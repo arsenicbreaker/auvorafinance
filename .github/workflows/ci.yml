@@ -1,0 +1,55 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  typescript:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: 22
+          package-manager-cache: false
+      - name: Enable pinned pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@12.14.0 --activate
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Check TypeScript workspace
+        run: pnpm check
+      - name: Build TypeScript workspace
+        run: pnpm build
+      - name: Scan tracked source for private key material
+        shell: bash
+        run: |
+          if git grep -nE '(ed25519|secp256k1):[A-Za-z0-9+/=_-]{40,}' -- ':!pnpm-lock.yaml'; then
+            echo 'Potential private key material found.' >&2
+            exit 1
+          fi
+
+  rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Install pinned Rust toolchain
+        run: rustup show
+      - name: Install cargo-near
+        run: cargo install --locked cargo-near --version 0.22.0
+      - name: Check Rust formatting
+        run: cargo fmt --all --check
+      - name: Run Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: Run unit and sandbox tests
+        run: cargo test --workspace --locked
+      - name: Build contract WASM
+        working-directory: contracts/treasury
+        run: cargo near build non-reproducible-wasm --locked

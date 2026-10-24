@@ -1,0 +1,14 @@
+node_modules
+.next
+dist
+target
+coverage
+pnpm-lock.yaml
+Cargo.lock
+*.wasm
+AUVORA_FINANCE_PRD_v1.md
+HACKATHON.md
+docs/ARCHITECTURE.md
+docs/IMPLEMENTATION_PLAN.md
+docs/SECURITY.md
+docs/TECH_STACK.md

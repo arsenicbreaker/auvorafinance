@@ -1,0 +1,22 @@
+[package]
+name = "auvora-treasury"
+version = "0.0.0"
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+near-sdk = "=5.29.1"
+
+[dev-dependencies]
+near-sdk = { version = "=5.29.1", features = ["unit-testing"] }
+
+[target.'cfg(target_os = "linux")'.dev-dependencies]
+anyhow = "1.0.100"
+near-workspaces = { version = "=0.23.0", features = ["unstable"] }
+serde_json = "1.0.145"
+tokio = { version = "1.48.0", features = ["macros", "rt-multi-thread"] }
