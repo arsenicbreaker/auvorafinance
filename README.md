@@ -4,7 +4,7 @@ Your Treasury, on Autopilot.
 
 Auvora Finance is a testnet-only treasury automation project for the NEAR Hackathon 2026 Autonomous Business track. The MVP target is a user-authorized recurring native NEAR payment with contract-enforced recipient, spending, reserve, and idempotency rules.
 
-This repository has completed the live **Phase 0 foundation and dependency proof** and is entering **Phase 1: contract policy and accounting core**. It does not yet move treasury funds.
+This repository has completed the live **Phase 0 foundation** and deployed the **Phase 1 contract policy and accounting core** to NEAR testnet. Phase 1 can create, fund, pause, resume, cancel, and safely withdraw isolated workflow ledgers; it does not yet execute scheduled payments to recipients.
 
 ## Phase 0 contents
 

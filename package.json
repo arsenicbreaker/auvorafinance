@@ -15,6 +15,7 @@
     "lint": "pnpm -r --if-present lint",
     "provision:keeper-key": "node --env-file=.env.keeper.local scripts/provision-keeper-key.mjs",
     "proof:relayer": "node --env-file=.env.relayer.local scripts/prove-relayer-testnet.mjs",
+    "proof:phase1": "node --env-file=.env.deploy.local scripts/prove-phase1-testnet.mjs",
     "test": "pnpm -r --if-present test",
     "typecheck": "pnpm -r --if-present typecheck"
   },
