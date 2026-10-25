@@ -1,4 +1,5 @@
 import { WalletProof } from "../features/wallet/wallet-proof";
+import { WorkflowBuilder } from "../features/workflow/workflow-builder";
 
 export default function Home() {
   return (
@@ -17,8 +18,8 @@ export default function Home() {
         <h1 id="page-title">Prove every signature before automating a cent.</h1>
         <p className="lede">
           Connect a user-controlled testnet wallet, inspect the deployed
-          contract, then sign one harmless owner call. No treasury workflow or
-          payment is available in this phase.
+          contract, then shape one recurring payment. The draft below stays
+          local until you review it and connect the owner wallet.
         </p>
       </section>
 
@@ -28,6 +29,8 @@ export default function Home() {
           process.env.NEXT_PUBLIC_NEAR_RPC_URL ?? "https://rpc.testnet.near.org"
         }
       />
+
+      <WorkflowBuilder />
 
       <footer>
         <p>Testnet only. Never paste a seed phrase or private key here.</p>

@@ -9,7 +9,7 @@
   "scripts": {
     "build": "pnpm -r --if-present build",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
-    "db:migrate:deploy": "pnpm --filter @auvora/db db:migrate:deploy",
+    "db:migrate:deploy": "node --env-file=.env.keeper.local scripts/migrate-db.mjs",
     "deploy:testnet": "node --env-file=.env.deploy.local scripts/deploy-testnet.mjs",
     "upgrade:phase1:testnet": "node --env-file=.env.deploy.local scripts/upgrade-phase1-testnet.mjs",
     "upgrade:phase2:testnet": "node --env-file=.env.deploy.local scripts/upgrade-phase2-testnet.mjs",
