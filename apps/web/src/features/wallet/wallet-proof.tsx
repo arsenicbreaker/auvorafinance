@@ -22,6 +22,16 @@ type ActionState = "error" | "idle" | "pending" | Finality;
 interface WalletProofProps {
   contractId: string;
   rpcUrl: string;
+  onWalletSession?: (session: WalletSession | null) => void;
+}
+
+export interface WalletSession {
+  accountId: string;
+  signFunctionCall: (input: {
+    methodName: string;
+    args: Record<string, unknown>;
+    deposit: bigint;
+  }) => Promise<string | undefined>;
 }
 
 const proofStatus = "wallet-proof-confirmed";
@@ -35,7 +45,11 @@ function callbackTransactionHash(): string {
   );
 }
 
-export function WalletProof({ contractId, rpcUrl }: WalletProofProps) {
+export function WalletProof({
+  contractId,
+  rpcUrl,
+  onWalletSession,
+}: WalletProofProps) {
   const [selector, setSelector] = useState<WalletSelector | null>(null);
   const [modal, setModal] = useState<WalletSelectorModal | null>(null);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -57,6 +71,33 @@ export function WalletProof({ contractId, rpcUrl }: WalletProofProps) {
   const activeAccount = accounts[0]?.accountId ?? "";
   const isOwner =
     Boolean(activeAccount) && contractStatus?.owner_id === activeAccount;
+
+  useEffect(() => {
+    if (!selector || !activeAccount) {
+      onWalletSession?.(null);
+      return;
+    }
+    onWalletSession?.({
+      accountId: activeAccount,
+      signFunctionCall: async ({ methodName, args, deposit }) => {
+        const wallet = await selector.wallet();
+        const outcome = await wallet.signAndSendTransaction({
+          actions: [
+            actionCreators.functionCall(
+              methodName,
+              args,
+              30_000_000_000_000n,
+              deposit,
+            ),
+          ],
+          receiverId: contractId,
+          signerId: activeAccount,
+        });
+        return outcome?.transaction.hash;
+      },
+    });
+    return () => onWalletSession?.(null);
+  }, [activeAccount, contractId, onWalletSession, selector]);
 
   const readStatus = useCallback(async () => {
     if (!contractId) return;

@@ -1,7 +1,19 @@
+"use client";
+
+import { useState } from "react";
 import { WalletProof } from "../features/wallet/wallet-proof";
-import { WorkflowBuilder } from "../features/workflow/workflow-builder";
+import {
+  WorkflowBuilder,
+  type WorkflowWalletSession,
+} from "../features/workflow/workflow-builder";
 
 export default function Home() {
+  const [walletSession, setWalletSession] =
+    useState<WorkflowWalletSession | null>(null);
+  const contractId = process.env.NEXT_PUBLIC_AUVORA_CONTRACT_ID ?? "";
+  const rpcUrl =
+    process.env.NEXT_PUBLIC_NEAR_RPC_URL ?? "https://rpc.testnet.near.org";
+
   return (
     <main>
       <header className="masthead">
@@ -24,13 +36,12 @@ export default function Home() {
       </section>
 
       <WalletProof
-        contractId={process.env.NEXT_PUBLIC_AUVORA_CONTRACT_ID ?? ""}
-        rpcUrl={
-          process.env.NEXT_PUBLIC_NEAR_RPC_URL ?? "https://rpc.testnet.near.org"
-        }
+        contractId={contractId}
+        rpcUrl={rpcUrl}
+        onWalletSession={setWalletSession}
       />
 
-      <WorkflowBuilder />
+      <WorkflowBuilder contractId={contractId} walletSession={walletSession} />
 
       <footer>
         <p>Testnet only. Never paste a seed phrase or private key here.</p>
