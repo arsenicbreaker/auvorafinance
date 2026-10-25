@@ -1,0 +1,179 @@
+import { describe, expect, it } from "vitest";
+
+import type {
+  FinalizedExecution,
+  KeeperNearClient,
+  WorkflowView,
+} from "@auvora/near-client";
+
+import { getHealthPayload } from "./health.js";
+import { runKeeperCycle } from "./keeper.js";
+import { InMemoryKeeperStore } from "./memory-store.js";
+import { KeeperRuntimeState } from "./state.js";
+
+const TRANSACTION_HASH = "11111111111111111111111111111111";
+const NOW_MS = 1_800_000_000_000;
+
+class FakeNearClient implements KeeperNearClient {
+  submitCount = 0;
+  finalityError = false;
+
+  constructor(public workflow: WorkflowView) {}
+
+  async listWorkflows(cursor: number): Promise<WorkflowView[]> {
+    return cursor === 0 ? [this.workflow] : [];
+  }
+
+  async getWorkflow(): Promise<WorkflowView> {
+    return this.workflow;
+  }
+
+  async submitExecuteDue(): Promise<string> {
+    this.submitCount += 1;
+    return TRANSACTION_HASH;
+  }
+
+  async waitForFinalExecution(): Promise<FinalizedExecution> {
+    if (this.finalityError) throw new Error("RPC_UNAVAILABLE");
+    const event = {
+      event: "execution_succeeded" as const,
+      workflowId: this.workflow.id,
+      runIndex: this.workflow.runs_completed,
+      scheduledForMs: this.workflow.next_run_at_ms,
+      amountYocto: this.workflow.amount,
+      reasonCode: null,
+    };
+    this.workflow = {
+      ...this.workflow,
+      runs_completed: this.workflow.runs_completed + 1,
+      next_run_at_ms: NOW_MS + 60_000,
+    };
+    return {
+      transactionHash: TRANSACTION_HASH,
+      status: "Succeeded",
+      reasonCode: null,
+      event,
+      explorerUrl: `https://testnet.nearblocks.io/txns/${TRANSACTION_HASH}`,
+    };
+  }
+}
+
+describe("keeper cycle", () => {
+  it("re-reads, submits, finalizes, and records a heartbeat", async () => {
+    const near = new FakeNearClient(dueWorkflow());
+    const store = new InMemoryKeeperStore();
+    const state = new KeeperRuntimeState();
+
+    const stats = await runKeeperCycle(cycleOptions({ near, store, state }));
+
+    expect(stats).toMatchObject({
+      discovered: 1,
+      candidates: 1,
+      leased: 1,
+      submitted: 1,
+      finalized: 1,
+    });
+    expect(near.submitCount).toBe(1);
+    expect(store.finalizations.get(TRANSACTION_HASH)?.status).toBe("Succeeded");
+    expect(store.heartbeats.get("keeper-a")?.lastErrorCode).toBeNull();
+  });
+
+  it("keeps an unresolved hash pending and does not blindly resubmit it", async () => {
+    const near = new FakeNearClient(dueWorkflow());
+    near.finalityError = true;
+    const store = new InMemoryKeeperStore();
+    const state = new KeeperRuntimeState();
+
+    const first = await runKeeperCycle(cycleOptions({ near, store, state }));
+    const second = await runKeeperCycle(cycleOptions({ near, store, state }));
+
+    expect(first.submitted).toBe(1);
+    expect(second.reconciliationPending).toBe(1);
+    expect(second.submitted).toBe(0);
+    expect(near.submitCount).toBe(1);
+  });
+
+  it("reconciles a stored hash after restart before considering submission", async () => {
+    const near = new FakeNearClient(dueWorkflow());
+    const store = new InMemoryKeeperStore();
+    await store.recordSubmission({
+      network: "testnet",
+      transactionHash: TRANSACTION_HASH,
+      contractId: "auvora.testnet",
+      workflowId: 0n,
+      runIndex: 0,
+      scheduledForMs: BigInt(NOW_MS - 1_000),
+      amountYocto: "10",
+      signerId: "keeper.testnet",
+      method: "execute_due",
+      submittedAt: new Date(NOW_MS - 500),
+    });
+
+    const stats = await runKeeperCycle(
+      cycleOptions({ near, store, state: new KeeperRuntimeState() }),
+    );
+
+    expect(stats.finalized).toBe(1);
+    expect(stats.submitted).toBe(0);
+    expect(store.finalizations.has(TRANSACTION_HASH)).toBe(true);
+  });
+
+  it("exposes readiness only after a recent successful poll", () => {
+    const state = new KeeperRuntimeState();
+    expect(
+      getHealthPayload({
+        state,
+        now: new Date(NOW_MS),
+        staleAfterMs: 30_000,
+      }).ready,
+    ).toBe(false);
+    state.startPoll(new Date(NOW_MS));
+    state.completePoll(new Date(NOW_MS));
+    expect(
+      getHealthPayload({
+        state,
+        now: new Date(NOW_MS + 20_000),
+        staleAfterMs: 30_000,
+      }).ready,
+    ).toBe(true);
+  });
+});
+
+function cycleOptions(options: {
+  near: KeeperNearClient;
+  store: InMemoryKeeperStore;
+  state: KeeperRuntimeState;
+}) {
+  return {
+    network: "testnet" as const,
+    contractId: "auvora.testnet",
+    signerId: "keeper.testnet",
+    instanceId: "keeper-a",
+    pageSize: 20,
+    leaseMs: 60_000,
+    finalityTimeoutMs: 5_000,
+    now: () => new Date(NOW_MS),
+    ...options,
+  };
+}
+
+function dueWorkflow(): WorkflowView {
+  return {
+    id: 0,
+    owner_id: "owner.testnet",
+    recipient_id: "recipient.testnet",
+    amount: "10",
+    max_per_run: "10",
+    min_reserve: "5",
+    interval_ms: 60_000,
+    next_run_at_ms: NOW_MS - 1_000,
+    max_runs: 2,
+    runs_completed: 0,
+    available_balance: "100",
+    state: "Active",
+    config_hash: "phase-3-test",
+    created_at_ms: NOW_MS - 100_000,
+    withdrawable: "75",
+    pending_execution: null,
+  };
+}

@@ -4,7 +4,7 @@ Your Treasury, on Autopilot.
 
 Auvora Finance is a testnet-only treasury automation project for the NEAR Hackathon 2026 Autonomous Business track. The MVP target is a user-authorized recurring native NEAR payment with contract-enforced recipient, spending, reserve, and idempotency rules.
 
-This repository has completed the live **Phase 0 foundation** and deployed the **Phase 1 contract policy and accounting core** to NEAR testnet. **Phase 2 is implemented and validated locally, and is awaiting testnet deployment.** It adds permissionless due-run execution, pre-transfer slot reservation, callback-based accounting, retry-safe failure recovery, and stable execution reason codes.
+This repository has completed the live **Phase 0 foundation** and deployed the **Phase 1 contract policy and accounting core** to NEAR testnet. **Phase 2 and Phase 3 are implemented locally and await testnet deployment.** Phase 2 adds permissionless due-run execution and callback-based accounting. Phase 3 adds bounded workflow discovery, an automated keeper, PostgreSQL-backed leases and execution records, restart-safe transaction reconciliation, and health endpoints.
 
 ## Phase 0 contents
 
@@ -44,6 +44,18 @@ Run the web proof after deploying the Phase 0 contract:
 pnpm --filter @auvora/web dev
 ```
 
+Run the Phase 3 keeper after setting `DATABASE_URL`, the deployed contract ID,
+and the restricted keeper credentials in the ignored `.env.keeper.local` file:
+
+```bash
+pnpm db:migrate:deploy
+pnpm keeper:dev
+```
+
+The keeper exposes `/live` and `/ready` on port `3001` by default. A transaction
+hash is persisted before the keeper waits for finality; unresolved hashes are
+reconciled on the next poll or after a restart instead of being submitted again.
+
 Build the Phase 2 WASM and upgrade an existing Phase 1 testnet deployment only after its status is exactly `phase-1-ready`:
 
 ```bash
@@ -54,6 +66,11 @@ pnpm upgrade:phase2:testnet
 ```
 
 The Phase 2 upgrade is atomic: deploy, migrate Phase 1 workflow state, and set the new status in one finalized transaction. It refuses non-testnet RPCs, account mismatches, and unexpected pre-upgrade status.
+
+The existing `oceanear.testnet` proof deployment had a Phase 1 state with a
+legacy `wallet-proof-confirmed` label, so its one-time Phase 3 migration uses
+the guarded `upgrade:phase3:testnet` path. It preserves the existing workflow
+state, exposes `list_workflows`, and sets the contract to `phase-2-ready`.
 
 The page remains in an explicit configuration state until a contract ID is set. It never asks for a seed phrase or private key.
 
@@ -90,7 +107,7 @@ cargo near build non-reproducible-wasm --locked
 
 Native Windows is suitable for the TypeScript checks and Rust unit tests after Rust is installed. Run the sandbox integration test on Linux, WSL2, or Ubuntu CI.
 
-Phase 2 intentionally does not catch up missed intervals in a burst. After a late run succeeds, the next run is scheduled one interval after confirmation; after a failed transfer, the same scheduled slot remains retryable.
+Phase 2 intentionally does not catch up missed intervals in a burst. After a late run succeeds, the next run is scheduled one interval after confirmation; after a failed transfer, the same scheduled slot remains retryable. Phase 3 does not change those contract rules: it discovers candidates and calls only `execute_due`; the contract remains the final authority.
 
 ## Current proof status
 

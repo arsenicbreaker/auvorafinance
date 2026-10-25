@@ -9,6 +9,6 @@ describe("keeper foundation", () => {
       service: "auvora-keeper",
       status: "ready",
     });
-    expect(KEEPER_ALLOWED_METHOD).toBe("keeper_ping");
+    expect(KEEPER_ALLOWED_METHOD).toBe("execute_due");
   });
 });

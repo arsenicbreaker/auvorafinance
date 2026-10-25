@@ -16,6 +16,27 @@ const serviceConfigSchema = publicConfigSchema.extend({
 
 const keeperConfigSchema = serviceConfigSchema.extend({
   KEEPER_ACCOUNT_ID: z.string().min(2),
+  KEEPER_FINALITY_TIMEOUT_MS: z.coerce
+    .number()
+    .int()
+    .min(5_000)
+    .max(300_000)
+    .default(60_000),
+  KEEPER_HEALTH_PORT: z.coerce.number().int().min(1).max(65_535).default(3_001),
+  KEEPER_INSTANCE_ID: z.string().min(1).max(128).default("keeper-1"),
+  KEEPER_LEASE_MS: z.coerce
+    .number()
+    .int()
+    .min(10_000)
+    .max(600_000)
+    .default(60_000),
+  KEEPER_PAGE_SIZE: z.coerce.number().int().min(1).max(50).default(20),
+  KEEPER_POLL_INTERVAL_MS: z.coerce
+    .number()
+    .int()
+    .min(1_000)
+    .max(300_000)
+    .default(15_000),
   KEEPER_PRIVATE_KEY: z.string().min(1),
 });
 

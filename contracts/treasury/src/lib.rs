@@ -737,6 +737,16 @@ impl TreasuryContract {
             .collect()
     }
 
+    pub fn list_workflows(&self, cursor: Option<u64>, limit: Option<u32>) -> Vec<WorkflowView> {
+        let start = cursor.unwrap_or(0);
+        let page_size = limit.unwrap_or(20).min(50);
+        (start..self.next_workflow_id)
+            .filter_map(|id| self.workflows.get(&id))
+            .take(page_size as usize)
+            .map(WorkflowView::from)
+            .collect()
+    }
+
     fn assert_contract_owner(&self) {
         assert_eq!(
             env::predecessor_account_id(),
@@ -1288,6 +1298,30 @@ mod tests {
             c.get_workflow(id).unwrap().next_run_at_ms,
             1_700_001_060_000
         );
+    }
+
+    #[test]
+    fn lists_workflows_in_bounded_global_pages_for_keeper_discovery() {
+        let mut c = setup();
+        let first = create_with_deposit(&mut c, 10u128.pow(24));
+        let second = create_with_deposit(&mut c, 10u128.pow(24));
+        let third = create_with_deposit(&mut c, 10u128.pow(24));
+
+        assert_eq!(
+            c.list_workflows(None, Some(2))
+                .into_iter()
+                .map(|workflow| workflow.id)
+                .collect::<Vec<_>>(),
+            vec![first, second]
+        );
+        assert_eq!(
+            c.list_workflows(Some(2), Some(50))
+                .into_iter()
+                .map(|workflow| workflow.id)
+                .collect::<Vec<_>>(),
+            vec![third]
+        );
+        assert_eq!(c.list_workflows(Some(99), Some(50)), Vec::new());
     }
 
     #[test]

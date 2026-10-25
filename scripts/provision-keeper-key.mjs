@@ -63,7 +63,7 @@ async function main() {
     const addKeyOutcome = await keeper.addFunctionCallAccessKey({
       publicKey: restrictedKey.getPublicKey(),
       contractId,
-      methodNames: ["keeper_ping"],
+      methodNames: ["execute_due"],
       allowance: ALLOWANCE,
     });
 
@@ -74,20 +74,6 @@ async function main() {
     });
 
     await rename(PENDING_ENV_PATH, ENV_PATH);
-
-    const restrictedKeeper = new Account(
-      keeperId,
-      provider,
-      restrictedKey.toString(),
-    );
-    const pingOutcome = await restrictedKeeper.callFunctionRaw({
-      contractId,
-      methodName: "keeper_ping",
-      args: {},
-      gas: 30_000_000_000_000n,
-      deposit: 0n,
-      waitUntil: "FINAL",
-    });
 
     const status = await provider.callFunction({
       contractId,
@@ -102,7 +88,6 @@ async function main() {
           keeperId,
           contractId,
           addKeyTransactionHash: transactionHash(addKeyOutcome),
-          pingTransactionHash: transactionHash(pingOutcome),
           permission: permission.permission,
           status,
         },

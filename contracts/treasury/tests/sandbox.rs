@@ -51,6 +51,13 @@ async fn executes_exact_transfer_and_restores_failed_transfer() -> Result<()> {
         .transact()
         .await?
         .into_result()?;
+    let discovered: Value = contract
+        .view("list_workflows")
+        .args_json(json!({ "cursor": 0, "limit": 20 }))
+        .await?
+        .json()?;
+    assert_eq!(discovered.as_array().map(Vec::len), Some(1));
+    assert_eq!(discovered[0]["id"], 0);
     worker.fast_forward(5).await?;
 
     let recipient_before = recipient.view_account().await?.balance;
