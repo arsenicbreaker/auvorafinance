@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { createWorkflowSchema, toContractArgs } from "./index.js";
+import {
+  EXECUTION_REASON_CODES,
+  createWorkflowSchema,
+  executionEventSchema,
+  toContractArgs,
+} from "./index.js";
 
 const validWorkflow = {
   recipientId: "recipient.testnet",
@@ -38,6 +43,51 @@ describe("createWorkflowSchema", () => {
         ...validWorkflow,
         recipientId: "INVALID ACCOUNT",
         intervalMs: 1,
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe("execution event contract", () => {
+  it("parses a Phase 2 reserve skip event", () => {
+    expect(
+      executionEventSchema.parse({
+        standard: "auvora",
+        version: "1.0.0",
+        event: "execution_skipped",
+        data: [
+          {
+            workflow_id: 7,
+            run_index: 1,
+            scheduled_for_ms: 1_800_000_000_000,
+            amount: "10000000000000000000000",
+            reason_code: "RESERVE_GUARD",
+          },
+        ],
+      }),
+    ).toMatchObject({ event: "execution_skipped" });
+  });
+
+  it("keeps callback replay and transfer failure as stable reason codes", () => {
+    expect(EXECUTION_REASON_CODES).toContain("TRANSFER_FAILED");
+    expect(EXECUTION_REASON_CODES).toContain("CALLBACK_ALREADY_RESOLVED");
+  });
+
+  it("rejects an unknown execution reason", () => {
+    expect(
+      executionEventSchema.safeParse({
+        standard: "auvora",
+        version: "1.0.0",
+        event: "execution_failed",
+        data: [
+          {
+            workflow_id: 7,
+            run_index: 1,
+            scheduled_for_ms: 1_800_000_000_000,
+            amount: "10",
+            reason_code: "UNKNOWN_REASON",
+          },
+        ],
       }).success,
     ).toBe(false);
   });

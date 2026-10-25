@@ -11,6 +11,7 @@
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
     "deploy:testnet": "node --env-file=.env.deploy.local scripts/deploy-testnet.mjs",
     "upgrade:phase1:testnet": "node --env-file=.env.deploy.local scripts/upgrade-phase1-testnet.mjs",
+    "upgrade:phase2:testnet": "node --env-file=.env.deploy.local scripts/upgrade-phase2-testnet.mjs",
     "format:check": "prettier --check .",
     "lint": "pnpm -r --if-present lint",
     "provision:keeper-key": "node --env-file=.env.keeper.local scripts/provision-keeper-key.mjs",

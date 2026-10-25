@@ -4,7 +4,7 @@ Your Treasury, on Autopilot.
 
 Auvora Finance is a testnet-only treasury automation project for the NEAR Hackathon 2026 Autonomous Business track. The MVP target is a user-authorized recurring native NEAR payment with contract-enforced recipient, spending, reserve, and idempotency rules.
 
-This repository has completed the live **Phase 0 foundation** and deployed the **Phase 1 contract policy and accounting core** to NEAR testnet. Phase 1 can create, fund, pause, resume, cancel, and safely withdraw isolated workflow ledgers; it does not yet execute scheduled payments to recipients.
+This repository has completed the live **Phase 0 foundation** and deployed the **Phase 1 contract policy and accounting core** to NEAR testnet. **Phase 2 is implemented and validated locally, and is awaiting testnet deployment.** It adds permissionless due-run execution, pre-transfer slot reservation, callback-based accounting, retry-safe failure recovery, and stable execution reason codes.
 
 ## Phase 0 contents
 
@@ -44,6 +44,17 @@ Run the web proof after deploying the Phase 0 contract:
 pnpm --filter @auvora/web dev
 ```
 
+Build the Phase 2 WASM and upgrade an existing Phase 1 testnet deployment only after its status is exactly `phase-1-ready`:
+
+```bash
+cd contracts/treasury
+cargo near build non-reproducible-wasm --locked
+cd ../..
+pnpm upgrade:phase2:testnet
+```
+
+The Phase 2 upgrade is atomic: deploy, migrate Phase 1 workflow state, and set the new status in one finalized transaction. It refuses non-testnet RPCs, account mismatches, and unexpected pre-upgrade status.
+
 The page remains in an explicit configuration state until a contract ID is set. It never asks for a seed phrase or private key.
 
 Local credential files are already prepared and ignored by Git:
@@ -78,6 +89,8 @@ cargo near build non-reproducible-wasm --locked
 ```
 
 Native Windows is suitable for the TypeScript checks and Rust unit tests after Rust is installed. Run the sandbox integration test on Linux, WSL2, or Ubuntu CI.
+
+Phase 2 intentionally does not catch up missed intervals in a burst. After a late run succeeds, the next run is scheduled one interval after confirmation; after a failed transfer, the same scheduled slot remains retryable.
 
 ## Current proof status
 

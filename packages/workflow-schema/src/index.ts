@@ -4,6 +4,55 @@ export const MIN_INTERVAL_MS = 60_000;
 export const MAX_INTERVAL_MS = 31_536_000_000;
 export const MAX_RUNS = 1_000;
 
+export const EXECUTION_REASON_CODES = [
+  "NOT_DUE",
+  "PAUSED",
+  "INACTIVE",
+  "RECIPIENT_NOT_ALLOWED",
+  "RESERVE_GUARD",
+  "ALREADY_DISPATCHED",
+  "TRANSFER_FAILED",
+  "CALLBACK_ALREADY_RESOLVED",
+] as const;
+
+export const EXECUTION_STATUSES = [
+  "Dispatched",
+  "Skipped",
+  "Succeeded",
+  "Failed",
+  "Ignored",
+] as const;
+
+export const EXECUTION_EVENT_NAMES = [
+  "execution_dispatched",
+  "execution_skipped",
+  "execution_succeeded",
+  "execution_failed",
+] as const;
+
+export type ExecutionReasonCode = (typeof EXECUTION_REASON_CODES)[number];
+export type ExecutionStatus = (typeof EXECUTION_STATUSES)[number];
+export type ExecutionEventName = (typeof EXECUTION_EVENT_NAMES)[number];
+
+export const executionEventSchema = z.object({
+  standard: z.literal("auvora"),
+  version: z.literal("1.0.0"),
+  event: z.enum(EXECUTION_EVENT_NAMES),
+  data: z
+    .array(
+      z.object({
+        workflow_id: z.number().int().nonnegative(),
+        run_index: z.number().int().nonnegative(),
+        scheduled_for_ms: z.number().int().nonnegative(),
+        amount: z.string().regex(/^\d+$/),
+        reason_code: z.enum(EXECUTION_REASON_CODES).optional(),
+      }),
+    )
+    .min(1),
+});
+
+export type ExecutionEvent = z.infer<typeof executionEventSchema>;
+
 const accountIdSchema = z
   .string()
   .min(2)
