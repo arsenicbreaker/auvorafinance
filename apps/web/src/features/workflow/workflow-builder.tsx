@@ -335,14 +335,16 @@ export function WorkflowBuilder({
       const hash = await walletSession.signFunctionCall({
         methodName: "create_workflow",
         args: {
-          recipient_id: draft.recipientId,
-          amount: draft.amountYocto.toString(),
-          max_per_run: draft.amountYocto.toString(),
-          min_reserve: draft.reserveYocto.toString(),
-          interval_ms: draft.intervalMs,
-          start_at_ms: startAtMs,
-          max_runs: draft.maxRuns,
-          config_hash: `auvora-web-${startAtMs}`,
+          args: {
+            recipient_id: draft.recipientId,
+            amount: draft.amountYocto.toString(),
+            max_per_run: draft.amountYocto.toString(),
+            min_reserve: draft.reserveYocto.toString(),
+            interval_ms: draft.intervalMs,
+            start_at_ms: startAtMs,
+            max_runs: draft.maxRuns,
+            config_hash: `auvora-web-${startAtMs}`,
+          },
         },
         deposit: totalDeposit,
       });
