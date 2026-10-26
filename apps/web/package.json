@@ -11,6 +11,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@auvora/domain": "workspace:*",
     "@near-js/transactions": "2.5.1",
     "@near-wallet-selector/core": "10.1.4",
     "@near-wallet-selector/meteor-wallet": "10.1.4",

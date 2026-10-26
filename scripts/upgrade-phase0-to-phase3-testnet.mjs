@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import { resolve } from "node:path";
 
 import { Account, JsonRpcProvider, actions } from "near-api-js";
@@ -27,20 +28,23 @@ function assertTestnetConfiguration(networkId, rpcUrl, contractId) {
 }
 
 async function main() {
+  const previewOnly = process.argv.includes("--preview");
   const networkId = requireEnvironment("NEAR_NETWORK_ID");
   const rpcUrl = requireEnvironment("NEAR_RPC_URL");
   const contractId = requireEnvironment("AUVORA_CONTRACT_ID");
   const ownerId = requireEnvironment("OWNER_ACCOUNT_ID");
-  const ownerPrivateKey = requireEnvironment("OWNER_PRIVATE_KEY");
   assertTestnetConfiguration(networkId, rpcUrl, contractId);
   if (ownerId !== contractId) {
     throw new Error("Phase 1 migration requires the contract account key");
   }
 
   const provider = new JsonRpcProvider({ url: rpcUrl });
-  const account = new Account(contractId, provider, ownerPrivateKey);
-  const state = await account.getState();
-  if (state.codeHash === ZERO_CODE_HASH) {
+  const state = await provider.query({
+    request_type: "view_account",
+    finality: "final",
+    account_id: contractId,
+  });
+  if (state.code_hash === ZERO_CODE_HASH) {
     throw new Error(`${contractId} has no existing contract to migrate`);
   }
 
@@ -54,6 +58,18 @@ async function main() {
     throw new Error(
       `Expected wallet-proof-confirmed before Phase 1 migration, received ${String(currentStatus.status)}`,
     );
+  }
+  let phaseTwoStateAvailable = false;
+  try {
+    await provider.callFunction({
+      contractId,
+      method: "get_accounting",
+      args: {},
+      finality: "final",
+    });
+    phaseTwoStateAvailable = true;
+  } catch {
+    phaseTwoStateAvailable = false;
   }
   try {
     await provider.callFunction({
@@ -70,18 +86,55 @@ async function main() {
 
   const wasmPath = resolve(process.env.WASM_PATH?.trim() || DEFAULT_WASM_PATH);
   const wasm = new Uint8Array(await readFile(wasmPath));
+  const wasmSha256 = createHash("sha256").update(wasm).digest("hex");
+  if (previewOnly) {
+    process.stdout.write(
+      `${JSON.stringify(
+        {
+          previewOnly: true,
+          transactionSent: false,
+          contractId,
+          ownerId,
+          currentStatus: currentStatus.status,
+          currentCodeHash: state.code_hash,
+          wasmPath,
+          wasmBytes: wasm.byteLength,
+          wasmSha256,
+          phaseTwoStateAvailable,
+          actions: phaseTwoStateAvailable
+            ? ["deploy_contract", "set_status:phase-2-ready"]
+            : [
+                "deploy_contract",
+                "migrate_phase_2",
+                "set_status:phase-2-ready",
+              ],
+        },
+        null,
+        2,
+      )}\n`,
+    );
+    return;
+  }
+
+  const ownerPrivateKey = requireEnvironment("OWNER_PRIVATE_KEY");
+  const account = new Account(contractId, provider, ownerPrivateKey);
+  const upgradeActions = [actions.deployContract(wasm)];
+  if (!phaseTwoStateAvailable) {
+    upgradeActions.push(
+      actions.functionCall("migrate_phase_2", {}, 30_000_000_000_000n, 0n),
+    );
+  }
+  upgradeActions.push(
+    actions.functionCall(
+      "set_status",
+      { status: "phase-2-ready" },
+      10_000_000_000_000n,
+      0n,
+    ),
+  );
   const outcome = await account.signAndSendTransaction({
     receiverId: contractId,
-    actions: [
-      actions.deployContract(wasm),
-      actions.functionCall("migrate_phase_2", {}, 30_000_000_000_000n, 0n),
-      actions.functionCall(
-        "set_status",
-        { status: "phase-2-ready" },
-        10_000_000_000_000n,
-        0n,
-      ),
-    ],
+    actions: upgradeActions,
     waitUntil: "FINAL",
     throwOnFailure: true,
   });
@@ -104,6 +157,8 @@ async function main() {
     `${JSON.stringify(
       {
         contractId,
+        phaseTwoStateAvailableBeforeUpgrade: phaseTwoStateAvailable,
+        wasmSha256,
         transactionHash: outcome.transaction.hash,
         status,
         discoveredWorkflowCount: workflows.length,

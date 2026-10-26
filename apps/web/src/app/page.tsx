@@ -41,7 +41,11 @@ export default function Home() {
         onWalletSession={setWalletSession}
       />
 
-      <WorkflowBuilder contractId={contractId} walletSession={walletSession} />
+      <WorkflowBuilder
+        contractId={contractId}
+        rpcUrl={rpcUrl}
+        walletSession={walletSession}
+      />
 
       <footer>
         <p>Testnet only. Never paste a seed phrase or private key here.</p>

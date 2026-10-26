@@ -57,6 +57,57 @@ export async function readContractStatus(
   return JSON.parse(decoded) as ContractStatus;
 }
 
+export async function readWorkflowStorageCost(
+  rpcUrl: string,
+  contractId: string,
+  ownerId: string,
+  recipientId: string,
+  configHash: string,
+): Promise<bigint> {
+  const result = await rpc<CallFunctionResult>(rpcUrl, "query", {
+    account_id: contractId,
+    args_base64: btoa(
+      JSON.stringify({
+        owner_id: ownerId,
+        recipient_id: recipientId,
+        config_hash: configHash,
+      }),
+    ),
+    finality: "final",
+    method_name: "estimate_workflow_storage_cost",
+    request_type: "call_function",
+  });
+  const decoded = new TextDecoder().decode(Uint8Array.from(result.result));
+  const value: unknown = JSON.parse(decoded);
+  if (typeof value !== "string" || !/^\d+$/.test(value)) {
+    throw new Error("RPC_INVALID_STORAGE_ESTIMATE");
+  }
+  return BigInt(value);
+}
+
+export async function readRecipientAllowed(
+  rpcUrl: string,
+  contractId: string,
+  ownerId: string,
+  recipientId: string,
+): Promise<boolean> {
+  const result = await rpc<CallFunctionResult>(rpcUrl, "query", {
+    account_id: contractId,
+    args_base64: btoa(
+      JSON.stringify({ owner_id: ownerId, account_id: recipientId }),
+    ),
+    finality: "final",
+    method_name: "is_recipient_allowed",
+    request_type: "call_function",
+  });
+  const decoded = new TextDecoder().decode(Uint8Array.from(result.result));
+  const value: unknown = JSON.parse(decoded);
+  if (typeof value !== "boolean") {
+    throw new Error("RPC_INVALID_ALLOWLIST_RESPONSE");
+  }
+  return value;
+}
+
 export type Finality = "failure" | "pending" | "success";
 
 export function classifyFinalExecution(result: TransactionResult): Finality {

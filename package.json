@@ -17,6 +17,7 @@
     "lint": "pnpm -r --if-present lint",
     "keeper:dev": "pnpm --filter @auvora/keeper dev",
     "upgrade:phase3:testnet": "node --env-file=.env.deploy.local scripts/upgrade-phase0-to-phase3-testnet.mjs",
+    "upgrade:phase3:preview": "node --env-file=.env.deploy.local scripts/upgrade-phase0-to-phase3-testnet.mjs --preview",
     "provision:keeper-key": "node --env-file=.env.keeper.local scripts/provision-keeper-key.mjs",
     "proof:relayer": "node --env-file=.env.relayer.local scripts/prove-relayer-testnet.mjs",
     "proof:phase1": "node --env-file=.env.deploy.local scripts/prove-phase1-testnet.mjs",

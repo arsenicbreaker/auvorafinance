@@ -1,6 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { formatNear, parseNear } from "@auvora/domain";
+import {
+  readRecipientAllowed,
+  readWorkflowStorageCost,
+} from "../../lib/near-rpc";
 
 export interface WorkflowWalletSession {
   accountId: string;
@@ -19,22 +24,17 @@ const INTERVALS = [
   { label: "Every day", value: 86_400_000 },
 ] as const;
 
-const YOCTO_PER_NEAR = 1_000_000_000_000_000_000_000_000n;
 const ALLOWLIST_DEPOSIT = 1_000_000_000_000_000_000_000n;
-
-function toYocto(value: string): bigint {
-  const [whole, fraction = ""] = value.split(".");
-  return (
-    BigInt(whole || "0") * YOCTO_PER_NEAR +
-    BigInt((fraction + "0".repeat(24)).slice(0, 24))
-  );
-}
+const MAX_U128 = (1n << 128n) - 1n;
+const MIN_SCHEDULE_LEAD_MS = 5 * 60_000;
 
 export function WorkflowBuilder({
   contractId,
+  rpcUrl,
   walletSession,
 }: {
   contractId: string;
+  rpcUrl: string;
   walletSession: WorkflowWalletSession | null;
 }) {
   const [recipient, setRecipient] = useState("");
@@ -45,6 +45,22 @@ export function WorkflowBuilder({
   const [draftState, setDraftState] = useState<DraftState>("idle");
   const [error, setError] = useState("");
   const [transactionHash, setTransactionHash] = useState("");
+  const [reviewedSchedule, setReviewedSchedule] = useState<{
+    intervalMs: number;
+    startAtMs: number;
+  } | null>(null);
+  const [reviewedDraftKey, setReviewedDraftKey] = useState<string | null>(null);
+  const [contractCheckAttempt, setContractCheckAttempt] = useState(0);
+  const [allowlistState, setAllowlistState] = useState<
+    "unknown" | "checking" | "allowed" | "not-allowed" | "error"
+  >("unknown");
+  const [storageQuote, setStorageQuote] = useState<{
+    key: string;
+    cost: bigint;
+  } | null>(null);
+  const [storageQuoteState, setStorageQuoteState] = useState<
+    "idle" | "loading" | "ready" | "error"
+  >("idle");
   const [transactionState, setTransactionState] = useState<
     "idle" | "pending" | "sent" | "error"
   >("idle");
@@ -52,36 +68,187 @@ export function WorkflowBuilder({
   const selectedInterval = INTERVALS.find(
     (option) => String(option.value) === interval,
   );
+  const ownerId = walletSession?.accountId ?? "";
+  const currentDraftKey = JSON.stringify([
+    recipient.trim(),
+    amount,
+    reserve,
+    interval,
+    maxRuns,
+  ]);
+  const isDraftReviewed = reviewedDraftKey === currentDraftKey;
+  const storageQuoteKey = `${contractId}:${ownerId}:${recipient.trim()}`;
+  const currentStorageQuote =
+    storageQuote?.key === storageQuoteKey ? storageQuote.cost : null;
+
+  useEffect(() => {
+    if (draftState !== "reviewing" || !ownerId || !contractId) {
+      setStorageQuote(null);
+      setStorageQuoteState("idle");
+      return;
+    }
+
+    let active = true;
+    setStorageQuote(null);
+    setStorageQuoteState("loading");
+    void readWorkflowStorageCost(
+      rpcUrl,
+      contractId,
+      ownerId,
+      recipient.trim(),
+      "auvora-web-0000000000000",
+    )
+      .then((cost) => {
+        if (!active) return;
+        setStorageQuote({ key: storageQuoteKey, cost });
+        setStorageQuoteState("ready");
+      })
+      .catch(() => {
+        if (!active) return;
+        setStorageQuote(null);
+        setStorageQuoteState("error");
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [
+    contractCheckAttempt,
+    contractId,
+    draftState,
+    ownerId,
+    recipient,
+    rpcUrl,
+    storageQuoteKey,
+  ]);
+
+  useEffect(() => {
+    if (draftState !== "reviewing" || !ownerId || !contractId) {
+      setAllowlistState("unknown");
+      return;
+    }
+
+    let active = true;
+    setAllowlistState("checking");
+    void readRecipientAllowed(rpcUrl, contractId, ownerId, recipient.trim())
+      .then((allowed) => {
+        if (!active) return;
+        setAllowlistState(allowed ? "allowed" : "not-allowed");
+      })
+      .catch(() => {
+        if (active) setAllowlistState("error");
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [
+    contractCheckAttempt,
+    contractId,
+    draftState,
+    ownerId,
+    recipient,
+    rpcUrl,
+    transactionState,
+  ]);
+
   const total = useMemo(() => {
-    const parsedAmount = Number(amount);
-    const parsedReserve = Number(reserve);
-    const parsedRuns = Number(maxRuns);
-    if (![parsedAmount, parsedReserve, parsedRuns].every(Number.isFinite)) {
+    try {
+      const amountYocto = parseNear(amount);
+      const reserveYocto = parseNear(reserve);
+      const runs = Number(maxRuns);
+      const funding = amountYocto * BigInt(runs) + reserveYocto;
+      if (
+        amountYocto <= 0n ||
+        reserveYocto < 0n ||
+        !isValidRunCount(runs) ||
+        funding > MAX_U128
+      ) {
+        return null;
+      }
+      return formatNear(funding);
+    } catch {
       return null;
     }
-    return parsedAmount * parsedRuns + parsedReserve;
   }, [amount, maxRuns, reserve]);
+  const totalWithStorage = useMemo(() => {
+    if (total === null || currentStorageQuote === null) return null;
+    return formatNear(parseNear(total) + currentStorageQuote);
+  }, [currentStorageQuote, total]);
 
-  function validateAndReview() {
+  function validateDraft() {
     const trimmedRecipient = recipient.trim();
-    const parsedAmount = Number(amount);
-    const parsedReserve = Number(reserve);
     const parsedRuns = Number(maxRuns);
 
-    if (!/^[a-z0-9._-]+\.testnet$/.test(trimmedRecipient)) {
-      setError("Use a valid NEAR testnet account, for example shop.testnet.");
-      return;
+    if (!/^[a-z0-9]+(?:[._-][a-z0-9]+)*\.testnet$/.test(trimmedRecipient)) {
+      throw new Error(
+        "Use a valid NEAR testnet account, for example shop.testnet.",
+      );
     }
-    if (!(parsedAmount > 0) || !(parsedReserve >= 0)) {
-      setError("Amount must be above zero and reserve cannot be negative.");
-      return;
+    if (!selectedInterval) {
+      throw new Error("Choose a supported payment interval.");
     }
-    if (!Number.isInteger(parsedRuns) || parsedRuns < 1 || parsedRuns > 12) {
-      setError("Choose between 1 and 12 runs for this draft.");
-      return;
+    if (!isValidRunCount(parsedRuns)) {
+      throw new Error("Choose between 1 and 12 runs for this draft.");
     }
-    setError("");
-    setDraftState("reviewing");
+
+    let amountYocto: bigint;
+    let reserveYocto: bigint;
+    try {
+      amountYocto = parseNear(amount);
+      reserveYocto = parseNear(reserve);
+    } catch {
+      throw new Error(
+        "Enter NEAR amounts with up to 24 decimal places and no exponent notation.",
+      );
+    }
+    if (amountYocto <= 0n || reserveYocto < 0n) {
+      throw new Error(
+        "Amount must be above zero and reserve cannot be negative.",
+      );
+    }
+    const deposit = amountYocto * BigInt(parsedRuns) + reserveYocto;
+    if (
+      amountYocto > MAX_U128 ||
+      reserveYocto > MAX_U128 ||
+      deposit > MAX_U128
+    ) {
+      throw new Error(
+        "The workflow funding amount exceeds the contract limit.",
+      );
+    }
+
+    return {
+      recipientId: trimmedRecipient,
+      amountYocto,
+      reserveYocto,
+      intervalMs: selectedInterval.value,
+      maxRuns: parsedRuns,
+      deposit,
+    };
+  }
+
+  function validateAndReview() {
+    try {
+      const draft = validateDraft();
+      setReviewedDraftKey(currentDraftKey);
+      setReviewedSchedule({
+        intervalMs: draft.intervalMs,
+        startAtMs:
+          Date.now() + Math.max(draft.intervalMs, MIN_SCHEDULE_LEAD_MS),
+      });
+      setContractCheckAttempt((attempt) => attempt + 1);
+      setError("");
+      setDraftState("reviewing");
+    } catch (nextError) {
+      setReviewedDraftKey(null);
+      setReviewedSchedule(null);
+      setError(
+        nextError instanceof Error
+          ? nextError.message
+          : "Invalid workflow draft.",
+      );
+    }
   }
 
   function saveDraft() {
@@ -93,6 +260,18 @@ export function WorkflowBuilder({
   }
 
   async function allowRecipient() {
+    if (allowlistState === "allowed") return;
+    let draft: ReturnType<typeof validateDraft>;
+    try {
+      draft = validateDraft();
+    } catch (nextError) {
+      setError(
+        nextError instanceof Error
+          ? nextError.message
+          : "Invalid workflow draft.",
+      );
+      return;
+    }
     if (!walletSession) {
       setError("Connect the contract owner wallet before signing.");
       return;
@@ -102,48 +281,79 @@ export function WorkflowBuilder({
     try {
       const hash = await walletSession.signFunctionCall({
         methodName: "add_allowed_recipient",
-        args: { account_id: recipient.trim() },
+        args: { account_id: draft.recipientId },
         deposit: ALLOWLIST_DEPOSIT,
       });
       setTransactionHash(hash ?? "");
       setTransactionState("sent");
     } catch (nextError) {
+      setTransactionState("error");
       setError(
         nextError instanceof Error ? nextError.message : "Wallet call failed",
       );
-      setTransactionState("error");
     }
   }
 
   async function createWorkflow() {
-    if (!walletSession || !selectedInterval) {
+    if (!walletSession) {
       setError("Connect the owner wallet and review the fields first.");
       return;
     }
-    setTransactionState("pending");
-    setError("");
+    if (currentStorageQuote === null || storageQuoteState !== "ready") {
+      setError(
+        "A current contract storage estimate is required before creation.",
+      );
+      return;
+    }
+    if (allowlistState !== "allowed") {
+      setError("Allow the recipient and wait for contract confirmation first.");
+      return;
+    }
     try {
+      const draft = validateDraft();
+      if (
+        !isDraftReviewed ||
+        !reviewedSchedule ||
+        reviewedSchedule.intervalMs !== draft.intervalMs ||
+        reviewedSchedule.startAtMs <= Date.now() + 60_000
+      ) {
+        setError(
+          "Review the current fields and schedule again before creating.",
+        );
+        return;
+      }
+      const totalDeposit = draft.deposit + currentStorageQuote;
+      if (totalDeposit > MAX_U128) {
+        throw new Error(
+          "The workflow funding amount exceeds the contract limit.",
+        );
+      }
+      setTransactionState("pending");
+      setError("");
+      setTransactionHash("");
+      const startAtMs = reviewedSchedule.startAtMs;
       const hash = await walletSession.signFunctionCall({
         methodName: "create_workflow",
         args: {
-          recipient_id: recipient.trim(),
-          amount: toYocto(amount).toString(),
-          max_per_run: toYocto(amount).toString(),
-          min_reserve: toYocto(reserve).toString(),
-          interval_ms: selectedInterval.value,
-          start_at_ms: Date.now() + selectedInterval.value,
-          max_runs: Number(maxRuns),
-          config_hash: `auvora-web-${Date.now()}`,
+          recipient_id: draft.recipientId,
+          amount: draft.amountYocto.toString(),
+          max_per_run: draft.amountYocto.toString(),
+          min_reserve: draft.reserveYocto.toString(),
+          interval_ms: draft.intervalMs,
+          start_at_ms: startAtMs,
+          max_runs: draft.maxRuns,
+          config_hash: `auvora-web-${startAtMs}`,
         },
-        deposit: toYocto(amount) * BigInt(maxRuns) + toYocto(reserve),
+        deposit: totalDeposit,
       });
       setTransactionHash(hash ?? "");
       setTransactionState("sent");
     } catch (nextError) {
+      setTransactionState("error");
+      setTransactionHash("");
       setError(
         nextError instanceof Error ? nextError.message : "Wallet call failed",
       );
-      setTransactionState("error");
     }
   }
 
@@ -186,10 +396,10 @@ export function WorkflowBuilder({
               Amount per run
               <span className="input-with-unit">
                 <input
+                  autoComplete="off"
                   inputMode="decimal"
-                  min="0"
-                  step="0.001"
-                  type="number"
+                  spellCheck={false}
+                  type="text"
                   value={amount}
                   onChange={(event) => setAmount(event.target.value)}
                 />
@@ -200,10 +410,10 @@ export function WorkflowBuilder({
               Minimum reserve
               <span className="input-with-unit">
                 <input
+                  autoComplete="off"
                   inputMode="decimal"
-                  min="0"
-                  step="0.001"
-                  type="number"
+                  spellCheck={false}
+                  type="text"
                   value={reserve}
                   onChange={(event) => setReserve(event.target.value)}
                 />
@@ -251,9 +461,19 @@ export function WorkflowBuilder({
         <aside className="review-sheet" aria-live="polite">
           <p className="step-label">Contract preview</p>
           <div className="review-total">
-            <span>Funding needed</span>
+            <span>Workflow funding needed</span>
             <strong>
-              {total === null ? "Not set" : `${total.toFixed(3)} NEAR`}
+              {totalWithStorage === null
+                ? total === null
+                  ? "Not set"
+                  : storageQuoteState === "loading"
+                    ? "Estimating…"
+                    : storageQuoteState === "error"
+                      ? "Unavailable"
+                      : walletSession
+                        ? "Review to estimate"
+                        : "Connect wallet"
+                : `${totalWithStorage} NEAR`}
             </strong>
           </div>
           <dl>
@@ -262,8 +482,24 @@ export function WorkflowBuilder({
               <dd>{recipient || "Not set"}</dd>
             </div>
             <div>
+              <dt>Amount per run</dt>
+              <dd>{amount || "Not set"} NEAR</dd>
+            </div>
+            <div>
               <dt>Schedule</dt>
               <dd>{selectedInterval?.label ?? "Not set"}</dd>
+            </div>
+            <div>
+              <dt>First scheduled run (UTC)</dt>
+              <dd>
+                {isDraftReviewed && reviewedSchedule
+                  ? new Date(reviewedSchedule.startAtMs).toISOString()
+                  : "Review fields to confirm"}
+              </dd>
+            </div>
+            <div>
+              <dt>Time zone</dt>
+              <dd>UTC</dd>
             </div>
             <div>
               <dt>Runs</dt>
@@ -273,12 +509,45 @@ export function WorkflowBuilder({
               <dt>Reserve floor</dt>
               <dd>{reserve || "Not set"} NEAR</dd>
             </div>
+            <div>
+              <dt>Payments plus reserve</dt>
+              <dd>{total === null ? "Not set" : `${total} NEAR`}</dd>
+            </div>
+            <div>
+              <dt>Workflow storage estimate</dt>
+              <dd>
+                {currentStorageQuote === null
+                  ? storageQuoteState === "error"
+                    ? "Unavailable"
+                    : "Waiting for wallet"
+                  : `${formatNear(currentStorageQuote)} NEAR`}
+              </dd>
+            </div>
+            <div>
+              <dt>Recipient authorization deposit</dt>
+              <dd>{formatNear(ALLOWLIST_DEPOSIT)} NEAR; excess refunded</dd>
+            </div>
+            <div>
+              <dt>Recipient allowlist</dt>
+              <dd>
+                {allowlistState === "allowed"
+                  ? "Allowed by contract"
+                  : allowlistState === "not-allowed"
+                    ? "Authorization required"
+                    : allowlistState === "checking"
+                      ? "Checking contract…"
+                      : allowlistState === "error"
+                        ? "Could not read contract"
+                        : "Connect owner wallet"}
+              </dd>
+            </div>
           </dl>
           {draftState === "reviewing" ? (
             <div className="review-actions">
               <p>
-                Fields are ready. Allow the recipient once, then create the
-                workflow with an explicit wallet confirmation.
+                {storageQuoteState === "error"
+                  ? "Could not load the contract storage estimate. Check the RPC connection and contract version before creating this workflow."
+                  : `The first run is scheduled at least five minutes from review time in UTC. The funding estimate includes payments, reserve, and contract storage. Recipient authorization attaches ${formatNear(ALLOWLIST_DEPOSIT)} NEAR; any excess is refunded.`}
               </p>
               <button className="secondary" type="button" onClick={saveDraft}>
                 Save draft locally
@@ -286,19 +555,53 @@ export function WorkflowBuilder({
               <button
                 className="secondary"
                 type="button"
-                disabled={transactionState === "pending" || !walletSession}
+                disabled={
+                  transactionState === "pending" ||
+                  !walletSession ||
+                  allowlistState === "allowed" ||
+                  allowlistState === "checking"
+                }
                 onClick={() => void allowRecipient()}
               >
-                {walletSession ? "Allow recipient" : "Connect owner wallet"}
+                {allowlistState === "allowed"
+                  ? "Recipient already allowed"
+                  : allowlistState === "checking"
+                    ? "Checking recipient"
+                    : allowlistState === "error"
+                      ? "Allowlist unavailable"
+                      : walletSession
+                        ? "Allow recipient"
+                        : "Connect owner wallet"}
               </button>
               <button
                 type="button"
-                disabled={transactionState === "pending" || !walletSession}
+                disabled={
+                  transactionState === "pending" ||
+                  !walletSession ||
+                  !isDraftReviewed ||
+                  allowlistState !== "allowed" ||
+                  currentStorageQuote === null ||
+                  storageQuoteState !== "ready"
+                }
                 onClick={() => void createWorkflow()}
               >
                 {transactionState === "pending"
                   ? "Waiting for wallet"
-                  : "Create workflow"}
+                  : storageQuoteState === "loading"
+                    ? "Estimating storage"
+                    : !walletSession
+                      ? "Connect owner wallet"
+                      : storageQuoteState === "error"
+                        ? "Storage estimate unavailable"
+                        : !isDraftReviewed
+                          ? "Review changed fields"
+                          : allowlistState === "checking"
+                            ? "Checking recipient"
+                            : allowlistState === "error"
+                              ? "Allowlist unavailable"
+                              : allowlistState !== "allowed"
+                                ? "Allow recipient first"
+                                : "Create workflow"}
               </button>
             </div>
           ) : null}
@@ -317,4 +620,8 @@ export function WorkflowBuilder({
       </div>
     </section>
   );
+}
+
+function isValidRunCount(value: number): boolean {
+  return Number.isInteger(value) && value >= 1 && value <= 12;
 }

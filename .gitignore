@@ -21,5 +21,6 @@ packages/db/src/generated/
 
 *.md
 !/README.md
+!/apps/web/AGENTS.md
 
 /docs/

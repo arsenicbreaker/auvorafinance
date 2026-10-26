@@ -9,6 +9,7 @@ const MAX_INTERVAL_MS: u64 = 31_536_000_000;
 const MAX_RUNS: u32 = 1_000;
 const MAX_RECIPIENTS_PER_OWNER: usize = 50;
 const MAX_WORKFLOWS_PER_OWNER: usize = 100;
+const STORAGE_ESTIMATE_MARGIN_BYTES: u64 = 256;
 const WITHDRAW_CALLBACK_GAS: Gas = Gas::from_tgas(5);
 const EXECUTION_CALLBACK_GAS: Gas = Gas::from_tgas(10);
 
@@ -205,7 +206,7 @@ struct PhaseOneTreasuryContract {
 }
 
 #[near(contract_state)]
-#[derive(PanicOnDefault)]
+#[derive(Clone, PanicOnDefault)]
 pub struct TreasuryContract {
     last_keeper: Option<AccountId>,
     owner_id: AccountId,
@@ -719,6 +720,51 @@ impl TreasuryContract {
             total_available_liability: U128(self.total_available_liability),
             total_pending_liability: U128(self.total_pending_liability),
         }
+    }
+    pub fn estimate_workflow_storage_cost(
+        &self,
+        owner_id: AccountId,
+        recipient_id: AccountId,
+        config_hash: String,
+    ) -> U128 {
+        assert!(
+            !config_hash.trim().is_empty() && config_hash.len() <= 128,
+            "INVALID_CONFIG_HASH"
+        );
+        let before = self.serialized_len();
+        let mut estimated = self.clone();
+        let id = estimated.next_workflow_id;
+        estimated.next_workflow_id = id.checked_add(1).expect("WORKFLOW_ID_OVERFLOW");
+        estimated.workflows.insert(
+            id,
+            Workflow {
+                id,
+                owner_id: owner_id.clone(),
+                recipient_id,
+                amount: 1,
+                max_per_run: 1,
+                min_reserve: 0,
+                interval_ms: MIN_INTERVAL_MS,
+                next_run_at_ms: env::block_timestamp_ms().saturating_add(MIN_INTERVAL_MS),
+                max_runs: 1,
+                runs_completed: 0,
+                available_balance: 0,
+                state: WorkflowState::Active,
+                config_hash,
+                created_at_ms: env::block_timestamp_ms(),
+                pending_execution: None,
+            },
+        );
+        estimated
+            .owner_workflows
+            .entry(owner_id)
+            .or_default()
+            .push(id);
+        let bytes = estimated
+            .serialized_len()
+            .saturating_sub(before)
+            .saturating_add(STORAGE_ESTIMATE_MARGIN_BYTES);
+        U128(u128::from(bytes).saturating_mul(env::storage_byte_cost().as_yoctonear()))
     }
     pub fn list_owner_workflows(
         &self,

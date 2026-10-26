@@ -237,6 +237,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@auvora/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
       '@near-js/transactions':
         specifier: 2.5.1
         version: 2.5.1(@near-js/crypto@2.5.1(@near-js/types@2.5.1)(@near-js/utils@2.5.1(@near-js/types@2.5.1)))(@near-js/types@2.5.1)(@near-js/utils@2.5.1(@near-js/types@2.5.1))
