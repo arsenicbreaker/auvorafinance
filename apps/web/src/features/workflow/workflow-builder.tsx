@@ -54,16 +54,15 @@ export function WorkflowBuilder({
   } | null>(null);
   const [reviewedDraftKey, setReviewedDraftKey] = useState<string | null>(null);
   const [contractCheckAttempt, setContractCheckAttempt] = useState(0);
-  const [allowlistState, setAllowlistState] = useState<
-    "unknown" | "checking" | "allowed" | "not-allowed" | "error"
-  >("unknown");
-  const [storageQuote, setStorageQuote] = useState<{
+  const [allowlistCheck, setAllowlistCheck] = useState<{
     key: string;
-    cost: bigint;
+    state: "allowed" | "not-allowed" | "error";
   } | null>(null);
-  const [storageQuoteState, setStorageQuoteState] = useState<
-    "idle" | "loading" | "ready" | "error"
-  >("idle");
+  const [storageQuote, setStorageQuote] = useState<
+    | { cost: bigint; key: string; state: "ready" }
+    | { key: string; state: "error" }
+    | null
+  >(null);
   const [transactionState, setTransactionState] = useState<
     "error" | "finalizing" | "idle" | "pending" | "submitted" | "success"
   >("idle");
@@ -84,18 +83,28 @@ export function WorkflowBuilder({
   const isDraftReviewed = reviewedDraftKey === currentDraftKey;
   const storageQuoteKey = `${contractId}:${ownerId}:${recipient.trim()}`;
   const currentStorageQuote =
-    storageQuote?.key === storageQuoteKey ? storageQuote.cost : null;
+    storageQuote?.key === storageQuoteKey && storageQuote.state === "ready"
+      ? storageQuote.cost
+      : null;
+  const storageQuoteState =
+    draftState !== "reviewing" || !ownerId || !contractId
+      ? "idle"
+      : storageQuote?.key !== storageQuoteKey
+        ? "loading"
+        : storageQuote.state;
+  const allowlistState =
+    draftState !== "reviewing" || !ownerId || !contractId
+      ? "unknown"
+      : allowlistCheck?.key !== storageQuoteKey
+        ? "checking"
+        : allowlistCheck.state;
 
   useEffect(() => {
     if (draftState !== "reviewing" || !ownerId || !contractId) {
-      setStorageQuote(null);
-      setStorageQuoteState("idle");
       return;
     }
 
     let active = true;
-    setStorageQuote(null);
-    setStorageQuoteState("loading");
     void readWorkflowStorageCost(
       rpcUrl,
       contractId,
@@ -105,13 +114,11 @@ export function WorkflowBuilder({
     )
       .then((cost) => {
         if (!active) return;
-        setStorageQuote({ key: storageQuoteKey, cost });
-        setStorageQuoteState("ready");
+        setStorageQuote({ cost, key: storageQuoteKey, state: "ready" });
       })
       .catch(() => {
         if (!active) return;
-        setStorageQuote(null);
-        setStorageQuoteState("error");
+        setStorageQuote({ key: storageQuoteKey, state: "error" });
       });
 
     return () => {
@@ -129,19 +136,22 @@ export function WorkflowBuilder({
 
   useEffect(() => {
     if (draftState !== "reviewing" || !ownerId || !contractId) {
-      setAllowlistState("unknown");
       return;
     }
 
     let active = true;
-    setAllowlistState("checking");
     void readRecipientAllowed(rpcUrl, contractId, ownerId, recipient.trim())
       .then((allowed) => {
         if (!active) return;
-        setAllowlistState(allowed ? "allowed" : "not-allowed");
+        setAllowlistCheck({
+          key: storageQuoteKey,
+          state: allowed ? "allowed" : "not-allowed",
+        });
       })
       .catch(() => {
-        if (active) setAllowlistState("error");
+        if (active) {
+          setAllowlistCheck({ key: storageQuoteKey, state: "error" });
+        }
       });
 
     return () => {
@@ -154,6 +164,7 @@ export function WorkflowBuilder({
     ownerId,
     recipient,
     rpcUrl,
+    storageQuoteKey,
     transactionState,
   ]);
 
@@ -237,6 +248,8 @@ export function WorkflowBuilder({
     try {
       const draft = validateDraft();
       setReviewedDraftKey(currentDraftKey);
+      setAllowlistCheck(null);
+      setStorageQuote(null);
       setReviewedSchedule({
         intervalMs: draft.intervalMs,
         startAtMs:
@@ -292,6 +305,7 @@ export function WorkflowBuilder({
       if (!hash) throw new Error("WALLET_TRANSACTION_HASH_MISSING");
       setTransactionHash(hash);
       if (await confirmFinality(hash, "Recipient authorization")) {
+        setAllowlistCheck(null);
         setContractCheckAttempt((attempt) => attempt + 1);
       }
     } catch (nextError) {
@@ -302,7 +316,7 @@ export function WorkflowBuilder({
     }
   }
 
-  async function createWorkflow() {
+  async function createWorkflow(currentTimeMs: number) {
     if (!walletSession) {
       setError("Connect the owner wallet and review the fields first.");
       return;
@@ -323,7 +337,7 @@ export function WorkflowBuilder({
         !isDraftReviewed ||
         !reviewedSchedule ||
         reviewedSchedule.intervalMs !== draft.intervalMs ||
-        reviewedSchedule.startAtMs <= Date.now() + 60_000
+        reviewedSchedule.startAtMs <= currentTimeMs + 60_000
       ) {
         setError(
           "Review the current fields and schedule again before creating.",
@@ -413,12 +427,12 @@ export function WorkflowBuilder({
     >
       <div className="builder-intro">
         <div>
-          <p className="step-label">Phase 5 / workflow draft</p>
-          <h2 id="builder-title">Plan one recurring payment.</h2>
+          <p className="step-label">Step 2 of 3</p>
+          <h2 id="builder-title">Set up a recurring payment</h2>
         </div>
         <p>
-          Start with the exact fields the contract will enforce. This draft
-          stays in the browser until you review it and connect an owner wallet.
+          Choose who gets paid, how much they receive, and when the schedule
+          stops. You will review the full amount before your wallet opens.
         </p>
       </div>
 
@@ -500,16 +514,16 @@ export function WorkflowBuilder({
               {error}
             </p>
           ) : null}
-          <button type="submit">Review contract fields</button>
+          <button type="submit">Review payment</button>
           <p className="builder-note">
-            No wallet request or payment happens at this step.
+            This only prepares a preview. Nothing is signed yet.
           </p>
         </form>
 
         <aside className="review-sheet" aria-live="polite">
-          <p className="step-label">Contract preview</p>
+          <p className="step-label">Payment summary</p>
           <div className="review-total">
-            <span>Workflow funding needed</span>
+            <span>Total sent to the contract</span>
             <strong>
               {totalWithStorage === null
                 ? total === null
@@ -567,7 +581,11 @@ export function WorkflowBuilder({
                 {currentStorageQuote === null
                   ? storageQuoteState === "error"
                     ? "Unavailable"
-                    : "Waiting for wallet"
+                    : storageQuoteState === "loading"
+                      ? "Estimating storage"
+                      : walletSession
+                        ? "Review payment first"
+                        : "Connect wallet"
                   : `${formatNear(currentStorageQuote)} NEAR`}
               </dd>
             </div>
@@ -586,7 +604,9 @@ export function WorkflowBuilder({
                       ? "Checking contract…"
                       : allowlistState === "error"
                         ? "Could not read contract"
-                        : "Connect owner wallet"}
+                        : walletSession
+                          ? "Review payment first"
+                          : "Connect owner wallet"}
               </dd>
             </div>
           </dl>
@@ -631,7 +651,7 @@ export function WorkflowBuilder({
                   currentStorageQuote === null ||
                   storageQuoteState !== "ready"
                 }
-                onClick={() => void createWorkflow()}
+                onClick={() => void createWorkflow(Date.now())}
               >
                 {transactionState === "pending"
                   ? "Waiting for wallet"
@@ -651,7 +671,7 @@ export function WorkflowBuilder({
                                 ? "Allowlist unavailable"
                                 : allowlistState !== "allowed"
                                   ? "Allow recipient first"
-                                  : "Create workflow"}
+                                  : "Create payment schedule"}
               </button>
             </div>
           ) : null}

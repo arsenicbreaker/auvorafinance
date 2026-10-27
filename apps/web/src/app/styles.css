@@ -20,7 +20,10 @@ html {
 
 body {
   margin: 0;
-  background: var(--paper);
+  background:
+    linear-gradient(90deg, transparent 0 97%, rgb(23 62 50 / 4%) 97%),
+    var(--paper);
+  background-size: 28px 100%;
   color: var(--ink);
   font-family: Aptos, "Segoe UI", sans-serif;
 }
@@ -47,6 +50,22 @@ main {
   justify-content: space-between;
   min-height: 84px;
   border-bottom: 1px solid var(--ink);
+}
+
+.header-status {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.header-account {
+  max-width: 280px;
+  overflow: hidden;
+  color: var(--muted);
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .wordmark {
@@ -77,10 +96,10 @@ main {
 
 .intro {
   display: grid;
-  grid-template-columns: minmax(0, 2.2fr) minmax(270px, 1fr);
-  gap: 64px;
+  grid-template-columns: minmax(0, 1.8fr) minmax(280px, 0.8fr);
+  gap: 52px;
   align-items: end;
-  padding: 92px 0 72px;
+  padding: 68px 0 52px;
 }
 
 .eyebrow,
@@ -116,10 +135,10 @@ h2 {
 h1 {
   grid-column: 1;
   grid-row: 2;
-  max-width: 760px;
+  max-width: 690px;
   margin-bottom: 0;
-  font-size: clamp(3.2rem, 7vw, 6.7rem);
-  line-height: 0.93;
+  font-size: clamp(3rem, 6vw, 5.6rem);
+  line-height: 0.96;
 }
 
 .lede {
@@ -128,12 +147,64 @@ h1 {
   align-self: end;
   margin-bottom: 8px;
   color: var(--muted);
-  font-size: 1.05rem;
-  line-height: 1.65;
+  font-size: 1.08rem;
+  line-height: 1.6;
+}
+
+.journey {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin-bottom: 64px;
+  border: 1px solid var(--ink);
+  background: #faf8f2;
+}
+
+.journey a {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 2px 12px;
+  min-width: 0;
+  padding: 18px 22px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.journey a + a {
+  border-left: 1px solid var(--rule);
+}
+
+.journey a:hover {
+  background: var(--paper-deep);
+}
+
+.journey span {
+  grid-row: 1 / 3;
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid var(--amber);
+  color: var(--amber);
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.journey strong {
+  font-size: 0.88rem;
+}
+
+.journey small {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .proof-shell {
-  margin-bottom: 92px;
+  margin-bottom: 64px;
   border-top: 5px solid var(--forest);
   border-bottom: 1px solid var(--ink);
   background: #faf8f2;
@@ -144,8 +215,92 @@ h1 {
   align-items: flex-start;
   justify-content: space-between;
   gap: 24px;
-  padding: 36px 40px 32px;
+  padding: 30px 36px 26px;
   border-bottom: 1px solid var(--rule);
+}
+
+.section-intro {
+  max-width: 650px;
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.wallet-primary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 32px;
+  align-items: center;
+  padding: 30px 36px;
+}
+
+.wallet-primary > div {
+  display: grid;
+  gap: 6px;
+}
+
+.field-caption {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.wallet-primary strong {
+  overflow-wrap: anywhere;
+  font-family: "Iowan Old Style", "Palatino Linotype", serif;
+  font-size: 1.55rem;
+  font-weight: 600;
+}
+
+.wallet-primary p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.wallet-primary button {
+  min-width: 180px;
+}
+
+.technical-details {
+  border-top: 1px solid var(--rule);
+}
+
+.technical-details summary {
+  padding: 18px 36px;
+  color: var(--forest);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.technical-details summary:hover {
+  background: var(--paper-deep);
+}
+
+.technical-details summary:focus-visible {
+  outline: 3px solid var(--amber);
+  outline-offset: -3px;
+}
+
+.technical-details-body {
+  padding: 0 36px 30px;
+}
+
+.technical-details-body dl {
+  margin-top: 4px;
+}
+
+.technical-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.technical-actions + .action-note {
+  margin: 12px 0 0;
 }
 
 .proof-heading h2,
@@ -352,7 +507,7 @@ button:disabled {
 }
 
 .builder-shell {
-  margin-bottom: 92px;
+  margin-bottom: 64px;
   border-top: 5px solid var(--amber);
   border-bottom: 1px solid var(--ink);
   background: #faf8f2;
@@ -362,7 +517,7 @@ button:disabled {
   display: grid;
   grid-template-columns: minmax(0, 1.25fr) minmax(260px, 0.75fr);
   gap: 48px;
-  padding: 38px 40px 32px;
+  padding: 30px 36px 26px;
   border-bottom: 1px solid var(--rule);
 }
 
@@ -390,7 +545,7 @@ button:disabled {
 .builder-form,
 .review-sheet {
   min-width: 0;
-  padding: 34px 40px 40px;
+  padding: 32px 36px 36px;
   background: #faf8f2;
 }
 
@@ -460,7 +615,7 @@ button:disabled {
 }
 
 .ledger-shell {
-  margin-bottom: 92px;
+  margin-bottom: 64px;
   border-top: 5px solid var(--forest);
   border-bottom: 1px solid var(--ink);
   background: #faf8f2;
@@ -471,7 +626,7 @@ button:disabled {
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 36px;
   align-items: end;
-  padding: 38px 40px 32px;
+  padding: 30px 36px 26px;
   border-bottom: 1px solid var(--rule);
 }
 
@@ -748,6 +903,19 @@ footer {
     padding: 68px 0 52px;
   }
 
+  .journey {
+    grid-template-columns: 1fr;
+  }
+
+  .journey a + a {
+    border-top: 1px solid var(--rule);
+    border-left: 0;
+  }
+
+  .journey small {
+    white-space: normal;
+  }
+
   h1 {
     grid-column: 1;
     grid-row: auto;
@@ -761,6 +929,8 @@ footer {
   }
 
   .proof-heading,
+  .wallet-primary,
+  .technical-details-body,
   .proof-list > li,
   .builder-intro,
   .builder-form,
@@ -768,6 +938,11 @@ footer {
   .ledger-heading,
   .ledger-row,
   .ledger-state {
+    padding-right: 22px;
+    padding-left: 22px;
+  }
+
+  .technical-details summary {
     padding-right: 22px;
     padding-left: 22px;
   }
@@ -823,13 +998,34 @@ footer {
   }
 
   .masthead {
-    justify-content: center;
-    gap: 8px;
+    align-items: stretch;
+    gap: 12px;
     padding: 18px 0;
+  }
+
+  .header-status {
+    justify-content: space-between;
+  }
+
+  .header-account {
+    max-width: 210px;
   }
 
   .proof-heading {
     display: flex;
+  }
+
+  .wallet-primary {
+    grid-template-columns: 1fr;
+  }
+
+  .wallet-primary button,
+  .technical-actions button {
+    width: 100%;
+  }
+
+  .technical-actions {
+    flex-direction: column;
   }
 
   .proof-list > li {

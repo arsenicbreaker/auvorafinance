@@ -19,23 +19,45 @@ export default function Home() {
   return (
     <main>
       <header className="masthead">
-        <a className="wordmark" href="#proof" aria-label="Auvora proof console">
+        <a className="wordmark" href="#top" aria-label="Auvora home">
           Auvora
         </a>
-        <div className="network-label" aria-label="Network: NEAR testnet">
-          <span aria-hidden="true" /> NEAR testnet
+        <div className="header-status">
+          <div className="network-label" aria-label="Network: NEAR testnet">
+            <span aria-hidden="true" /> Testnet
+          </div>
+          <span className="header-account">
+            {walletSession?.accountId ?? "Wallet not connected"}
+          </span>
         </div>
       </header>
 
-      <section className="intro" aria-labelledby="page-title">
-        <p className="eyebrow">Phase 0 / wallet path</p>
-        <h1 id="page-title">Prove every signature before automating a cent.</h1>
+      <section className="intro" id="top" aria-labelledby="page-title">
+        <p className="eyebrow">Recurring payments on NEAR</p>
+        <h1 id="page-title">Set it once. Keep every payment visible.</h1>
         <p className="lede">
-          Connect a user-controlled testnet wallet, inspect the deployed
-          contract, then shape one recurring payment. The draft below stays
-          local until you review it and connect the owner wallet.
+          Create a funded payment schedule, approve it in your own wallet, and
+          track every run from one testnet dashboard.
         </p>
       </section>
+
+      <nav className="journey" aria-label="Payment setup steps">
+        <a href="#proof">
+          <span>1</span>
+          <strong>Connect wallet</strong>
+          <small>Use the contract owner account</small>
+        </a>
+        <a href="#builder">
+          <span>2</span>
+          <strong>Set payment</strong>
+          <small>Choose recipient, amount, and timing</small>
+        </a>
+        <a href="#workflows">
+          <span>3</span>
+          <strong>Track workflows</strong>
+          <small>Pause, resume, cancel, or withdraw</small>
+        </a>
+      </nav>
 
       <WalletProof
         contractId={contractId}

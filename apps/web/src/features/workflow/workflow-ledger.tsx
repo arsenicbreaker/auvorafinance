@@ -65,7 +65,13 @@ export function WorkflowLedger({
   }, [contractId, rpcUrl, walletSession]);
 
   useEffect(() => {
-    void loadWorkflows();
+    let active = true;
+    void Promise.resolve().then(() => {
+      if (active) void loadWorkflows();
+    });
+    return () => {
+      active = false;
+    };
   }, [loadWorkflows, refreshToken]);
 
   const totals = useMemo(
@@ -143,8 +149,12 @@ export function WorkflowLedger({
     >
       <div className="ledger-heading">
         <div>
-          <p className="step-label">Live treasury ledger</p>
-          <h2 id="ledger-title">Follow the money after signing.</h2>
+          <p className="step-label">Step 3 of 3</p>
+          <h2 id="ledger-title">Track your payment schedules</h2>
+          <p className="section-intro">
+            See what runs next, manage active schedules, and withdraw funds that
+            are no longer reserved.
+          </p>
         </div>
         <button
           className="secondary"
@@ -152,7 +162,7 @@ export function WorkflowLedger({
           disabled={!walletSession || loadState === "loading"}
           onClick={() => void loadWorkflows()}
         >
-          {loadState === "loading" ? "Reading final state" : "Refresh ledger"}
+          {loadState === "loading" ? "Refreshing" : "Refresh"}
         </button>
       </div>
 

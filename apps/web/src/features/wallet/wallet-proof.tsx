@@ -238,79 +238,65 @@ export function WalletProof({
     <section className="proof-shell" id="proof" aria-labelledby="proof-title">
       <div className="proof-heading">
         <div>
-          <p className="step-label">Live proof sequence</p>
-          <h2 id="proof-title">Wallet and contract checkpoint</h2>
+          <p className="step-label">Step 1 of 3</p>
+          <h2 id="proof-title">Connect the owner wallet</h2>
+          <p className="section-intro">
+            Auvora only asks your wallet to sign when an on-chain action needs
+            your approval.
+          </p>
         </div>
         <StateMark state={setupState} />
       </div>
 
-      <ol className="proof-list">
-        <li>
-          <div className="sequence">01</div>
-          <div className="proof-copy">
-            <h3>Connect the signer</h3>
-            <p>
-              The wallet remains in user custody. Auvora receives only the
-              active testnet account ID.
-            </p>
-            <dl>
-              <div>
-                <dt>Account</dt>
-                <dd>{activeAccount || "No wallet connected"}</dd>
-              </div>
-              <div>
-                <dt>Network</dt>
-                <dd>testnet</dd>
-              </div>
-            </dl>
-          </div>
-          <div className="proof-action">
-            {activeAccount ? (
-              <button
-                className="secondary"
-                type="button"
-                onClick={() => void disconnect()}
-              >
-                Disconnect wallet
-              </button>
-            ) : (
-              <button
-                type="button"
-                disabled={!modal || setupState !== "ready"}
-                onClick={() => modal?.show()}
-              >
-                {setupState === "loading"
-                  ? "Preparing wallets"
-                  : "Choose testnet wallet"}
-              </button>
-            )}
-          </div>
-        </li>
+      <div className="wallet-primary">
+        <div>
+          <span className="field-caption">Connected account</span>
+          <strong>{activeAccount || "No wallet connected"}</strong>
+          <p>
+            {activeAccount
+              ? isOwner
+                ? "This account can create and manage workflows."
+                : "This is not the contract owner account."
+              : "Connect oceanear.testnet to continue with this deployment."}
+          </p>
+        </div>
+        {activeAccount ? (
+          <button
+            className="secondary"
+            type="button"
+            onClick={() => void disconnect()}
+          >
+            Disconnect
+          </button>
+        ) : (
+          <button
+            type="button"
+            disabled={!modal || setupState !== "ready"}
+            onClick={() => modal?.show()}
+          >
+            {setupState === "loading" ? "Preparing wallets" : "Connect wallet"}
+          </button>
+        )}
+      </div>
 
-        <li>
-          <div className="sequence">02</div>
-          <div className="proof-copy">
-            <h3>Read final contract state</h3>
-            <p>
-              Queries <code>get_status</code> at finality without asking the
-              wallet to sign.
-            </p>
-            <dl>
-              <div>
-                <dt>Contract</dt>
-                <dd>{contractId}</dd>
-              </div>
-              <div>
-                <dt>Owner</dt>
-                <dd>{contractStatus?.owner_id ?? "Not loaded"}</dd>
-              </div>
-              <div>
-                <dt>Status</dt>
-                <dd>{contractStatus?.status ?? "Not loaded"}</dd>
-              </div>
-            </dl>
-          </div>
-          <div className="proof-action">
+      <details className="technical-details">
+        <summary>Contract connection details</summary>
+        <div className="technical-details-body">
+          <dl>
+            <div>
+              <dt>Contract</dt>
+              <dd>{contractId}</dd>
+            </div>
+            <div>
+              <dt>Owner</dt>
+              <dd>{contractStatus?.owner_id ?? "Not loaded"}</dd>
+            </div>
+            <div>
+              <dt>Status</dt>
+              <dd>{contractStatus?.status ?? "Not loaded"}</dd>
+            </div>
+          </dl>
+          <div className="technical-actions">
             <button
               className="secondary"
               type="button"
@@ -318,61 +304,36 @@ export function WalletProof({
               onClick={() => void readStatus()}
             >
               {viewState === "pending"
-                ? "Reading final state"
+                ? "Reading contract"
                 : "Refresh contract"}
             </button>
-          </div>
-        </li>
-
-        <li>
-          <div className="sequence">03</div>
-          <div className="proof-copy">
-            <h3>Sign a harmless owner call</h3>
-            <p>
-              Sets the Phase 0 status marker. It attaches zero deposit and
-              cannot create a workflow or move funds.
-            </p>
-            <dl>
-              <div>
-                <dt>Method</dt>
-                <dd>set_status</dd>
-              </div>
-              <div>
-                <dt>Deposit</dt>
-                <dd>0 NEAR</dd>
-              </div>
-              <div>
-                <dt>Finality</dt>
-                <dd>{callState === "idle" ? "Not submitted" : callState}</dd>
-              </div>
-            </dl>
-            {explorerUrl ? (
-              <a
-                className="transaction-link"
-                href={explorerUrl}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Inspect transaction on NearBlocks
-              </a>
-            ) : null}
-          </div>
-          <div className="proof-action">
             <button
+              className="secondary"
               type="button"
               disabled={!isOwner || callState === "pending"}
               onClick={() => void signProof()}
             >
               {callState === "pending"
                 ? "Waiting for finality"
-                : "Sign owner proof"}
+                : "Sign test proof"}
             </button>
-            {activeAccount && !isOwner ? (
-              <p className="action-note">Connect the contract owner account.</p>
-            ) : null}
           </div>
-        </li>
-      </ol>
+          <p className="action-note">
+            The test proof calls <code>set_status</code> with 0 NEAR. It does
+            not create a workflow or move funds.
+          </p>
+          {explorerUrl ? (
+            <a
+              className="transaction-link"
+              href={explorerUrl}
+              target="_blank"
+              rel="noreferrer"
+            >
+              View proof transaction
+            </a>
+          ) : null}
+        </div>
+      </details>
 
       {message ? (
         <div className="error-message" role="alert">
@@ -386,7 +347,7 @@ export function WalletProof({
 function StateMark({ state }: { state: SetupState }) {
   const label =
     state === "ready"
-      ? "Wallet path ready"
+      ? "Ready"
       : state === "error"
         ? "Setup failed"
         : "Preparing";
