@@ -2,6 +2,7 @@ import type { KeeperStore, PendingTransaction } from "@auvora/db";
 import type {
   FinalizedExecution,
   KeeperNearClient,
+  PreparedExecutionTransaction,
   WorkflowView,
 } from "@auvora/near-client";
 
@@ -108,34 +109,45 @@ export async function runKeeperCycle(
           continue;
         }
 
-        let transactionHash: string;
+        let prepared: PreparedExecutionTransaction;
         try {
-          transactionHash = await options.near.submitExecuteDue(current.id);
+          prepared = await options.near.prepareExecuteDue(current.id);
         } catch {
           stats.submissionErrors += 1;
           continue;
         }
 
-        // A persistence failure must fail the poll. The transaction is already
-        // accepted by the RPC at this point, so swallowing it risks a duplicate.
+        // Persist the locally computed hash and signed bytes before broadcast.
+        // If the RPC accepts the transaction but drops its response, the exact
+        // same transaction can be reconciled or safely rebroadcast after restart.
         const submittedAt = now();
         await options.store.recordSubmission({
           network: options.network,
-          transactionHash,
+          transactionHash: prepared.transactionHash,
           contractId: options.contractId,
           workflowId: BigInt(current.id),
           runIndex: current.runs_completed,
           scheduledForMs: BigInt(current.next_run_at_ms),
           amountYocto: current.amount,
           signerId: options.signerId,
+          signedTransactionBase64: prepared.signedTransactionBase64,
           method: "execute_due",
           submittedAt,
         });
         stats.submitted += 1;
 
         try {
+          await options.near.broadcastExecuteDue(
+            prepared.signedTransactionBase64,
+          );
+        } catch {
+          stats.submissionErrors += 1;
+          continue;
+        }
+
+        try {
           const final = await withTimeout(
-            options.near.waitForFinalExecution(transactionHash),
+            options.near.waitForFinalExecution(prepared.transactionHash),
             options.finalityTimeoutMs,
           );
           await recordFinalization(options, current, final, now());
@@ -215,6 +227,16 @@ async function reconcileTransaction(
     });
     return true;
   } catch {
+    if (transaction.signedTransactionBase64) {
+      try {
+        await options.near.broadcastExecuteDue(
+          transaction.signedTransactionBase64,
+        );
+      } catch {
+        // The original transaction may already be accepted, finalized, or have
+        // an old nonce. Its known hash remains the source of truth next cycle.
+      }
+    }
     return false;
   }
 }

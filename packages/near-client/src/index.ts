@@ -6,6 +6,7 @@ export type {
   KeeperNearClient,
   ParsedExecutionEvent,
   PendingExecutionView,
+  PreparedExecutionTransaction,
   WorkflowState,
   WorkflowView,
 } from "./types.js";

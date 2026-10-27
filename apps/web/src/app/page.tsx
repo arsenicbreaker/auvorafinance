@@ -6,10 +6,12 @@ import {
   WorkflowBuilder,
   type WorkflowWalletSession,
 } from "../features/workflow/workflow-builder";
+import { WorkflowLedger } from "../features/workflow/workflow-ledger";
 
 export default function Home() {
   const [walletSession, setWalletSession] =
     useState<WorkflowWalletSession | null>(null);
+  const [workflowRefreshToken, setWorkflowRefreshToken] = useState(0);
   const contractId = process.env.NEXT_PUBLIC_AUVORA_CONTRACT_ID ?? "";
   const rpcUrl =
     process.env.NEXT_PUBLIC_NEAR_RPC_URL ?? "https://rpc.testnet.near.org";
@@ -43,6 +45,16 @@ export default function Home() {
 
       <WorkflowBuilder
         contractId={contractId}
+        rpcUrl={rpcUrl}
+        walletSession={walletSession}
+        onWorkflowSubmitted={() =>
+          setWorkflowRefreshToken((current) => current + 1)
+        }
+      />
+
+      <WorkflowLedger
+        contractId={contractId}
+        refreshToken={workflowRefreshToken}
         rpcUrl={rpcUrl}
         walletSession={walletSession}
       />

@@ -52,9 +52,10 @@ pnpm db:migrate:deploy
 pnpm keeper:dev
 ```
 
-The keeper exposes `/live` and `/ready` on port `3001` by default. A transaction
-hash is persisted before the keeper waits for finality; unresolved hashes are
-reconciled on the next poll or after a restart instead of being submitted again.
+The keeper exposes `/live` and `/ready` on port `3001` by default. It signs each
+transaction locally and persists the hash plus signed bytes before broadcasting.
+If an RPC response is lost, the next poll reconciles the known hash or safely
+rebroadcasts the exact same transaction instead of signing a duplicate.
 
 Build the Phase 2 WASM and upgrade an existing Phase 1 testnet deployment only after its status is exactly `phase-1-ready`:
 

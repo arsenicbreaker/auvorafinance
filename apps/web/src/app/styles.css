@@ -431,6 +431,185 @@ button:disabled {
   line-height: 1.5;
 }
 
+.ledger-shell {
+  margin-bottom: 92px;
+  border-top: 5px solid var(--forest);
+  border-bottom: 1px solid var(--ink);
+  background: #faf8f2;
+}
+
+.ledger-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 36px;
+  align-items: end;
+  padding: 38px 40px 32px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.ledger-heading h2 {
+  max-width: 680px;
+  margin-bottom: 0;
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  line-height: 1;
+}
+
+.ledger-heading button {
+  min-width: 180px;
+}
+
+.ledger-state {
+  padding: 68px 40px 72px;
+}
+
+.ledger-state h3 {
+  margin-bottom: 10px;
+  font-family: "Iowan Old Style", "Palatino Linotype", serif;
+  font-size: 1.65rem;
+}
+
+.ledger-state p {
+  max-width: 590px;
+  margin-bottom: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.ledger-state-error {
+  color: var(--error);
+}
+
+.ledger-state-error p {
+  color: inherit;
+}
+
+.ledger-summary {
+  grid-template-columns: 1.35fr repeat(3, 1fr);
+  margin: 0;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.ledger-summary div {
+  padding: 22px 24px;
+}
+
+.ledger-list {
+  display: grid;
+}
+
+.ledger-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.9fr) minmax(360px, 1.4fr) minmax(
+      190px,
+      0.7fr
+    );
+  gap: 32px;
+  padding: 34px 40px 38px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.ledger-row:last-child {
+  border-bottom: 0;
+}
+
+.ledger-identity {
+  min-width: 0;
+}
+
+.workflow-number {
+  color: var(--amber);
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.workflow-status {
+  display: inline-block;
+  margin-left: 10px;
+  padding: 3px 7px;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.status-active,
+.status-completed {
+  color: var(--forest);
+}
+
+.status-cancelled {
+  color: var(--error);
+}
+
+.ledger-identity h3 {
+  overflow-wrap: anywhere;
+  margin: 22px 0 8px;
+  font-family: "Iowan Old Style", "Palatino Linotype", serif;
+  font-size: 1.5rem;
+}
+
+.ledger-identity p {
+  margin-bottom: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.ledger-facts {
+  grid-template-columns: 1fr 1fr;
+  align-self: start;
+  margin: 0;
+}
+
+.ledger-facts div {
+  padding: 13px 14px;
+}
+
+.ledger-action {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 0;
+  padding-left: 24px;
+  border-left: 1px solid var(--rule);
+}
+
+.ledger-action span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.ledger-action strong {
+  overflow-wrap: anywhere;
+  margin-bottom: 12px;
+  color: var(--forest);
+  font-family: "Iowan Old Style", "Palatino Linotype", serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.ledger-message {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px 40px;
+  border-top: 1px solid var(--forest);
+  color: var(--forest);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.ledger-message a {
+  color: inherit;
+  text-underline-offset: 4px;
+}
+
 .builder-error {
   margin: -4px 0 0;
   color: var(--error);
@@ -521,7 +700,10 @@ footer {
   .proof-list > li,
   .builder-intro,
   .builder-form,
-  .review-sheet {
+  .review-sheet,
+  .ledger-heading,
+  .ledger-row,
+  .ledger-state {
     padding-right: 22px;
     padding-left: 22px;
   }
@@ -531,8 +713,20 @@ footer {
   }
 
   .builder-intro,
-  .builder-grid {
+  .builder-grid,
+  .ledger-row {
     grid-template-columns: 1fr;
+  }
+
+  .ledger-summary {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .ledger-action {
+    padding-top: 20px;
+    padding-left: 0;
+    border-top: 1px solid var(--rule);
+    border-left: 0;
   }
 
   .review-sheet {
@@ -557,6 +751,8 @@ footer {
 @media (max-width: 520px) {
   .masthead,
   .proof-heading,
+  .ledger-heading,
+  .ledger-message,
   footer {
     align-items: flex-start;
     flex-direction: column;
@@ -578,8 +774,14 @@ footer {
   }
 
   .field-pair,
-  .review-sheet dl {
+  .review-sheet dl,
+  .ledger-summary,
+  .ledger-facts {
     grid-template-columns: 1fr;
+  }
+
+  .ledger-heading button {
+    width: 100%;
   }
 
   .proof-action {

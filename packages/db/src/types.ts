@@ -25,6 +25,7 @@ export interface PendingTransaction {
   scheduledForMs: bigint;
   amountYocto: string;
   signerId: string;
+  signedTransactionBase64: string | null;
 }
 
 export interface TransactionSubmission extends PendingTransaction {

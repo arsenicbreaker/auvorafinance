@@ -134,6 +134,7 @@ export class PrismaKeeperStore implements KeeperStore {
       scheduledForMs: row.scheduledForMs,
       amountYocto: row.amountYocto,
       signerId: row.signerId,
+      signedTransactionBase64: row.signedTransactionBase64,
     }));
   }
 
@@ -155,11 +156,14 @@ export class PrismaKeeperStore implements KeeperStore {
           scheduledForMs: input.scheduledForMs,
           amountYocto: input.amountYocto,
           signerId: input.signerId,
+          signedTransactionBase64: input.signedTransactionBase64,
           method: input.method,
           submittedAt: input.submittedAt,
           finalState: "Pending",
         },
-        update: {},
+        update: {
+          signedTransactionBase64: input.signedTransactionBase64,
+        },
       }),
       this.client.execution.upsert({
         where: {

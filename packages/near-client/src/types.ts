@@ -47,9 +47,15 @@ export interface FinalizedExecution {
   explorerUrl: string;
 }
 
+export interface PreparedExecutionTransaction {
+  transactionHash: string;
+  signedTransactionBase64: string;
+}
+
 export interface KeeperNearClient {
   listWorkflows(cursor: number, limit: number): Promise<WorkflowView[]>;
   getWorkflow(workflowId: number): Promise<WorkflowView | null>;
-  submitExecuteDue(workflowId: number): Promise<string>;
+  prepareExecuteDue(workflowId: number): Promise<PreparedExecutionTransaction>;
+  broadcastExecuteDue(signedTransactionBase64: string): Promise<void>;
   waitForFinalExecution(transactionHash: string): Promise<FinalizedExecution>;
 }

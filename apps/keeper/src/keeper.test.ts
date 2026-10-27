@@ -16,6 +16,7 @@ const NOW_MS = 1_800_000_000_000;
 
 class FakeNearClient implements KeeperNearClient {
   submitCount = 0;
+  broadcastError = false;
   finalityError = false;
 
   constructor(public workflow: WorkflowView) {}
@@ -28,9 +29,16 @@ class FakeNearClient implements KeeperNearClient {
     return this.workflow;
   }
 
-  async submitExecuteDue(): Promise<string> {
+  async prepareExecuteDue() {
+    return {
+      transactionHash: TRANSACTION_HASH,
+      signedTransactionBase64: "c2lnbmVkLXRyYW5zYWN0aW9u",
+    };
+  }
+
+  async broadcastExecuteDue(): Promise<void> {
     this.submitCount += 1;
-    return TRANSACTION_HASH;
+    if (this.broadcastError) throw new Error("RPC_RESPONSE_LOST");
   }
 
   async waitForFinalExecution(): Promise<FinalizedExecution> {
@@ -78,7 +86,7 @@ describe("keeper cycle", () => {
     expect(store.heartbeats.get("keeper-a")?.lastErrorCode).toBeNull();
   });
 
-  it("keeps an unresolved hash pending and does not blindly resubmit it", async () => {
+  it("keeps an unresolved hash pending and only rebroadcasts the same transaction", async () => {
     const near = new FakeNearClient(dueWorkflow());
     near.finalityError = true;
     const store = new InMemoryKeeperStore();
@@ -90,7 +98,27 @@ describe("keeper cycle", () => {
     expect(first.submitted).toBe(1);
     expect(second.reconciliationPending).toBe(1);
     expect(second.submitted).toBe(0);
-    expect(near.submitCount).toBe(1);
+    expect(near.submitCount).toBe(2);
+  });
+
+  it("persists the signed transaction before a broadcast response is lost", async () => {
+    const near = new FakeNearClient(dueWorkflow());
+    near.broadcastError = true;
+    const store = new InMemoryKeeperStore();
+
+    const stats = await runKeeperCycle(
+      cycleOptions({ near, store, state: new KeeperRuntimeState() }),
+    );
+
+    expect(stats).toMatchObject({
+      submitted: 1,
+      finalized: 0,
+      submissionErrors: 1,
+    });
+    expect(store.submissions.get(TRANSACTION_HASH)).toMatchObject({
+      transactionHash: TRANSACTION_HASH,
+      signedTransactionBase64: "c2lnbmVkLXRyYW5zYWN0aW9u",
+    });
   });
 
   it("reconciles a stored hash after restart before considering submission", async () => {
@@ -105,6 +133,7 @@ describe("keeper cycle", () => {
       scheduledForMs: BigInt(NOW_MS - 1_000),
       amountYocto: "10",
       signerId: "keeper.testnet",
+      signedTransactionBase64: "c2lnbmVkLXRyYW5zYWN0aW9u",
       method: "execute_due",
       submittedAt: new Date(NOW_MS - 500),
     });

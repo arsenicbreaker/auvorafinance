@@ -1,5 +1,17 @@
-import { Account, JsonRpcProvider, actions } from "near-api-js";
-import type { Action, KeyPairString } from "near-api-js";
+import {
+  Account,
+  JsonRpcProvider,
+  actions,
+  baseEncode,
+  decodeSignedTransaction,
+} from "near-api-js";
+import type {
+  Action,
+  KeyPairString,
+  PublicKey,
+  Signer,
+  Transaction,
+} from "near-api-js";
 
 import { collectOutcomeLogs, parseExecutionEvents } from "./events.js";
 import { workflowViewSchema } from "./schema.js";
@@ -21,15 +33,19 @@ interface NearProvider {
     accountId: string;
     waitUntil: "FINAL";
   }): Promise<unknown>;
+  sendTransactionUntil(
+    signedTransaction: ReturnType<typeof decodeSignedTransaction>,
+    waitUntil: "NONE",
+  ): Promise<unknown>;
 }
 
 interface NearAccount {
-  signAndSendTransaction(request: {
+  getSigner(): Signer | undefined;
+  createTransaction(request: {
     receiverId: string;
     actions: Action[];
-    waitUntil: "NONE";
-    throwOnFailure: false;
-  }): Promise<{ transaction: { hash: string } }>;
+    publicKey: PublicKey;
+  }): Promise<Transaction>;
 }
 
 export interface NearClientOptions {
@@ -92,8 +108,10 @@ export class NearClient implements KeeperNearClient {
     return result === null ? null : workflowViewSchema.parse(result);
   }
 
-  async submitExecuteDue(workflowId: number): Promise<string> {
-    const outcome = await this.account.signAndSendTransaction({
+  async prepareExecuteDue(workflowId: number) {
+    const signer = this.account.getSigner();
+    if (!signer) throw new Error("KEEPER_SIGNER_REQUIRED");
+    const transaction = await this.account.createTransaction({
       receiverId: this.contractId,
       actions: [
         actions.functionCall(
@@ -103,10 +121,23 @@ export class NearClient implements KeeperNearClient {
           0n,
         ),
       ],
-      waitUntil: "NONE",
-      throwOnFailure: false,
+      publicKey: await signer.getPublicKey(),
     });
-    return outcome.transaction.hash;
+    const { txHash, signedTransaction } =
+      await signer.signTransaction(transaction);
+    return {
+      transactionHash: baseEncode(txHash),
+      signedTransactionBase64: Buffer.from(signedTransaction.encode()).toString(
+        "base64",
+      ),
+    };
+  }
+
+  async broadcastExecuteDue(signedTransactionBase64: string): Promise<void> {
+    const signedTransaction = decodeSignedTransaction(
+      Buffer.from(signedTransactionBase64, "base64"),
+    );
+    await this.provider.sendTransactionUntil(signedTransaction, "NONE");
   }
 
   async waitForFinalExecution(

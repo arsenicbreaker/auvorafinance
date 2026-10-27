@@ -32,10 +32,12 @@ export function WorkflowBuilder({
   contractId,
   rpcUrl,
   walletSession,
+  onWorkflowSubmitted,
 }: {
   contractId: string;
   rpcUrl: string;
   walletSession: WorkflowWalletSession | null;
+  onWorkflowSubmitted?: () => void;
 }) {
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("0.001");
@@ -350,6 +352,7 @@ export function WorkflowBuilder({
       });
       setTransactionHash(hash ?? "");
       setTransactionState("sent");
+      onWorkflowSubmitted?.();
     } catch (nextError) {
       setTransactionState("error");
       setTransactionHash("");
