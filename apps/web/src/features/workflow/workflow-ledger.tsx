@@ -3,10 +3,20 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { formatNear } from "@auvora/domain";
 
-import { readOwnerWorkflows, type WorkflowView } from "../../lib/near-rpc";
+import {
+  readOwnerWorkflows,
+  readTransactionFinality,
+  type WorkflowView,
+} from "../../lib/near-rpc";
 import type { WorkflowWalletSession } from "./workflow-builder";
 
 type LoadState = "empty" | "error" | "loading" | "ready" | "signed-out";
+type OwnerAction = "cancel" | "pause" | "resume" | "withdraw";
+type ActionState = {
+  kind: OwnerAction;
+  phase: "finality" | "wallet";
+  workflowId: number;
+} | null;
 
 export function WorkflowLedger({
   contractId,
@@ -22,7 +32,11 @@ export function WorkflowLedger({
   const [workflows, setWorkflows] = useState<WorkflowView[]>([]);
   const [loadState, setLoadState] = useState<LoadState>("signed-out");
   const [message, setMessage] = useState("");
-  const [withdrawingId, setWithdrawingId] = useState<number | null>(null);
+  const [messageTone, setMessageTone] = useState<"error" | "success">(
+    "success",
+  );
+  const [actionState, setActionState] = useState<ActionState>(null);
+  const [confirmCancelId, setConfirmCancelId] = useState<number | null>(null);
   const [transactionHash, setTransactionHash] = useState("");
 
   const loadWorkflows = useCallback(async () => {
@@ -33,6 +47,7 @@ export function WorkflowLedger({
     }
     setLoadState("loading");
     setMessage("");
+    setTransactionHash("");
     try {
       const next = await readOwnerWorkflows(
         rpcUrl,
@@ -67,26 +82,56 @@ export function WorkflowLedger({
     [workflows],
   );
 
-  async function withdraw(workflow: WorkflowView) {
-    if (!walletSession || BigInt(workflow.withdrawable) <= 0n) return;
-    setWithdrawingId(workflow.id);
+  async function submitOwnerAction(workflow: WorkflowView, kind: OwnerAction) {
+    if (!walletSession) return;
+    if (kind === "withdraw" && BigInt(workflow.withdrawable) <= 0n) return;
+    const methodName = `${kind}_workflow`;
+    setActionState({ kind, phase: "wallet", workflowId: workflow.id });
     setMessage("");
+    setMessageTone("success");
     setTransactionHash("");
+    setConfirmCancelId(null);
     try {
       const hash = await walletSession.signFunctionCall({
-        methodName: "withdraw_available",
-        args: { workflow_id: workflow.id, amount: workflow.withdrawable },
+        methodName: kind === "withdraw" ? "withdraw_available" : methodName,
+        args:
+          kind === "withdraw"
+            ? { workflow_id: workflow.id, amount: workflow.withdrawable }
+            : { workflow_id: workflow.id },
         deposit: 0n,
       });
-      setTransactionHash(hash ?? "");
-      setMessage("Withdrawal submitted. Refresh after the wallet confirms it.");
+      if (!hash) {
+        throw new Error("WALLET_TRANSACTION_HASH_MISSING");
+      }
+      setTransactionHash(hash);
+      setActionState({ kind, phase: "finality", workflowId: workflow.id });
+      const finality = await readTransactionFinality(
+        rpcUrl,
+        hash,
+        walletSession.accountId,
+      );
+      if (finality === "failure") {
+        setMessageTone("error");
+        setMessage(`${actionLabel(kind)} failed at finality.`);
+        return;
+      }
+      if (finality === "pending") {
+        setMessage(
+          `${actionLabel(kind)} was submitted, but finality is not confirmed yet.`,
+        );
+        return;
+      }
       await loadWorkflows();
+      setTransactionHash(hash);
+      setMessageTone("success");
+      setMessage(`${actionLabel(kind)} finalized on NEAR testnet.`);
     } catch (error) {
+      setMessageTone("error");
       setMessage(
-        error instanceof Error ? error.message : "Withdrawal call failed",
+        error instanceof Error ? error.message : `${actionLabel(kind)} failed`,
       );
     } finally {
-      setWithdrawingId(null);
+      setActionState(null);
     }
   }
 
@@ -209,23 +254,110 @@ export function WorkflowLedger({
                   </dl>
 
                   <div className="ledger-action">
-                    <span>Owner withdrawable</span>
-                    <strong>
-                      {formatNear(BigInt(workflow.withdrawable))} NEAR
-                    </strong>
-                    <button
-                      className="secondary"
-                      type="button"
-                      disabled={
-                        BigInt(workflow.withdrawable) <= 0n ||
-                        withdrawingId !== null
-                      }
-                      onClick={() => void withdraw(workflow)}
-                    >
-                      {withdrawingId === workflow.id
-                        ? "Waiting for wallet"
-                        : "Withdraw available funds"}
-                    </button>
+                    <div className="ledger-control-group">
+                      <span>Workflow control</span>
+                      {workflow.state === "Active" ? (
+                        <button
+                          className="secondary"
+                          type="button"
+                          disabled={actionState !== null}
+                          onClick={() =>
+                            void submitOwnerAction(workflow, "pause")
+                          }
+                        >
+                          {actionButtonLabel(actionState, workflow.id, "pause")}
+                        </button>
+                      ) : null}
+                      {workflow.state === "Paused" ? (
+                        <button
+                          type="button"
+                          disabled={actionState !== null}
+                          onClick={() =>
+                            void submitOwnerAction(workflow, "resume")
+                          }
+                        >
+                          {actionButtonLabel(
+                            actionState,
+                            workflow.id,
+                            "resume",
+                          )}
+                        </button>
+                      ) : null}
+                      {workflow.state === "Active" ||
+                      workflow.state === "Paused" ? (
+                        confirmCancelId === workflow.id ? (
+                          <div
+                            className="cancel-confirm"
+                            role="group"
+                            aria-label={`Confirm cancellation of workflow ${workflow.id}`}
+                          >
+                            <p>
+                              Stops future runs. A pending transfer cannot be
+                              reversed.
+                            </p>
+                            <button
+                              className="danger"
+                              type="button"
+                              disabled={actionState !== null}
+                              onClick={() =>
+                                void submitOwnerAction(workflow, "cancel")
+                              }
+                            >
+                              {actionButtonLabel(
+                                actionState,
+                                workflow.id,
+                                "cancel",
+                              )}
+                            </button>
+                            <button
+                              className="quiet"
+                              type="button"
+                              disabled={actionState !== null}
+                              onClick={() => setConfirmCancelId(null)}
+                            >
+                              Keep workflow
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            className="quiet danger-text"
+                            type="button"
+                            disabled={actionState !== null}
+                            onClick={() => setConfirmCancelId(workflow.id)}
+                          >
+                            Cancel workflow
+                          </button>
+                        )
+                      ) : (
+                        <p className="control-note">
+                          No further runs can be scheduled in this state.
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="ledger-control-group withdraw-control">
+                      <span>Owner withdrawable</span>
+                      <strong>
+                        {formatNear(BigInt(workflow.withdrawable))} NEAR
+                      </strong>
+                      <button
+                        className="secondary"
+                        type="button"
+                        disabled={
+                          BigInt(workflow.withdrawable) <= 0n ||
+                          actionState !== null
+                        }
+                        onClick={() =>
+                          void submitOwnerAction(workflow, "withdraw")
+                        }
+                      >
+                        {actionButtonLabel(
+                          actionState,
+                          workflow.id,
+                          "withdraw",
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </article>
               ))}
@@ -234,7 +366,10 @@ export function WorkflowLedger({
       ) : null}
 
       {loadState === "ready" && message ? (
-        <div className="ledger-message" role="status">
+        <div
+          className={`ledger-message ledger-message-${messageTone}`}
+          role={messageTone === "error" ? "alert" : "status"}
+        >
           {message}
           {transactionHash ? (
             <a
@@ -297,4 +432,27 @@ function formatRunTime(workflow: WorkflowView): string {
     timeStyle: "short",
     timeZone: "UTC",
   }).format(new Date(workflow.next_run_at_ms));
+}
+
+function actionLabel(kind: OwnerAction): string {
+  if (kind === "pause") return "Pause";
+  if (kind === "resume") return "Resume";
+  if (kind === "cancel") return "Cancellation";
+  return "Withdrawal";
+}
+
+function actionButtonLabel(
+  state: ActionState,
+  workflowId: number,
+  kind: OwnerAction,
+): string {
+  if (state?.workflowId === workflowId && state.kind === kind) {
+    return state.phase === "wallet"
+      ? "Waiting for wallet"
+      : "Checking finality";
+  }
+  if (kind === "pause") return "Pause future runs";
+  if (kind === "resume") return "Resume scheduled runs";
+  if (kind === "cancel") return "Confirm cancellation";
+  return "Withdraw available funds";
 }

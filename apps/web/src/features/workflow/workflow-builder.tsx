@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { formatNear, parseNear } from "@auvora/domain";
 import {
   readRecipientAllowed,
+  readTransactionFinality,
   readWorkflowStorageCost,
 } from "../../lib/near-rpc";
 
@@ -64,8 +65,10 @@ export function WorkflowBuilder({
     "idle" | "loading" | "ready" | "error"
   >("idle");
   const [transactionState, setTransactionState] = useState<
-    "idle" | "pending" | "sent" | "error"
+    "error" | "finalizing" | "idle" | "pending" | "submitted" | "success"
   >("idle");
+  const transactionBusy =
+    transactionState === "pending" || transactionState === "finalizing";
 
   const selectedInterval = INTERVALS.find(
     (option) => String(option.value) === interval,
@@ -286,8 +289,11 @@ export function WorkflowBuilder({
         args: { account_id: draft.recipientId },
         deposit: ALLOWLIST_DEPOSIT,
       });
-      setTransactionHash(hash ?? "");
-      setTransactionState("sent");
+      if (!hash) throw new Error("WALLET_TRANSACTION_HASH_MISSING");
+      setTransactionHash(hash);
+      if (await confirmFinality(hash, "Recipient authorization")) {
+        setContractCheckAttempt((attempt) => attempt + 1);
+      }
     } catch (nextError) {
       setTransactionState("error");
       setError(
@@ -350,15 +356,52 @@ export function WorkflowBuilder({
         },
         deposit: totalDeposit,
       });
-      setTransactionHash(hash ?? "");
-      setTransactionState("sent");
-      onWorkflowSubmitted?.();
+      if (!hash) throw new Error("WALLET_TRANSACTION_HASH_MISSING");
+      setTransactionHash(hash);
+      if (await confirmFinality(hash, "Workflow creation")) {
+        onWorkflowSubmitted?.();
+      }
     } catch (nextError) {
       setTransactionState("error");
       setTransactionHash("");
       setError(
         nextError instanceof Error ? nextError.message : "Wallet call failed",
       );
+    }
+  }
+
+  async function confirmFinality(
+    transactionHash: string,
+    actionName: string,
+  ): Promise<boolean> {
+    if (!walletSession) return false;
+    setTransactionState("finalizing");
+    try {
+      const finality = await readTransactionFinality(
+        rpcUrl,
+        transactionHash,
+        walletSession.accountId,
+      );
+      if (finality === "failure") {
+        setTransactionState("error");
+        setError(`${actionName} failed at finality.`);
+        return false;
+      }
+      if (finality === "pending") {
+        setTransactionState("submitted");
+        setError(
+          `${actionName} was submitted, but finality is not confirmed yet.`,
+        );
+        return false;
+      }
+      setTransactionState("success");
+      return true;
+    } catch {
+      setTransactionState("submitted");
+      setError(
+        `${actionName} was submitted, but the finality check is unavailable. Inspect the transaction before retrying.`,
+      );
+      return false;
     }
   }
 
@@ -561,7 +604,7 @@ export function WorkflowBuilder({
                 className="secondary"
                 type="button"
                 disabled={
-                  transactionState === "pending" ||
+                  transactionBusy ||
                   !walletSession ||
                   allowlistState === "allowed" ||
                   allowlistState === "checking"
@@ -581,7 +624,7 @@ export function WorkflowBuilder({
               <button
                 type="button"
                 disabled={
-                  transactionState === "pending" ||
+                  transactionBusy ||
                   !walletSession ||
                   !isDraftReviewed ||
                   allowlistState !== "allowed" ||
@@ -592,21 +635,23 @@ export function WorkflowBuilder({
               >
                 {transactionState === "pending"
                   ? "Waiting for wallet"
-                  : storageQuoteState === "loading"
-                    ? "Estimating storage"
-                    : !walletSession
-                      ? "Connect owner wallet"
-                      : storageQuoteState === "error"
-                        ? "Storage estimate unavailable"
-                        : !isDraftReviewed
-                          ? "Review changed fields"
-                          : allowlistState === "checking"
-                            ? "Checking recipient"
-                            : allowlistState === "error"
-                              ? "Allowlist unavailable"
-                              : allowlistState !== "allowed"
-                                ? "Allow recipient first"
-                                : "Create workflow"}
+                  : transactionState === "finalizing"
+                    ? "Checking finality"
+                    : storageQuoteState === "loading"
+                      ? "Estimating storage"
+                      : !walletSession
+                        ? "Connect owner wallet"
+                        : storageQuoteState === "error"
+                          ? "Storage estimate unavailable"
+                          : !isDraftReviewed
+                            ? "Review changed fields"
+                            : allowlistState === "checking"
+                              ? "Checking recipient"
+                              : allowlistState === "error"
+                                ? "Allowlist unavailable"
+                                : allowlistState !== "allowed"
+                                  ? "Allow recipient first"
+                                  : "Create workflow"}
               </button>
             </div>
           ) : null}
@@ -615,10 +660,25 @@ export function WorkflowBuilder({
               Draft saved on this device. No funds moved.
             </p>
           ) : null}
-          {transactionState === "sent" ? (
+          {transactionState === "success" ||
+          transactionState === "submitted" ? (
             <p className="saved-note" role="status">
-              Transaction submitted
+              {transactionState === "success"
+                ? "Transaction finalized"
+                : "Transaction submitted"}
               {transactionHash ? `: ${transactionHash}` : ""}.
+              {transactionHash ? (
+                <>
+                  {" "}
+                  <a
+                    href={`https://testnet.nearblocks.io/txns/${encodeURIComponent(transactionHash)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Inspect on NearBlocks
+                  </a>
+                </>
+              ) : null}
             </p>
           ) : null}
         </aside>
