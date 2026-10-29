@@ -4,20 +4,20 @@ Use this checklist before the public repository, demo post, or hackathon submiss
 
 ## Automated gates
 
-- [ ] `pnpm install --frozen-lockfile`
-- [ ] `pnpm format:check`
-- [ ] `pnpm lint`
-- [ ] `pnpm typecheck`
-- [ ] `pnpm test`
-- [ ] `pnpm build`
-- [ ] `pnpm audit --audit-level high`
-- [ ] `cargo fmt --all --check`
-- [ ] `cargo clippy --workspace --all-targets -- -D warnings`
-- [ ] `cargo test --workspace --locked`
-- [ ] `cargo audit`
-- [ ] `cargo near build non-reproducible-wasm --locked`
-- [ ] Ubuntu CI sandbox test passes
-- [ ] Git history secret scan passes
+- [x] `pnpm install --frozen-lockfile`
+- [x] `pnpm format:check`
+- [x] `pnpm lint`
+- [x] `pnpm typecheck`
+- [x] `pnpm test`
+- [x] `pnpm build`
+- [x] `pnpm audit --audit-level high`
+- [x] `cargo fmt --all --check`
+- [x] `cargo clippy --workspace --all-targets -- -D warnings`
+- [x] `cargo test --workspace --locked`
+- [x] `cargo audit` with the four documented host-side NEAR exceptions
+- [x] `cargo near build non-reproducible-wasm --locked`
+- [x] Ubuntu CI sandbox test passes
+- [x] Git history secret scan passes
 
 ## Contract and keeper evidence
 

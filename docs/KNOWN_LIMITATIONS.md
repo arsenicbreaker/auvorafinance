@@ -40,7 +40,7 @@ Status date: 2026-10-29
 - Two finalized scheduled payment hashes are still required.
 - A live reserve-guard rejection is still required.
 - Keeper restart, concurrent duplicate trigger, callback failure, final-contract pause/cancel, and final-contract withdrawal need captured Phase 7 evidence.
-- The Linux sandbox test passes in WSL2. A hosted CI result has not yet been recorded in this workspace.
+- The Linux sandbox test passes in WSL2 and in the hosted Ubuntu 24.04 CI run for commit `d78b2d3`.
 
 ## Dependency advisories
 
@@ -49,7 +49,7 @@ Status date: 2026-10-29
 - Four findings remain in host-side NEAR unit-test and sandbox dependencies: `crypto-bigint` (`RUSTSEC-2026-0387`), `zstd` (`RUSTSEC-2026-0391`), and two `zstd-safe` findings (`RUSTSEC-2026-0398` and `RUSTSEC-2026-0403`). A target-specific dependency-tree check confirms these packages are absent from the contract's normal `wasm32-unknown-unknown` graph.
 - CI keeps RustSec enabled and explicitly acknowledges only those four IDs. The exceptions must be removed when the NEAR dependency graph provides patched compatible versions.
 - The Windows run covered Rust unit tests, Clippy, formatting, the TypeScript suite, and a 233.9 KB optimized WASM build without embedded ABI. The full Linux run also passed the `near-workspaces` sandbox integration test.
-- Native Windows ABI generation currently fails while linking NEAR host functions. The optimized WASM itself builds successfully with `--no-abi`; CI's Ubuntu build remains the gate for the ABI-embedded artifact.
+- Native Windows ABI generation currently fails while linking NEAR host functions. The optimized WASM itself builds successfully with `--no-abi`; hosted Ubuntu CI verifies the ABI-embedded artifact.
 
 ## Operations and privacy
 

@@ -142,6 +142,7 @@ Read [Security model](docs/SECURITY.md) and [Known limitations](docs/KNOWN_LIMIT
 
 - Contract deployment: [FW1uXWCowcW1W17HUUryk965Rgzrn5h6x3e9tgjiimX1](https://testnet.nearblocks.io/txns/FW1uXWCowcW1W17HUUryk965Rgzrn5h6x3e9tgjiimX1)
 - Phase 1 upgrade: [6Pi8aHBnWEXsnaUdX2CDVZFr5sdT8U1Q717xt3XsQb6c](https://testnet.nearblocks.io/txns/6Pi8aHBnWEXsnaUdX2CDVZFr5sdT8U1Q717xt3XsQb6c)
+- NEAR dependency hardening upgrade: [BpAT9eRzUT3fHbiYDnMXSUMi9856qcfX5hzbK69XniW8](https://testnet.nearblocks.io/txns/BpAT9eRzUT3fHbiYDnMXSUMi9856qcfX5hzbK69XniW8)
 - Restricted keeper call: [DdDZQzEGBFWbAvQfb1cr5t1qyBo1y8ar2xF1St8UaNNd](https://testnet.nearblocks.io/txns/DdDZQzEGBFWbAvQfb1cr5t1qyBo1y8ar2xF1St8UaNNd)
 - Sponsored relayer proof: [5tXH5JGDeyf9WhkCED94E9D7yqGtERNEh3HhYYrEcY7H](https://testnet.nearblocks.io/txns/5tXH5JGDeyf9WhkCED94E9D7yqGtERNEh3HhYYrEcY7H)
 - Owner wallet proof: [MFaieneZw88gcdhwSsneX5h6jBibeNrDjmJQGPow7Nd](https://testnet.nearblocks.io/txns/MFaieneZw88gcdhwSsneX5h6jBibeNrDjmJQGPow7Nd)
