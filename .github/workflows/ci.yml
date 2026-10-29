@@ -47,9 +47,26 @@ jobs:
       - name: Install pinned Rust toolchain
         run: rustup show
       - name: Install cargo-near
-        run: cargo install --locked cargo-near --version 0.22.0
+        run: |
+          curl --proto '=https' --tlsv1.2 -LsSf \
+            https://github.com/near/cargo-near/releases/download/cargo-near-v0.22.0/cargo-near-installer.sh \
+            -o /tmp/cargo-near-installer.sh
+          echo 'efbc260384a2e40c5690a6e0c5eae125eaa51347e38dfaaff07d342e704486f7  /tmp/cargo-near-installer.sh' \
+            | sha256sum --check
+          sh /tmp/cargo-near-installer.sh
+          cargo near --version
       - name: Install cargo-audit
-        run: cargo install --locked cargo-audit --version 0.22.2
+        run: |
+          curl --proto '=https' --tlsv1.2 -LsSf \
+            https://github.com/rustsec/rustsec/releases/download/cargo-audit/v0.22.2/cargo-audit-x86_64-unknown-linux-gnu-v0.22.2.tgz \
+            -o /tmp/cargo-audit.tgz
+          echo 'ab28a1bdb54db4d5d8ad5981cf1f959410370b3d28250dbd35f6a44248620e39  /tmp/cargo-audit.tgz' \
+            | sha256sum --check
+          tar -xzf /tmp/cargo-audit.tgz -C /tmp
+          install -m 0755 \
+            /tmp/cargo-audit-x86_64-unknown-linux-gnu-v0.22.2/cargo-audit \
+            "$HOME/.cargo/bin/cargo-audit"
+          cargo audit --version
       - name: Audit Rust dependency advisories
         # These four advisories are currently pulled in only by NEAR's host-side
         # unit-test/sandbox graph. They are absent from the normal WASM graph and
