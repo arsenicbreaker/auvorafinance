@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "node --env-file=../../.env.keeper.local --import tsx src/index.ts",
+    "evidence:report": "node --env-file=../../.env.keeper.local --import tsx src/evidence-report.ts",
     "start": "node dist/index.js",
     "test": "vitest run src",
     "typecheck": "tsc -p tsconfig.json --noEmit"

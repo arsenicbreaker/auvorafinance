@@ -24,15 +24,19 @@ jobs:
           corepack prepare pnpm@12.14.0 --activate
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Audit production dependency advisories
+        run: pnpm audit --audit-level high
       - name: Check TypeScript workspace
         run: pnpm check
       - name: Build TypeScript workspace
         run: pnpm build
-      - name: Scan tracked source for private key material
+      - name: Scan Git history for private key material
         shell: bash
         run: |
-          if git grep -nE '(ed25519|secp256k1):[A-Za-z0-9+/=_-]{40,}' -- ':!pnpm-lock.yaml'; then
-            echo 'Potential private key material found.' >&2
+          pattern='(ed25519|secp256k1):[A-Za-z0-9+/=_-]{40,}|-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----|NEAR_AI_API_KEY=[A-Za-z0-9_/-]{20,}'
+          if git grep -I -l -E "$pattern" $(git rev-list --all) -- . > /tmp/auvora-secret-paths; then
+            echo 'Potential private key material found in these tracked paths:' >&2
+            sed -E 's/^[^:]+://' /tmp/auvora-secret-paths | sort -u >&2
             exit 1
           fi
 
@@ -44,6 +48,18 @@ jobs:
         run: rustup show
       - name: Install cargo-near
         run: cargo install --locked cargo-near --version 0.22.0
+      - name: Install cargo-audit
+        run: cargo install --locked cargo-audit --version 0.22.2
+      - name: Audit Rust dependency advisories
+        # These four advisories are currently pulled in only by NEAR's host-side
+        # unit-test/sandbox graph. They are absent from the normal WASM graph and
+        # remain documented in docs/KNOWN_LIMITATIONS.md until upstream updates.
+        run: >-
+          cargo audit
+          --ignore RUSTSEC-2026-0387
+          --ignore RUSTSEC-2026-0391
+          --ignore RUSTSEC-2026-0398
+          --ignore RUSTSEC-2026-0403
       - name: Check Rust formatting
         run: cargo fmt --all --check
       - name: Run Clippy

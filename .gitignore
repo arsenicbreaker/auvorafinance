@@ -24,3 +24,6 @@ packages/db/src/generated/
 !/apps/web/AGENTS.md
 
 /docs/
+!/docs/
+!/docs/*.md
+!/docs/**/*.md

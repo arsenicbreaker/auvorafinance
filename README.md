@@ -1,20 +1,37 @@
 # Auvora Finance
 
-Your Treasury, on Autopilot.
+Auvora is a testnet-only recurring native NEAR payment system. A user defines and signs a payment policy, a keeper asks the contract to execute due runs, and the contract enforces the recipient, amount, schedule, run limit, reserve, and workflow ledger.
 
-Auvora Finance is a testnet-only treasury automation project for the NEAR Hackathon 2026 Autonomous Business track. The MVP target is a user-authorized recurring native NEAR payment with contract-enforced recipient, spending, reserve, and idempotency rules.
+This repository is a NEAR Hackathon 2026 project. It is not audited, production-ready, or intended for mainnet funds.
 
-This repository has completed the live **Phase 0 foundation** and deployed the **Phase 1 contract policy and accounting core** to NEAR testnet. **Phase 2 and Phase 3 are implemented locally and await testnet deployment.** Phase 2 adds permissionless due-run execution and callback-based accounting. Phase 3 adds bounded workflow discovery, an automated keeper, PostgreSQL-backed leases and execution records, restart-safe transaction reconciliation, and health endpoints.
+## What works
 
-## Phase 0 contents
+| Capability                                      | Status                              | Authority boundary                                          |
+| ----------------------------------------------- | ----------------------------------- | ----------------------------------------------------------- |
+| Recurring native NEAR workflow                  | Live on `oceanear.testnet`          | Owner wallet creates and funds it                           |
+| Recipient allowlist                             | Live                                | Contract owner signs changes                                |
+| Due-run execution and callback accounting       | Live                                | Keeper supplies only the workflow ID; contract decides      |
+| Pause, resume, cancel, and safe withdrawal      | Live                                | Workflow owner signs each action                            |
+| Keeper discovery and restart reconciliation     | Implemented                         | Restricted keeper key and PostgreSQL records                |
+| Sponsored nonpayable call proof                 | Live proof recorded                 | Relayer cannot sponsor deposits or change signed arguments  |
+| Natural-language draft parsing                  | Implemented locally                 | Produces editable fields only; cannot open or sign a wallet |
+| NEAR AI Cloud adapter                           | Configurable, not yet live-verified | Falls back to deterministic parsing when unavailable        |
+| Mainnet, stablecoins, swaps, lending, and yield | Not implemented                     | Outside the MVP                                             |
 
-- Strict TypeScript pnpm workspace.
-- Next.js testnet proof shell with Wallet Selector, final contract reads, and a zero-deposit owner call.
-- Minimal Rust and `near-sdk` contract with a view, harmless owner call, and keeper proof call.
-- Typed testnet-only environment parsing.
-- Keeper service boundary with no financial parameters.
-- Relayer sponsorship policy that rejects deposits, unknown methods, wrong receivers, expired actions, and excessive gas.
-- Ubuntu CI for TypeScript, Rust, sandbox deployment, WASM build, and a basic tracked-file secret pattern scan.
+The live contract returned `phase-2-ready` at finality on 2026-10-29. Its current state contains one cancelled workflow and one completed one-run workflow. The second scheduled payment proof and the reserve-guard proof remain release gates; see [Demo evidence](docs/DEMO_EVIDENCE.md).
+
+## Judge path: do X, see Y
+
+1. Install the pinned tools and dependencies.
+2. Start the web app.
+3. Connect a NEAR testnet wallet that owns the workflow.
+4. Enter the example payment instruction and select **Fill payment fields**.
+5. See an editable native NEAR draft. No wallet opens at this step.
+6. Review the canonical fields. The wallet opens only for an explicit on-chain action.
+7. Start the keeper and wait until a due workflow finalizes.
+8. Run the evidence report to read final contract state and recorded transaction hashes.
+
+The exact commands, expected outputs, and human-only signing steps are in [Demo runbook](docs/DEMO_RUNBOOK.md).
 
 ## Prerequisites
 
@@ -22,11 +39,9 @@ This repository has completed the live **Phase 0 foundation** and deployed the *
 - Corepack with pnpm 12.14.0
 - Rust 1.99.1 with `rustfmt`, `clippy`, and `wasm32-unknown-unknown`
 - `cargo-near` 0.22.0
-- Linux, WSL2, or Ubuntu CI for `near-workspaces` sandbox tests
-
-Do not place a wallet seed phrase or user private key in this repository. The keeper and relayer use separate, limited testnet service keys supplied only through their deployment secret stores.
-
-## Setup
+- PostgreSQL for the keeper evidence store
+- Linux, WSL2, or Ubuntu CI for the `near-workspaces` sandbox test
+- A NEAR testnet wallet only when performing the human-signed demo path
 
 ```bash
 corepack enable
@@ -36,94 +51,115 @@ rustup show
 cargo install --locked cargo-near --version 0.22.0
 ```
 
-Copy `.env.example` to an untracked `.env` only when running service proofs. For the Next.js wallet proof, put `NEXT_PUBLIC_AUVORA_CONTRACT_ID` and the public testnet RPC URL in `apps/web/.env.local`. Values in `.env.example` are names or public defaults, not secrets.
+## Configuration
 
-Run the web proof after deploying the Phase 0 contract:
+Use [.env.example](.env.example) as the field list. Keep credentials only in ignored local files or deployment secret stores:
+
+- `apps/web/.env.local`: public browser configuration only.
+- `.env.keeper.local`: restricted keeper account and database configuration.
+- `.env.relayer.local`: separately funded relayer configuration.
+- `.env.deploy.local`: owner deployment credentials for an explicitly approved deployment or upgrade.
+
+Never paste a seed phrase into the app. Never commit a private key or AI provider key.
+
+Minimal web configuration:
+
+```dotenv
+NEXT_PUBLIC_NEAR_RPC_URL=https://rpc.testnet.near.org
+NEXT_PUBLIC_AUVORA_CONTRACT_ID=oceanear.testnet
+```
+
+Optional AI provider configuration:
+
+```dotenv
+AI_PROVIDER=near-ai
+NEAR_AI_BASE_URL=https://cloud-api.near.ai
+NEAR_AI_API_KEY=
+AI_MODEL=
+AI_TIMEOUT_MS=8000
+```
+
+If the provider key or model is absent, the web app keeps the manual form available and uses the deterministic parser for supported instructions.
+
+## Run locally
+
+Web:
 
 ```bash
 pnpm --filter @auvora/web dev
 ```
 
-Run the Phase 3 keeper after setting `DATABASE_URL`, the deployed contract ID,
-and the restricted keeper credentials in the ignored `.env.keeper.local` file:
+Keeper, after the database migration and restricted-key setup:
 
 ```bash
 pnpm db:migrate:deploy
 pnpm keeper:dev
 ```
 
-The keeper exposes `/live` and `/ready` on port `3001` by default. It signs each
-transaction locally and persists the hash plus signed bytes before broadcasting.
-If an RPC response is lost, the next poll reconciles the known hash or safely
-rebroadcasts the exact same transaction instead of signing a duplicate.
+The keeper exposes `/live` and `/ready` on port `3001` by default. It persists signed transaction bytes and the derived hash before broadcast, then reconciles that same hash after restart or an uncertain RPC response.
 
-Build the Phase 2 WASM and upgrade an existing Phase 1 testnet deployment only after its status is exactly `phase-1-ready`:
+Read-only evidence report:
 
 ```bash
-cd contracts/treasury
-cargo near build non-reproducible-wasm --locked
-cd ../..
-pnpm upgrade:phase2:testnet
+pnpm proof:report
 ```
 
-The Phase 2 upgrade is atomic: deploy, migrate Phase 1 workflow state, and set the new status in one finalized transaction. It refuses non-testnet RPCs, account mismatches, and unexpected pre-upgrade status.
+The report reads final contract views plus the keeper's transaction records. It never imports a wallet key into the browser and never submits a transaction.
 
-The existing `oceanear.testnet` proof deployment had a Phase 1 state with a
-legacy `wallet-proof-confirmed` label, so its one-time Phase 3 migration uses
-the guarded `upgrade:phase3:testnet` path. It preserves the existing workflow
-state, exposes `list_workflows`, and sets the contract to `phase-2-ready`.
-
-The page remains in an explicit configuration state until a contract ID is set. It never asks for a seed phrase or private key.
-
-Local credential files are already prepared and ignored by Git:
-
-- `apps/web/.env.local` contains public browser configuration only.
-- `.env.keeper.local` contains the restricted keeper account configuration.
-- `.env.relayer.local` contains the separately funded relayer configuration.
-
-See [Phase 0 environment setup](docs/phase-0/ENV_SETUP.md) before adding any key.
-
-Deploy and initialize the Phase 0 contract atomically on testnet after filling
-the ignored `.env.deploy.local` file with the owner account's full-access key:
+## Validation commands
 
 ```bash
-pnpm deploy:testnet
-```
-
-The deployment command is locked to `testnet`, requires an exact
-`DEPLOY_CONFIRM` match, and refuses to overwrite an account that already has
-contract code.
-
-## Validation
-
-```bash
-pnpm check
+pnpm format:check
+pnpm lint
+pnpm typecheck
+pnpm test
 pnpm build
+pnpm audit --audit-level high
 cargo fmt --all --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace --locked
+cargo audit
 cd contracts/treasury
 cargo near build non-reproducible-wasm --locked
 ```
 
-Native Windows is suitable for the TypeScript checks and Rust unit tests after Rust is installed. Run the sandbox integration test on Linux, WSL2, or Ubuntu CI.
+Native Windows supports the TypeScript checks and Rust unit tests. Run the sandbox integration test on Linux, WSL2, or Ubuntu CI.
 
-Phase 2 intentionally does not catch up missed intervals in a burst. After a late run succeeds, the next run is scheduled one interval after confirmation; after a failed transfer, the same scheduled slot remains retryable. Phase 3 does not change those contract rules: it discovers candidates and calls only `execute_due`; the contract remains the final authority.
+## Security boundary
 
-## Current proof status
+- AI output is untrusted draft data.
+- The user reviews canonical fields before a wallet request.
+- The keeper cannot choose a recipient, amount, reserve, or schedule.
+- `execute_due` accepts a workflow ID and the contract re-checks every policy.
+- One pending execution slot prevents duplicate dispatch for the same run.
+- Failed transfer callbacks restore the reserved ledger amount once.
+- Withdrawals cannot consume active obligations, reserve, or pending value.
+- The MVP is testnet-only and remains upgrade-trusted.
 
-The Phase 0 contract is deployed at `oceanear.testnet`. Meteor Wallet completed an owner-signed call, the restricted `oceankeeper.testnet` key called only its allowlisted method, and `oceanrelayer.testnet` finalized a sponsored NEP-366 call without reducing the owner's total balance. Details and transaction evidence are recorded in [Phase 0 validation](docs/phase-0/VALIDATION.md). The Ubuntu sandbox/CI proof remains a release gate.
+Read [Security model](docs/SECURITY.md) and [Known limitations](docs/KNOWN_LIMITATIONS.md) before relying on a demo result.
+
+## Testnet evidence already recorded
+
+- Contract deployment: [FW1uXWCowcW1W17HUUryk965Rgzrn5h6x3e9tgjiimX1](https://testnet.nearblocks.io/txns/FW1uXWCowcW1W17HUUryk965Rgzrn5h6x3e9tgjiimX1)
+- Phase 1 upgrade: [6Pi8aHBnWEXsnaUdX2CDVZFr5sdT8U1Q717xt3XsQb6c](https://testnet.nearblocks.io/txns/6Pi8aHBnWEXsnaUdX2CDVZFr5sdT8U1Q717xt3XsQb6c)
+- Restricted keeper call: [DdDZQzEGBFWbAvQfb1cr5t1qyBo1y8ar2xF1St8UaNNd](https://testnet.nearblocks.io/txns/DdDZQzEGBFWbAvQfb1cr5t1qyBo1y8ar2xF1St8UaNNd)
+- Sponsored relayer proof: [5tXH5JGDeyf9WhkCED94E9D7yqGtERNEh3HhYYrEcY7H](https://testnet.nearblocks.io/txns/5tXH5JGDeyf9WhkCED94E9D7yqGtERNEh3HhYYrEcY7H)
+- Owner wallet proof: [MFaieneZw88gcdhwSsneX5h6jBibeNrDjmJQGPow7Nd](https://testnet.nearblocks.io/txns/MFaieneZw88gcdhwSsneX5h6jBibeNrDjmJQGPow7Nd)
+- Phase 1 lifecycle hashes: [Phase 1 validation](docs/phase-1/VALIDATION.md)
 
 ## Documentation
 
+- [Demo runbook](docs/DEMO_RUNBOOK.md)
+- [Demo evidence](docs/DEMO_EVIDENCE.md)
+- [Known limitations](docs/KNOWN_LIMITATIONS.md)
+- [Release checklist](docs/RELEASE_CHECKLIST.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Implementation plan](docs/IMPLEMENTATION_PLAN.md)
 - [Technology stack](docs/TECH_STACK.md)
 - [Security model](docs/SECURITY.md)
 - [Phase 0 validation](docs/phase-0/VALIDATION.md)
-- [Wallet decision](docs/phase-0/WALLET_DECISION.md)
-- [Phase 0 web design record](docs/phase-0/WEB_DESIGN.md)
+- [Phase 1 validation](docs/phase-1/VALIDATION.md)
 
-## Scope boundary
+## Publication boundary
 
-The hackathon MVP is NEAR testnet only. It excludes mainnet funds, yield farming, lending, cross-chain execution, and unrestricted AI wallet authority. AI proposes a draft; a user reviews and authorizes canonical financial fields; the contract makes the final execution decision.
+Repository publication, the public demo post, and the final hackathon submission are human actions. The submission must not be sent until the human reviews and explicitly confirms the exact immutable payload described in [HACKATHON.md](HACKATHON.md).
