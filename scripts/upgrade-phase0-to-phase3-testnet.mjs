@@ -54,11 +54,6 @@ async function main() {
     args: {},
     finality: "final",
   });
-  if (currentStatus.status !== "wallet-proof-confirmed") {
-    throw new Error(
-      `Expected wallet-proof-confirmed before Phase 1 migration, received ${String(currentStatus.status)}`,
-    );
-  }
   let phaseTwoStateAvailable = false;
   try {
     await provider.callFunction({
@@ -70,6 +65,14 @@ async function main() {
     phaseTwoStateAvailable = true;
   } catch {
     phaseTwoStateAvailable = false;
+  }
+  const expectedStatus = phaseTwoStateAvailable
+    ? "phase-2-ready"
+    : "wallet-proof-confirmed";
+  if (currentStatus.status !== expectedStatus) {
+    throw new Error(
+      `Expected ${expectedStatus} before contract upgrade, received ${String(currentStatus.status)}`,
+    );
   }
   try {
     await provider.callFunction({
