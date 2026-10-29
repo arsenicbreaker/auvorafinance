@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   typescript:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: actions/setup-node@v7.1.0
@@ -41,7 +41,7 @@ jobs:
           fi
 
   rust:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7.0.1
       - name: Install pinned Rust toolchain
