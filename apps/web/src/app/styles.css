@@ -535,6 +535,82 @@ button:disabled {
   line-height: 1.6;
 }
 
+.instruction-panel {
+  display: grid;
+  gap: 12px;
+  padding: 28px 36px 30px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--paper-deep);
+}
+
+.instruction-panel > label {
+  color: var(--ink);
+  font-family: "Iowan Old Style", "Palatino Linotype", serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.instruction-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 210px;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.instruction-entry textarea {
+  width: 100%;
+  min-height: 96px;
+  padding: 14px 15px;
+  resize: vertical;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  background: #faf8f2;
+  color: var(--ink);
+  font: inherit;
+  line-height: 1.5;
+}
+
+.instruction-entry button {
+  min-height: 96px;
+}
+
+.instruction-panel > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.parser-result {
+  margin-top: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--forest);
+  background: #faf8f2;
+  color: var(--forest);
+}
+
+.parser-result strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.parser-result p {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.parser-result-clarification {
+  border-color: var(--amber);
+  color: #744018;
+}
+
+.parser-result-error,
+.parser-result-rejected {
+  border-color: var(--error);
+  color: var(--error);
+}
+
 .builder-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
@@ -563,7 +639,8 @@ button:disabled {
 }
 
 .builder-form input,
-.builder-form select {
+.builder-form select,
+.instruction-entry textarea {
   width: 100%;
   min-height: 48px;
   border: 1px solid var(--rule);
@@ -576,7 +653,8 @@ button:disabled {
 }
 
 .builder-form input:focus,
-.builder-form select:focus {
+.builder-form select:focus,
+.instruction-entry textarea:focus {
   border-color: var(--forest);
   outline: 3px solid color-mix(in srgb, var(--amber) 45%, transparent);
   outline-offset: 1px;
@@ -933,6 +1011,7 @@ footer {
   .technical-details-body,
   .proof-list > li,
   .builder-intro,
+  .instruction-panel,
   .builder-form,
   .review-sheet,
   .ledger-heading,
@@ -1034,10 +1113,15 @@ footer {
   }
 
   .field-pair,
+  .instruction-entry,
   .review-sheet dl,
   .ledger-summary,
   .ledger-facts {
     grid-template-columns: 1fr;
+  }
+
+  .instruction-entry button {
+    min-height: 52px;
   }
 
   .ledger-heading button {

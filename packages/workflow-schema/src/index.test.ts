@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   EXECUTION_REASON_CODES,
+  aiWorkflowParserResultSchema,
   createWorkflowSchema,
   executionEventSchema,
   toContractArgs,
@@ -88,6 +89,52 @@ describe("execution event contract", () => {
             reason_code: "UNKNOWN_REASON",
           },
         ],
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe("AI workflow draft contract", () => {
+  it("accepts a complete editable native NEAR draft", () => {
+    expect(
+      aiWorkflowParserResultSchema.parse({
+        status: "ready",
+        source: "deterministic",
+        draft: {
+          recipient: "recipient.testnet",
+          asset: "NEAR",
+          amountNear: "2",
+          intervalSeconds: 604_800,
+          startAt: "2026-11-03T10:00:00Z",
+          maxRuns: 4,
+          minReserveNear: "5",
+          maxPerRunNear: "2",
+          timezone: "UTC",
+          explanation: "A weekly native NEAR payment draft.",
+          warnings: [],
+        },
+      }).status,
+    ).toBe("ready");
+  });
+
+  it("rejects an amount above the per-run limit", () => {
+    expect(
+      aiWorkflowParserResultSchema.safeParse({
+        status: "ready",
+        source: "provider",
+        draft: {
+          recipient: "recipient.testnet",
+          asset: "NEAR",
+          amountNear: "2",
+          intervalSeconds: 604_800,
+          startAt: "2026-11-03T10:00:00Z",
+          maxRuns: 4,
+          minReserveNear: "5",
+          maxPerRunNear: "1",
+          timezone: "UTC",
+          explanation: "Invalid limit.",
+          warnings: [],
+        },
       }).success,
     ).toBe(false);
   });

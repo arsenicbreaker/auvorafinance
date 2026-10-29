@@ -90,6 +90,106 @@ export const createWorkflowSchema = z
 
 export type CreateWorkflow = z.infer<typeof createWorkflowSchema>;
 
+export const AI_DRAFT_FIELDS = [
+  "recipient",
+  "amount",
+  "interval",
+  "startAt",
+  "maxRuns",
+  "minReserve",
+] as const;
+
+const nearDecimalSchema = z
+  .string()
+  .regex(/^(?:0|[1-9]\d*)(?:\.\d{1,24})?$/)
+  .refine((value) => BigInt(value.replace(".", "") || "0") >= 0n);
+
+const positiveNearDecimalSchema = nearDecimalSchema.refine(
+  (value) => /[1-9]/.test(value),
+  "AMOUNT_MUST_BE_POSITIVE",
+);
+
+const aiWorkflowDraftObjectSchema = z.object({
+  recipient: accountIdSchema,
+  asset: z.literal("NEAR"),
+  amountNear: positiveNearDecimalSchema,
+  intervalSeconds: z
+    .number()
+    .int()
+    .refine(
+      (value) => [60, 3_600, 86_400, 604_800].includes(value),
+      "UNSUPPORTED_INTERVAL",
+    ),
+  startAt: z.string().datetime({ offset: true }),
+  maxRuns: z.number().int().min(1).max(12),
+  minReserveNear: nearDecimalSchema,
+  maxPerRunNear: positiveNearDecimalSchema,
+  timezone: z.string().trim().min(1).max(64),
+  explanation: z.string().trim().min(1).max(400),
+  warnings: z.array(z.string().trim().min(1).max(240)).max(6),
+});
+
+export const aiWorkflowDraftSchema = aiWorkflowDraftObjectSchema.superRefine(
+  (draft, context) => {
+    if (
+      nearDecimalToAtomic(draft.amountNear) >
+      nearDecimalToAtomic(draft.maxPerRunNear)
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "MAX_PER_RUN_EXCEEDED",
+        path: ["amountNear"],
+      });
+    }
+  },
+);
+
+export const aiWorkflowPartialDraftSchema = aiWorkflowDraftObjectSchema
+  .omit({ explanation: true, warnings: true })
+  .partial();
+
+const aiDraftSourceSchema = z.enum(["provider", "deterministic"]);
+
+export const aiWorkflowParserResultSchema = z.discriminatedUnion("status", [
+  z.object({
+    status: z.literal("ready"),
+    source: aiDraftSourceSchema,
+    draft: aiWorkflowDraftSchema,
+  }),
+  z.object({
+    status: z.literal("clarification"),
+    source: aiDraftSourceSchema,
+    partialDraft: aiWorkflowPartialDraftSchema,
+    missingFields: z.array(z.enum(AI_DRAFT_FIELDS)).min(1),
+    questions: z.array(z.string().trim().min(1).max(240)).min(1).max(6),
+    warnings: z.array(z.string().trim().min(1).max(240)).max(6),
+  }),
+  z.object({
+    status: z.literal("rejected"),
+    source: aiDraftSourceSchema,
+    code: z.enum(["UNSUPPORTED_ASSET", "UNSAFE_PROMPT"]),
+    message: z.string().trim().min(1).max(300),
+  }),
+]);
+
+export const aiWorkflowParserRequestSchema = z.object({
+  prompt: z.string().trim().min(8).max(1_000),
+  ownerAccountId: accountIdSchema.optional(),
+});
+
+export type AiWorkflowDraft = z.infer<typeof aiWorkflowDraftSchema>;
+export type AiWorkflowPartialDraft = z.infer<
+  typeof aiWorkflowPartialDraftSchema
+>;
+export type AiWorkflowParserResult = z.infer<
+  typeof aiWorkflowParserResultSchema
+>;
+
+function nearDecimalToAtomic(value: string): bigint {
+  const [whole, fraction = ""] = value.split(".");
+  return BigInt(`${whole}${fraction.padEnd(24, "0")}`);
+}
+
 export interface ContractCreateWorkflowArgs {
   recipient_id: string;
   amount: string;

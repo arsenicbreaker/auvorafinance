@@ -3,6 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { formatNear, parseNear } from "@auvora/domain";
 import {
+  aiWorkflowParserResultSchema,
+  type AiWorkflowDraft,
+  type AiWorkflowPartialDraft,
+} from "@auvora/workflow-schema";
+import {
   readRecipientAllowed,
   readTransactionFinality,
   readWorkflowStorageCost,
@@ -23,11 +28,11 @@ const INTERVALS = [
   { label: "Every minute", value: 60_000 },
   { label: "Every hour", value: 3_600_000 },
   { label: "Every day", value: 86_400_000 },
+  { label: "Every week", value: 604_800_000 },
 ] as const;
 
 const ALLOWLIST_DEPOSIT = 1_000_000_000_000_000_000_000n;
 const MAX_U128 = (1n << 128n) - 1n;
-const MIN_SCHEDULE_LEAD_MS = 5 * 60_000;
 
 export function WorkflowBuilder({
   contractId,
@@ -45,6 +50,12 @@ export function WorkflowBuilder({
   const [reserve, setReserve] = useState("0.002");
   const [interval, setInterval] = useState("60000");
   const [maxRuns, setMaxRuns] = useState("1");
+  const [startAt, setStartAt] = useState("");
+  const [instruction, setInstruction] = useState("");
+  const [parserState, setParserState] = useState<
+    "clarification" | "error" | "idle" | "loading" | "ready" | "rejected"
+  >("idle");
+  const [parserNotes, setParserNotes] = useState<string[]>([]);
   const [draftState, setDraftState] = useState<DraftState>("idle");
   const [error, setError] = useState("");
   const [transactionHash, setTransactionHash] = useState("");
@@ -79,6 +90,7 @@ export function WorkflowBuilder({
     reserve,
     interval,
     maxRuns,
+    startAt,
   ]);
   const isDraftReviewed = reviewedDraftKey === currentDraftKey;
   const storageQuoteKey = `${contractId}:${ownerId}:${recipient.trim()}`;
@@ -195,6 +207,7 @@ export function WorkflowBuilder({
   function validateDraft() {
     const trimmedRecipient = recipient.trim();
     const parsedRuns = Number(maxRuns);
+    const parsedStartAt = Date.parse(`${startAt}:00Z`);
 
     if (!/^[a-z0-9]+(?:[._-][a-z0-9]+)*\.testnet$/.test(trimmedRecipient)) {
       throw new Error(
@@ -206,6 +219,12 @@ export function WorkflowBuilder({
     }
     if (!isValidRunCount(parsedRuns)) {
       throw new Error("Choose between 1 and 12 runs for this draft.");
+    }
+    if (!startAt || !Number.isFinite(parsedStartAt)) {
+      throw new Error("Choose the first run time in UTC.");
+    }
+    if (parsedStartAt <= Date.now() + 60_000) {
+      throw new Error("The first run must be at least one minute from now.");
     }
 
     let amountYocto: bigint;
@@ -240,6 +259,7 @@ export function WorkflowBuilder({
       reserveYocto,
       intervalMs: selectedInterval.value,
       maxRuns: parsedRuns,
+      startAtMs: parsedStartAt,
       deposit,
     };
   }
@@ -252,8 +272,7 @@ export function WorkflowBuilder({
       setStorageQuote(null);
       setReviewedSchedule({
         intervalMs: draft.intervalMs,
-        startAtMs:
-          Date.now() + Math.max(draft.intervalMs, MIN_SCHEDULE_LEAD_MS),
+        startAtMs: draft.startAtMs,
       });
       setContractCheckAttempt((attempt) => attempt + 1);
       setError("");
@@ -272,7 +291,14 @@ export function WorkflowBuilder({
   function saveDraft() {
     localStorage.setItem(
       "auvora.workflow-draft",
-      JSON.stringify({ recipient, amount, reserve, interval, maxRuns }),
+      JSON.stringify({
+        recipient,
+        amount,
+        reserve,
+        interval,
+        maxRuns,
+        startAt,
+      }),
     );
     setDraftState("saved");
   }
@@ -313,6 +339,82 @@ export function WorkflowBuilder({
       setError(
         nextError instanceof Error ? nextError.message : "Wallet call failed",
       );
+    }
+  }
+
+  async function parseInstruction() {
+    setParserState("loading");
+    setParserNotes([]);
+    setError("");
+    try {
+      const response = await fetch("/api/ai/workflow-draft", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          prompt: instruction,
+          ownerAccountId: walletSession?.accountId,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error(
+          response.status === 429
+            ? "Too many parser requests. Wait a minute and try again."
+            : "The payment instruction could not be parsed.",
+        );
+      }
+      const result = aiWorkflowParserResultSchema.safeParse(
+        await response.json(),
+      );
+      if (!result.success) throw new Error("The parser response was invalid.");
+
+      if (result.data.status === "rejected") {
+        setParserState("rejected");
+        setParserNotes([result.data.message]);
+        return;
+      }
+
+      applyParsedFields(
+        result.data.status === "ready"
+          ? result.data.draft
+          : result.data.partialDraft,
+      );
+      setReviewedDraftKey(null);
+      setReviewedSchedule(null);
+      setDraftState("idle");
+      setAllowlistCheck(null);
+      setStorageQuote(null);
+
+      if (result.data.status === "clarification") {
+        setParserState("clarification");
+        setParserNotes([...result.data.questions, ...result.data.warnings]);
+        return;
+      }
+
+      setParserState("ready");
+      setParserNotes([
+        result.data.draft.explanation,
+        ...result.data.draft.warnings,
+      ]);
+    } catch (nextError) {
+      setParserState("error");
+      setParserNotes([
+        nextError instanceof Error
+          ? nextError.message
+          : "The payment instruction could not be parsed.",
+      ]);
+    }
+  }
+
+  function applyParsedFields(draft: AiWorkflowDraft | AiWorkflowPartialDraft) {
+    if (draft.recipient !== undefined) setRecipient(draft.recipient);
+    if (draft.amountNear !== undefined) setAmount(draft.amountNear);
+    if (draft.minReserveNear !== undefined) setReserve(draft.minReserveNear);
+    if (draft.intervalSeconds !== undefined) {
+      setInterval(String(draft.intervalSeconds * 1_000));
+    }
+    if (draft.maxRuns !== undefined) setMaxRuns(String(draft.maxRuns));
+    if (draft.startAt !== undefined) {
+      setStartAt(toUtcLocalInput(draft.startAt));
     }
   }
 
@@ -436,6 +538,62 @@ export function WorkflowBuilder({
         </p>
       </div>
 
+      <form
+        className="instruction-panel"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void parseInstruction();
+        }}
+      >
+        <label htmlFor="payment-instruction">Describe the payment</label>
+        <div className="instruction-entry">
+          <textarea
+            id="payment-instruction"
+            maxLength={1_000}
+            placeholder="Pay 2 NEAR to recipient.testnet every week, starting 2026-11-03T10:00:00Z, maximum 4 times, and keep a 5 NEAR reserve."
+            value={instruction}
+            onChange={(event) => setInstruction(event.target.value)}
+          />
+          <button
+            type="submit"
+            disabled={
+              instruction.trim().length < 8 || parserState === "loading"
+            }
+          >
+            {parserState === "loading"
+              ? "Reading instruction"
+              : "Fill payment fields"}
+          </button>
+        </div>
+        <p>
+          This only fills the editable form below. It cannot open your wallet or
+          submit a transaction.
+        </p>
+        {parserState !== "idle" && parserState !== "loading" ? (
+          <div
+            className={`parser-result parser-result-${parserState}`}
+            role={
+              parserState === "error" || parserState === "rejected"
+                ? "alert"
+                : "status"
+            }
+          >
+            <strong>
+              {parserState === "ready"
+                ? "Draft fields filled"
+                : parserState === "clarification"
+                  ? "More detail needed"
+                  : parserState === "rejected"
+                    ? "Instruction not supported"
+                    : "Parser unavailable"}
+            </strong>
+            {parserNotes.map((note) => (
+              <p key={note}>{note}</p>
+            ))}
+          </div>
+        ) : null}
+      </form>
+
       <div className="builder-grid">
         <form
           className="builder-form"
@@ -483,6 +641,14 @@ export function WorkflowBuilder({
               </span>
             </label>
           </div>
+          <label>
+            First run (UTC)
+            <input
+              type="datetime-local"
+              value={startAt}
+              onChange={(event) => setStartAt(event.target.value)}
+            />
+          </label>
           <div className="field-pair">
             <label>
               Repeat
@@ -709,4 +875,8 @@ export function WorkflowBuilder({
 
 function isValidRunCount(value: number): boolean {
   return Number.isInteger(value) && value >= 1 && value <= 12;
+}
+
+function toUtcLocalInput(value: string): string {
+  return new Date(value).toISOString().slice(0, 16);
 }

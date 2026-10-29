@@ -240,6 +240,9 @@ importers:
       '@auvora/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+      '@auvora/workflow-schema':
+        specifier: workspace:*
+        version: link:../../packages/workflow-schema
       '@near-js/transactions':
         specifier: 2.5.1
         version: 2.5.1(@near-js/crypto@2.5.1(@near-js/types@2.5.1)(@near-js/utils@2.5.1(@near-js/types@2.5.1)))(@near-js/types@2.5.1)(@near-js/utils@2.5.1(@near-js/types@2.5.1))
