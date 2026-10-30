@@ -18,7 +18,7 @@ This repository is a NEAR Hackathon 2026 project. It is not audited, production-
 | NEAR AI Cloud adapter                           | Configurable, not yet live-verified | Falls back to deterministic parsing when unavailable        |
 | Mainnet, stablecoins, swaps, lending, and yield | Not implemented                     | Outside the MVP                                             |
 
-The live contract returned `phase-2-ready` at finality on 2026-10-29. Its current state contains one cancelled workflow and one completed one-run workflow. The second scheduled payment proof and the reserve-guard proof remain release gates; see [Demo evidence](docs/DEMO_EVIDENCE.md).
+The live contract returned `phase-2-ready` at finality on 2026-10-30. Workflows `2` and `4` each completed two scheduled 0.001 NEAR payments with distinct finalized hashes; workflows `3` and `5` returned `RESERVE_GUARD`. All four fixture ledgers were withdrawn to zero. A keeper-cycle worker was terminated after broadcast and a separate OS process reconciled its persisted hash without submitting a replacement. Two independent keeper processes also produced one payment for the next slot. Direct concurrent contract triggers and remaining lifecycle/product gates stay open. See [Demo evidence](docs/DEMO_EVIDENCE.md).
 
 ## Judge path: do X, see Y
 
@@ -105,6 +105,10 @@ pnpm proof:report
 ```
 
 The report reads final contract views plus the keeper's transaction records. It never imports a wallet key into the browser and never submits a transaction.
+
+It independently verifies recorded execution hashes with final RPC outcomes and contract-origin events. Use `pnpm proof:report --chain-only` without database access, or `pnpm proof:report --require-evidence` to fail when the payment-and-reserve evidence is incomplete. Neither command certifies all MVP release gates.
+
+`pnpm proof:payments` previews the two signed Phase 7 fixtures without sending transactions. After human approval, `pnpm proof:payments --execute` runs the scheduled payments, reserve rejection, persisted-hash recovery, and concurrent keeper cycles, then withdraws remaining fixture balances. Read the accounts, testnet deposits, limitations, and recovery instructions in the [Demo runbook](docs/DEMO_RUNBOOK.md) first.
 
 ## Validation commands
 

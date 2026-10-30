@@ -22,11 +22,12 @@ Use this checklist before the public repository, demo post, or hackathon submiss
 ## Contract and keeper evidence
 
 - [ ] UI, keeper, documentation, and evidence report all use `testnet` and `oceanear.testnet`
-- [ ] Keeper key is restricted to `oceanear.testnet` and `execute_due`
-- [ ] Two scheduled payments have distinct finalized hashes and expected recipient deltas
+- [x] Keeper key is restricted to `oceanear.testnet` and `execute_due` (live preflight, 2026-10-30)
+- [x] Two scheduled payments have distinct finalized hashes and expected recipient deltas ([Phase 7 evidence](phase-7/VALIDATION.md))
 - [ ] Duplicate trigger produces one successful transfer for one workflow/run slot
-- [ ] Keeper restart reconciles the same persisted hash
-- [ ] Reserve guard returns `RESERVE_GUARD` without changing recipient or workflow balance
+- [x] Keeper-cycle worker restart reconciles the same persisted hash after OS termination ([process proof](phase-7/PROCESS_VALIDATION.md))
+- [x] Two independent keeper processes produce one payment through the database lease ([process proof](phase-7/PROCESS_VALIDATION.md))
+- [x] Reserve guard returns `RESERVE_GUARD` without changing recipient or workflow balance ([Phase 7 evidence](phase-7/VALIDATION.md))
 - [ ] Transfer failure restores the workflow ledger exactly once
 - [ ] Direct or repeated callback cannot mutate resolved state
 - [ ] Pause prevents the next dispatch
@@ -37,9 +38,9 @@ Use this checklist before the public repository, demo post, or hackathon submiss
 ## Product evidence
 
 - [ ] Fresh setup follows [Demo runbook](DEMO_RUNBOOK.md) without undocumented credentials
-- [ ] Natural-language parser fills an editable form and does not open a wallet
-- [ ] Missing or ambiguous fields produce clarification
-- [ ] Unsupported assets are rejected
+- [x] Natural-language parser fills an editable form and does not open a wallet ([desktop browser proof](phase-7/PRODUCT_VALIDATION.md))
+- [x] Missing recipient produces clarification; existing corpus tests cover ambiguous start time ([product evidence](phase-7/PRODUCT_VALIDATION.md))
+- [x] Unsupported assets are rejected ([USDC browser proof](phase-7/PRODUCT_VALIDATION.md))
 - [ ] Provider timeout or malformed output leaves the manual form usable
 - [ ] Wallet rejection or abandonment does not show success
 - [ ] Submitted and unknown transactions are not presented as finalized

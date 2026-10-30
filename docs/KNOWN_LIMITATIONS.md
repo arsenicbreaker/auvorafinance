@@ -1,6 +1,6 @@
 # Known Limitations
 
-Status date: 2026-10-29
+Status date: 2026-10-30
 
 ## Product scope
 
@@ -25,7 +25,7 @@ Status date: 2026-10-29
 - PostgreSQL leases reduce duplicate submissions but are not the idempotency boundary; the contract pending slot is authoritative.
 - A provider outage delays execution. The contract intentionally does not burst through missed intervals.
 - Ambiguous transfer callbacks require investigation. There is no time-based automatic refund because it could double-credit a successful transfer.
-- Current local database evidence does not identify the transaction that completed workflow `1`; the hash must be recaptured in a fresh proof.
+- Current local database evidence does not identify the older transaction that completed workflow `1`. Fresh workflow `2` now supplies two independently verified finalized payment hashes.
 
 ## Relayer
 
@@ -36,10 +36,11 @@ Status date: 2026-10-29
 
 ## Demo evidence
 
-- One completed workflow is visible in final contract state, but its execution hash is not in the current evidence store.
-- Two finalized scheduled payment hashes are still required.
-- A live reserve-guard rejection is still required.
-- Keeper restart, concurrent duplicate trigger, callback failure, final-contract pause/cancel, and final-contract withdrawal need captured Phase 7 evidence.
+- Workflow `2` completed two scheduled payments on 2026-10-30; workflow `3` produced a verified reserve rejection with zero recipient and workflow balance deltas. Both fixture balances were withdrawn to zero. Hashes and the final RPC report are recorded in [Demo evidence](DEMO_EVIDENCE.md).
+- The initial live runner stopped after cancellation had committed. Final RPC confirmed the cancelled state; journal-based recovery withdrew the existing fixture balances without creating another fixture or repeating the cancellation. Owner hashes are now journaled before broadcast and reconciled through full receipt queries.
+- A follow-up [OS process proof](phase-7/PROCESS_VALIDATION.md) terminated a keeper-cycle worker after broadcast, recovered its persisted hash in a new process without another submission, and verified one payment from two competing OS processes. These are one-cycle worker processes; service-manager restart, sustained load, and long-running deployment availability are not established.
+- The first process-proof collector stopped before retaining restart diagnostics. A recovery-only process reconciled the existing transaction and the runner resumed the same fixture. The original collector-stop cause was not retained; child result/error reporting and resumable journal commands now exist.
+- Callback failure, live pause/dispatch prevention, post-cancel dispatch prevention, and withdrawal rejection while obligations are locked still need captured Phase 7 evidence. A successful withdrawal from completed/cancelled fixtures does not prove those rejection paths.
 - The Linux sandbox test passes in WSL2 and in the hosted Ubuntu 24.04 CI run for commit `d78b2d3`.
 
 ## Dependency advisories

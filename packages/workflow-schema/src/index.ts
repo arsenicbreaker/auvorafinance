@@ -99,10 +99,7 @@ export const AI_DRAFT_FIELDS = [
   "minReserve",
 ] as const;
 
-const nearDecimalSchema = z
-  .string()
-  .regex(/^(?:0|[1-9]\d*)(?:\.\d{1,24})?$/)
-  .refine((value) => BigInt(value.replace(".", "") || "0") >= 0n);
+const nearDecimalSchema = z.string().regex(/^(?:0|[1-9]\d*)(?:\.\d{1,24})?$/);
 
 const positiveNearDecimalSchema = nearDecimalSchema.refine(
   (value) => /[1-9]/.test(value),
@@ -131,6 +128,11 @@ const aiWorkflowDraftObjectSchema = z.object({
 
 export const aiWorkflowDraftSchema = aiWorkflowDraftObjectSchema.superRefine(
   (draft, context) => {
+    if (
+      !positiveNearDecimalSchema.safeParse(draft.amountNear).success ||
+      !positiveNearDecimalSchema.safeParse(draft.maxPerRunNear).success
+    )
+      return;
     if (
       nearDecimalToAtomic(draft.amountNear) >
       nearDecimalToAtomic(draft.maxPerRunNear)

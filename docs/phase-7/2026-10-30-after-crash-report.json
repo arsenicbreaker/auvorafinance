@@ -1,0 +1,284 @@
+{
+  "observedAt": "2026-10-30T11:29:01.282Z",
+  "network": "testnet",
+  "contractId": "oceanear.testnet",
+  "chain": {
+    "status": {
+      "last_keeper": "oceankeeper.testnet",
+      "owner_id": "oceanear.testnet",
+      "status": "phase-2-ready"
+    },
+    "accounting": {
+      "total_available_liability": "51460000000000000000000",
+      "total_pending_liability": "0"
+    },
+    "workflows": [
+      {
+        "id": 0,
+        "owner_id": "oceanear.testnet",
+        "recipient_id": "oceanrelayer.testnet",
+        "amount": "10000000000000000000000",
+        "max_per_run": "10000000000000000000000",
+        "min_reserve": "20000000000000000000000",
+        "interval_ms": 60000,
+        "next_run_at_ms": 1792821497855,
+        "max_runs": 2,
+        "runs_completed": 0,
+        "available_balance": "0",
+        "state": "Cancelled",
+        "config_hash": "sha256:phase1-live-smoke-v1",
+        "created_at_ms": 1792817908996,
+        "withdrawable": "0",
+        "pending_execution": null
+      },
+      {
+        "id": 1,
+        "owner_id": "oceanear.testnet",
+        "recipient_id": "oceanrelayer.testnet",
+        "amount": "1000000000000000000000",
+        "max_per_run": "1000000000000000000000",
+        "min_reserve": "2000000000000000000000",
+        "interval_ms": 60000,
+        "next_run_at_ms": 1793027573211,
+        "max_runs": 1,
+        "runs_completed": 1,
+        "available_balance": "4560000000000000000000",
+        "state": "Completed",
+        "config_hash": "auvora-web-1793027573211",
+        "created_at_ms": 1793027333317,
+        "withdrawable": "4560000000000000000000",
+        "pending_execution": null
+      },
+      {
+        "id": 2,
+        "owner_id": "oceanear.testnet",
+        "recipient_id": "oceanrelayer.testnet",
+        "amount": "1000000000000000000000",
+        "max_per_run": "1000000000000000000000",
+        "min_reserve": "2000000000000000000000",
+        "interval_ms": 60000,
+        "next_run_at_ms": 1793355962600,
+        "max_runs": 2,
+        "runs_completed": 2,
+        "available_balance": "0",
+        "state": "Completed",
+        "config_hash": "phase7-payments-2026-10-30T10-23-43-811Z",
+        "created_at_ms": 1793355847137,
+        "withdrawable": "0",
+        "pending_execution": null
+      },
+      {
+        "id": 3,
+        "owner_id": "oceanear.testnet",
+        "recipient_id": "oceanrelayer.testnet",
+        "amount": "1000000000000000000000",
+        "max_per_run": "1000000000000000000000",
+        "min_reserve": "100000000000000000000000",
+        "interval_ms": 60000,
+        "next_run_at_ms": 1793356041075,
+        "max_runs": 1,
+        "runs_completed": 0,
+        "available_balance": "0",
+        "state": "Cancelled",
+        "config_hash": "phase7-reserve-2026-10-30T10-23-43-811Z",
+        "created_at_ms": 1793356024419,
+        "withdrawable": "0",
+        "pending_execution": null
+      },
+      {
+        "id": 4,
+        "owner_id": "oceanear.testnet",
+        "recipient_id": "oceanrelayer.testnet",
+        "amount": "1000000000000000000000",
+        "max_per_run": "1000000000000000000000",
+        "min_reserve": "2000000000000000000000",
+        "interval_ms": 60000,
+        "next_run_at_ms": 1793359690447,
+        "max_runs": 2,
+        "runs_completed": 1,
+        "available_balance": "46900000000000000000000",
+        "state": "Active",
+        "config_hash": "phase7-payments-2026-10-30T11-25-30-941Z",
+        "created_at_ms": 1793359567425,
+        "withdrawable": "43900000000000000000000",
+        "pending_execution": null
+      }
+    ]
+  },
+  "evidence": {
+    "source": "chain-and-keeper-database",
+    "verifiedPaymentSlots": 3,
+    "twoFinalizedPayments": true,
+    "verifiedReserveRejections": 1,
+    "reserveRejection": true,
+    "duplicateSlots": [],
+    "unverifiedTransactions": 0,
+    "scope": "Verifies final RPC outcomes, exact execute_due calls, and contract-emitted events. Recipient balance deltas, restart, concurrency, and lifecycle proofs require separate evidence."
+  },
+  "keeper": {
+    "transactions": [
+      {
+        "transactionHash": "2fjohRCc12mt7ngr36iu5i6jY8yuukPj3KHmSdyCtZsn",
+        "workflowId": "2",
+        "runIndex": 0,
+        "method": "execute_due",
+        "signerId": "oceankeeper.testnet",
+        "submittedAt": "2026-10-30T10:24:49.438Z",
+        "finalState": "Success",
+        "errorCode": null,
+        "finalizedAt": "2026-10-30T10:25:04.616Z",
+        "scheduledForMs": "1793355863393",
+        "amountYocto": "1000000000000000000000",
+        "explorerUrl": "https://testnet.nearblocks.io/txns/2fjohRCc12mt7ngr36iu5i6jY8yuukPj3KHmSdyCtZsn",
+        "evidence": {
+          "verified": true,
+          "event": {
+            "event": "execution_succeeded",
+            "workflowId": 2,
+            "runIndex": 0,
+            "scheduledForMs": 1793355863393,
+            "amountYocto": "1000000000000000000000",
+            "reasonCode": null
+          },
+          "method": "execute_due",
+          "args": {
+            "workflow_id": 2
+          },
+          "attachedDeposit": "0",
+          "gas": "100000000000000"
+        }
+      },
+      {
+        "transactionHash": "EU1hXmfCwKKh6TZhbBDw2uBfX9K2qkS1RTn3PsT6DBN3",
+        "workflowId": "2",
+        "runIndex": 1,
+        "method": "execute_due",
+        "signerId": "oceankeeper.testnet",
+        "submittedAt": "2026-10-30T10:26:29.349Z",
+        "finalState": "Success",
+        "errorCode": null,
+        "finalizedAt": "2026-10-30T10:26:38.939Z",
+        "scheduledForMs": "1793355962600",
+        "amountYocto": "1000000000000000000000",
+        "explorerUrl": "https://testnet.nearblocks.io/txns/EU1hXmfCwKKh6TZhbBDw2uBfX9K2qkS1RTn3PsT6DBN3",
+        "evidence": {
+          "verified": true,
+          "event": {
+            "event": "execution_succeeded",
+            "workflowId": 2,
+            "runIndex": 1,
+            "scheduledForMs": 1793355962600,
+            "amountYocto": "1000000000000000000000",
+            "reasonCode": null
+          },
+          "method": "execute_due",
+          "args": {
+            "workflow_id": 2
+          },
+          "attachedDeposit": "0",
+          "gas": "100000000000000"
+        }
+      },
+      {
+        "transactionHash": "7z5FYzrez1E7nCrt3Y4HqWT7LftUtf62rCsw3UKWgJj8",
+        "workflowId": "3",
+        "runIndex": 0,
+        "method": "execute_due",
+        "signerId": "oceankeeper.testnet",
+        "submittedAt": "2026-10-30T10:27:44.026Z",
+        "finalState": "Success",
+        "errorCode": "RESERVE_GUARD",
+        "finalizedAt": "2026-10-30T10:27:52.357Z",
+        "scheduledForMs": "1793356041075",
+        "amountYocto": "1000000000000000000000",
+        "explorerUrl": "https://testnet.nearblocks.io/txns/7z5FYzrez1E7nCrt3Y4HqWT7LftUtf62rCsw3UKWgJj8",
+        "evidence": {
+          "verified": true,
+          "event": {
+            "event": "execution_skipped",
+            "workflowId": 3,
+            "runIndex": 0,
+            "scheduledForMs": 1793356041075,
+            "amountYocto": "1000000000000000000000",
+            "reasonCode": "RESERVE_GUARD"
+          },
+          "method": "execute_due",
+          "args": {
+            "workflow_id": 3
+          },
+          "attachedDeposit": "0",
+          "gas": "100000000000000"
+        }
+      },
+      {
+        "transactionHash": "39Paxhd2EqVKV6cvaryTXwSzw6JDN63jRYd63qveSSDY",
+        "workflowId": "4",
+        "runIndex": 0,
+        "method": "execute_due",
+        "signerId": "oceankeeper.testnet",
+        "submittedAt": "2026-10-30T11:26:57.214Z",
+        "finalState": "Pending",
+        "errorCode": null,
+        "finalizedAt": null,
+        "scheduledForMs": "1793359583586",
+        "amountYocto": "1000000000000000000000",
+        "explorerUrl": "https://testnet.nearblocks.io/txns/39Paxhd2EqVKV6cvaryTXwSzw6JDN63jRYd63qveSSDY",
+        "evidence": {
+          "verified": true,
+          "event": {
+            "event": "execution_succeeded",
+            "workflowId": 4,
+            "runIndex": 0,
+            "scheduledForMs": 1793359583586,
+            "amountYocto": "1000000000000000000000",
+            "reasonCode": null
+          },
+          "method": "execute_due",
+          "args": {
+            "workflow_id": 4
+          },
+          "attachedDeposit": "0",
+          "gas": "100000000000000"
+        }
+      }
+    ],
+    "executions": [
+      {
+        "workflowId": "2",
+        "runIndex": 0,
+        "status": "Succeeded",
+        "reasonCode": null,
+        "transactionHash": "2fjohRCc12mt7ngr36iu5i6jY8yuukPj3KHmSdyCtZsn",
+        "dispatchedAt": "2026-10-30T10:24:49.438Z",
+        "finalizedAt": "2026-10-30T10:25:04.616Z"
+      },
+      {
+        "workflowId": "2",
+        "runIndex": 1,
+        "status": "Succeeded",
+        "reasonCode": null,
+        "transactionHash": "EU1hXmfCwKKh6TZhbBDw2uBfX9K2qkS1RTn3PsT6DBN3",
+        "dispatchedAt": "2026-10-30T10:26:29.349Z",
+        "finalizedAt": "2026-10-30T10:26:38.939Z"
+      },
+      {
+        "workflowId": "3",
+        "runIndex": 0,
+        "status": "Skipped",
+        "reasonCode": "RESERVE_GUARD",
+        "transactionHash": "7z5FYzrez1E7nCrt3Y4HqWT7LftUtf62rCsw3UKWgJj8",
+        "dispatchedAt": "2026-10-30T10:27:44.026Z",
+        "finalizedAt": "2026-10-30T10:27:52.357Z"
+      },
+      {
+        "workflowId": "4",
+        "runIndex": 0,
+        "status": "Pending",
+        "reasonCode": null,
+        "transactionHash": "39Paxhd2EqVKV6cvaryTXwSzw6JDN63jRYd63qveSSDY",
+        "dispatchedAt": "2026-10-30T11:26:57.214Z",
+        "finalizedAt": null
+      }
+    ]
+  }
+}

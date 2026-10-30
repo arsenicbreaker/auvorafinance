@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   EXECUTION_REASON_CODES,
+  aiWorkflowDraftSchema,
+  aiWorkflowPartialDraftSchema,
   aiWorkflowParserResultSchema,
   createWorkflowSchema,
   executionEventSchema,
@@ -95,6 +97,32 @@ describe("execution event contract", () => {
 });
 
 describe("AI workflow draft contract", () => {
+  it.each(["NaN", "Infinity", "-1", "1e3", "1.0000000000000000000000001"])(
+    "rejects malformed financial field %s without throwing from safeParse",
+    (value) => {
+      const draft = {
+        recipient: "recipient.testnet",
+        asset: "NEAR",
+        amountNear: "2",
+        intervalSeconds: 60,
+        startAt: "2026-11-03T10:00:00Z",
+        maxRuns: 2,
+        minReserveNear: "1",
+        maxPerRunNear: "2",
+        timezone: "UTC",
+        explanation: "Test payment policy.",
+        warnings: [],
+      };
+      for (const field of ["amountNear", "minReserveNear", "maxPerRunNear"]) {
+        expect(
+          aiWorkflowDraftSchema.safeParse({ ...draft, [field]: value }).success,
+        ).toBe(false);
+        expect(
+          aiWorkflowPartialDraftSchema.safeParse({ [field]: value }).success,
+        ).toBe(false);
+      }
+    },
+  );
   it("accepts a complete editable native NEAR draft", () => {
     expect(
       aiWorkflowParserResultSchema.parse({

@@ -50,6 +50,62 @@ Expected JSON:
 
 If `keeper.transactions` is empty, the database does not contain the execution evidence. Do not claim a payment hash until it has been captured from a finalized transaction.
 
+The report independently queries each recorded hash at `FINAL`. Only matching signer, receiver, workflow/run/schedule/amount, a single nonpayable `execute_due` action, successful receipt outcomes, and events emitted by the configured contract can produce `evidence.verified: true`. Database `finalState` remains a cached value. Unknown or unavailable RPC results remain unverified.
+
+For inspection without a database:
+
+```bash
+pnpm proof:report --chain-only
+```
+
+For a strict payment-and-reserve evidence check:
+
+```bash
+pnpm proof:report --require-evidence
+```
+
+The strict command exits 1 unless at least two distinct payment slots and one reserve rejection are independently verified, no duplicate successful slot is found, and no recorded transaction remains unverified. It does not certify recipient balance deltas, lifecycle controls, concurrency, or process restart; retain separate evidence for those gates.
+
+### Optional signed fixture runner
+
+Preview the concrete fixture plan without sending a transaction:
+
+```bash
+pnpm proof:payments
+```
+
+After the human approves the displayed accounts, methods, parameters, and deposits:
+
+```bash
+pnpm proof:payments --execute
+```
+
+The runner loads the ignored keeper and owner deployment environments, verifies that the keeper key is restricted to the contract and `execute_due`, and requires `DEPLOY_CONFIRM` to match the contract. Stop any other keeper against this contract for the proof so external executions do not invalidate balance measurements. It refuses to start with unresolved database submissions.
+
+The two fixtures attach 0.05 testnet NEAR each. If the recipient is not already allowed, another 0.01 testnet NEAR is attached for allowlist storage. The payment fixture sends 0.001 NEAR twice, with a 0.002 NEAR minimum reserve. The rejection fixture has a 0.1 NEAR reserve, exceeding its entire creation deposit. After verification, the runner cancels that fixture and withdraws remaining ledger balances from both fixtures. Storage and gas remain spent.
+
+Public proof records go to ignored `result/phase7-*.jsonl`; execution hashes also remain in PostgreSQL. The journal records owner methods and arguments before submission. On any uncertain owner transaction or failed assertion, inspect the journal and final chain state before running again. It does not automatically recreate fixtures or guess refunds. A stopped proof may leave a funded active fixture requiring owner cancellation and withdrawal.
+
+Owner calls persist their locally computed hash before broadcast and query complete receipts at `FINAL`. After inspecting a stopped run, recover only its recorded fixtures with:
+
+```bash
+pnpm proof:payments --cleanup-journal /absolute/path/to/auvora/result/phase7-TIMESTAMP.jsonl
+```
+
+Recovery validates the journal's contract, owner, recipient, fixture IDs and configuration hashes, and reconciles known owner hashes first. It skips an already committed cancellation, cancels only the reserve fixture if necessary, and withdraws completed/cancelled balances. It refuses to cancel an unfinished payment fixture or withdraw while a transfer remains pending. No new fixture or deposit is created by this mode.
+
+Recovery reconstructs the client and database store after an intentionally interrupted finality read, then checks that the persisted hash is reconciled without a new signature. Concurrency uses two independent keeper cycles and instance IDs inside one process. Capture separate operating-system restart and multi-process evidence before checking those broader release gates.
+
+For actual OS process termination and multiple keeper processes, preview with `pnpm proof:payments --processes`, then use the approved fixture plan with `pnpm proof:payments --processes --execute`. The parent terminates a worker after persisted broadcast; a recovery-only worker then reconciles its known hash without discovering new due work. Two independent worker processes connect to PostgreSQL, wait at an IPC barrier, and compete for the next slot. Owner and relayer credentials are excluded from worker environments.
+
+If the process collector stops, inspect the journal and final chain state. Resume the existing bounded two-run payment fixture and its reserve proof with:
+
+```bash
+pnpm proof:payments --resume-process-journal /absolute/path/to/auvora/result/phase7-TIMESTAMP.jsonl
+```
+
+Resume reconciles pending hashes first, checks the recorded payment workflow identity and run limit, skips an already completed payment workflow, reuses an existing reserve fixture, and creates at most the missing reserve fixture. It does not recreate the payment fixture. Do not resume an uncertain owner creation until its hash and workflow identity have been reconciled; use the cleanup-only mode when no further proof execution is intended. The [recorded process proof](phase-7/PROCESS_VALIDATION.md) documents the actual run and its collector interruption.
+
 ## 3. Start the product
 
 Terminal A:
@@ -144,7 +200,7 @@ Record both hashes if two submissions appear. They must be identical for a safe 
 
 The normal web flow intentionally funds all scheduled payments plus reserve, so it cannot create an underfunded workflow accidentally. The reserve rejection therefore needs a dedicated testnet fixture created with only its measured storage deposit and less than `amount + min_reserve` left in its workflow ledger.
 
-This step is not automated by the current runbook because creating the fixture and calling `execute_due` both require signed testnet transactions. Before running it:
+The optional fixture runner above automates this proof after approval. A manual fixture also requires signed testnet transactions. Before running either path:
 
 1. Show the exact fixture arguments and attached deposit to the human.
 2. Obtain explicit approval for both signed actions.

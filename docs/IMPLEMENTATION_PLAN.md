@@ -1,6 +1,7 @@
 # Auvora Finance MVP Implementation Plan
 
-Status: Phase 0 accepted; Phase 1 implementation and live proof complete, awaiting product-owner acceptance  
+Status: Phases 1–6 have implementation in the repository; Phase 7 verification is in progress. Live evidence and product acceptance remain release gates.
+
 Rule: do not begin a phase until the prior phase is accepted by the product owner
 
 ## 1. Delivery strategy
@@ -349,13 +350,24 @@ AI integration must not destabilize the already passing manual flow.
 
 ## 9. Phase 7: hardening and reproducible demo
 
+### Progress on 2026-10-30
+
+- Added independent final-RPC verification of keeper transaction hashes, signer, receiver, decoded `execute_due` arguments, zero deposit, and contract-origin execution events.
+- Evidence reporting now pages through all workflows, detects multiple successful hashes for one run slot, supports database-free `--chain-only` inspection, and exits nonzero with `--require-evidence` when payment or reserve evidence is missing.
+- Added `pnpm proof:payments`, a read-only preview by default. Explicit execution creates two isolated testnet fixtures, runs two scheduled payments, exercises persisted-hash recovery and concurrent keeper cycles, verifies recipient/ledger deltas, captures reserve rejection, and withdraws remaining fixture balances.
+- Before signed execution, a read-only check confirmed `phase-2-ready` with an empty evidence database; strict reporting correctly returned code 1 for missing evidence.
+- The product owner approved the concrete 0.1 NEAR testnet fixture plan. Workflow `2` completed two 0.001 NEAR payments; workflow `3` returned `RESERVE_GUARD` with zero balance deltas. All three execution hashes independently verified at finality.
+- Persisted-hash recovery signed no replacement transaction; concurrent keeper cycles submitted one payment for the second slot. The initial runner stopped after cancellation committed; journal-based recovery confirmed cancellation and withdrew both remaining fixture balances to zero. Owner transactions now persist their hash before broadcast and use full final receipt queries.
+- A follow-up process proof terminated worker PID `8736` after broadcast and recovered its pending database hash in worker PID `27900` with zero new submissions. Two separate contender processes produced one payment on the existing fixture. Workflow `4` completed two runs; reserve fixture `5` was cancelled and both balances were withdrawn to zero. See [OS process evidence](phase-7/PROCESS_VALIDATION.md).
+- Desktop browser checks cover editable parsing, missing recipient, unsupported USDC, zero-amount rejection, disconnected state, and a keyboard navigation sample. Provider-failure tests found and fixed invalid decimal strings throwing from schema `safeParse`. Live pause/rejection paths and remaining wallet/device acceptance stay open. See [product evidence](phase-7/PRODUCT_VALIDATION.md).
+
 ### Progress on 2026-10-29
 
 - Added a read-only evidence report, judge runbook, evidence ledger, known limitations, and release checklist.
 - Added high-severity npm audit, RustSec audit, and Git-history key-material scan gates to CI.
 - Patched the transitive Meteor Wallet `nanoid` dependency from 5.1.5 to 5.1.16; the high-severity npm audit gate now passes.
 - Confirmed the live contract is `phase-2-ready` with one completed workflow and no pending liability.
-- Remaining blockers: two captured scheduled-payment hashes, live reserve rejection, final lifecycle/restart evidence, Linux sandbox evidence, and a coordinated NEAR Rust dependency update for current RustSec advisories.
+- Blockers at that time: two captured scheduled-payment hashes, live reserve rejection, final lifecycle/restart evidence, Linux sandbox evidence, and a coordinated NEAR Rust dependency update. The Linux sandbox and coordinated dependency upgrade subsequently passed; four documented host-side RustSec exceptions remain.
 
 ### Objective
 

@@ -21,6 +21,7 @@
     "provision:keeper-key": "node --env-file=.env.keeper.local scripts/provision-keeper-key.mjs",
     "proof:relayer": "node --env-file=.env.relayer.local scripts/prove-relayer-testnet.mjs",
     "proof:report": "pnpm --filter @auvora/keeper evidence:report",
+    "proof:payments": "pnpm --filter @auvora/keeper proof:payments",
     "proof:phase1": "node --env-file=.env.deploy.local scripts/prove-phase1-testnet.mjs",
     "test": "pnpm -r --if-present test",
     "typecheck": "pnpm -r --if-present typecheck"
