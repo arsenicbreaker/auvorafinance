@@ -18,6 +18,12 @@ export async function startKeeper(): Promise<void> {
   });
   const state = new KeeperRuntimeState();
   const healthServer = createHealthServer({
+    identity: {
+      networkId: config.NEAR_NETWORK_ID,
+      contractId: config.AUVORA_CONTRACT_ID,
+      signerId: config.KEEPER_ACCOUNT_ID,
+      instanceId: config.KEEPER_INSTANCE_ID,
+    },
     state,
     port: config.KEEPER_HEALTH_PORT,
     staleAfterMs: config.KEEPER_POLL_INTERVAL_MS * 3,

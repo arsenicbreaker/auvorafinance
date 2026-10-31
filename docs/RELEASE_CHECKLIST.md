@@ -87,6 +87,18 @@ See [Phase 9 validation](phase-9/VALIDATION.md). Automated wallet/RPC regression
 
 See [Phase 10 validation](phase-10/VALIDATION.md). Operational dependencies and the earlier real wallet/release acceptance gates remain separate from this development verification.
 
+## Phase 11 development verification
+
+- [x] Before implementation, 229 tests, formatting/lint/typecheck, and the full workspace build passed.
+- [x] Health responses include versioned public network/contract/signer/instance identity and a readiness reason.
+- [x] Failure remains visible during retry, and successful database heartbeat persistence precedes in-memory poll success.
+- [x] Startup, failure, stale/future timestamps, and invalid freshness settings cannot report ready.
+- [x] Actual health HTTP tests verify liveness/readiness status, no-store headers, HEAD, unsupported methods, and unknown paths.
+- [x] Doctor rejects old/mismatched identity and inconsistent readiness; three cases cross the real local HTTP boundary with mocked web/RPC dependencies.
+- [x] Final `pnpm check` passed 256 tests; full workspace build, high-severity audit gate, and whitespace checks passed.
+
+See [Phase 11 validation](phase-11/VALIDATION.md). These are local development proofs; no production keeper was started and no new live wallet/payment evidence was captured. The closing plan has two remaining phases: integrated wallet/payment acceptance, then release/demo preparation.
+
 ## Documentation truth check
 
 - [ ] README lists live, local-only, configurable, deferred, and excluded features accurately

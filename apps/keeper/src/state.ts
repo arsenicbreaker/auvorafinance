@@ -16,7 +16,6 @@ export class KeeperRuntimeState {
   startPoll(at: Date): void {
     this.pollRunning = true;
     this.lastPollStartedAt = at;
-    this.lastErrorCode = null;
   }
 
   completePoll(at: Date): void {

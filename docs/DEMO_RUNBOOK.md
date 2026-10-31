@@ -42,7 +42,7 @@ pnpm local:doctor
 
 It checks the web app at `http://127.0.0.1:3000`. If using the existing production preview, run `pnpm local:doctor --web-url http://127.0.0.1:3010`. Use `--offline` for configuration-only checks or `--json` for structured output. The script reads ignored local configuration and public status; it does not start the keeper, migrate the database, provision keys, or send transactions.
 
-A failed web check means the app is unavailable or the selected port is wrong. A failed keeper check means its readiness endpoint did not report a recent error-free poll; inspect PostgreSQL and keeper logs, then follow the startup commands below. Exit 1 indicates these operational blockers, not a failed automated test. Offline exit 0 does not prove service readiness. Existing web builds may retain older public configuration, and keeper health does not attest the identity of the running process. Wallet and scheduled-payment acceptance still require the following demo steps.
+A failed web check means the app is unavailable or the selected port is wrong. A failed keeper check means its readiness response is unavailable, old, mismatched with expected network/contract/signer/instance, or not a recent error-free poll; inspect PostgreSQL, keeper configuration, and logs, then follow the startup commands below. Restart older keeper processes so they expose `healthVersion: 1`. Exit 1 indicates these operational blockers, not a failed automated test. Offline exit 0 does not prove service readiness. Existing web builds may retain older public configuration. Keeper identity is self-reported and does not cryptographically attest the running process. Wallet and scheduled-payment acceptance still require the following demo steps.
 
 ## 2. Read final contract state
 
@@ -140,6 +140,8 @@ pnpm keeper:dev
 ```
 
 Expected keeper output is one JSON line per cycle. A healthy idle cycle has `event: "keeper_cycle"`. The `/live` and `/ready` endpoints listen on port `3001` by default.
+
+`/ready` includes `healthVersion`, public `identity`, `readinessReason`, polling timestamps, and `pollRunning`. Expected reasons are `starting`, `poll_failed`, `clock_skew`, `stale`, or `ready`. A failed cycle stays HTTP 503 during retry and only returns HTTP 200 after a complete successful cycle and persisted database heartbeat. `/live` stays HTTP 200 independently of polling readiness. GET and HEAD are supported; responses must not be cached.
 
 ## 4. Parse the hero instruction
 

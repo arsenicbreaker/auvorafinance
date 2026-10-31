@@ -74,7 +74,8 @@ Status date: 2026-10-31
 ## Operations and privacy
 
 - `pnpm local:doctor` diagnoses local configuration, web/keeper health, and read-only chain/key state. Offline mode does not test running services. A successful runtime report does not certify wallet behavior, payments, migrations, uptime, or release acceptance.
-- The doctor uses the named `.testnet` accounts and exact local configuration convention documented in the runbook. It does not discover implicit-account setups, alternate environment-file layouts, a production bundle's embedded public configuration, or the identity of the process answering a keeper health request.
+- The doctor uses the named `.testnet` accounts and exact local configuration convention documented in the runbook. It does not discover implicit-account setups, alternate environment-file layouts, or a production bundle's embedded public configuration. Keeper health now reports versioned network/contract/signer/instance identity, which the doctor compares with configuration. These public fields are self-reported and can be imitated by another process; they are not cryptographic attestation.
+- Keeper readiness remains false after a failed poll and throughout its retry until a successful cycle persists a database heartbeat. An otherwise fresh poll does not prove that every workflow payment succeeded; inspect per-transaction finality and evidence separately. Older keeper processes must be restarted to expose the versioned health response.
 - Doctor output excludes raw secrets and error bodies, but the command reads local keeper configuration in memory to derive its public key. It never signs. Its endpoint/key checks are point-in-time observations, not an assurance about later availability or allowance.
 - The web app has no user account system or private off-chain treasury metadata store.
 - Browser wallet sessions depend on supported NEAR Wallet Selector wallets.

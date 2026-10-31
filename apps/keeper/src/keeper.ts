@@ -166,7 +166,6 @@ export async function runKeeperCycle(
     }
 
     const completedAt = now();
-    options.state.completePoll(completedAt);
     await options.store.recordHeartbeat({
       serviceId: options.instanceId,
       network: options.network,
@@ -175,6 +174,7 @@ export async function runKeeperCycle(
       lastSuccessfulPollAt: completedAt,
       lastErrorCode: null,
     });
+    options.state.completePoll(completedAt);
     return stats;
   } catch (error) {
     const errorCode =

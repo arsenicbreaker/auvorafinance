@@ -1,6 +1,6 @@
 # Auvora Finance MVP Implementation Plan
 
-Status: Phases 1–6 are implemented; Phase 7 live/product acceptance remains in progress. Phases 8–10 (treasury planning, workflow transaction recovery, and local readiness diagnostics) are implemented and tested locally. Live evidence and product acceptance remain release gates.
+Status: Phases 1–6 are implemented; Phase 7 live/product acceptance remains in progress. Phases 8–11 (treasury planning, transaction recovery, local diagnostics, and keeper readiness) are implemented and tested locally. Two closing phases remain: integrated wallet/payment acceptance and the release/demo package. Live evidence and product acceptance remain release gates.
 
 Rule: do not begin a phase until the prior phase is accepted by the product owner
 
@@ -492,7 +492,36 @@ Make local testing reproducible by identifying configuration, web, keeper, RPC, 
 
 Before implementation, `pnpm check` passed all 181 TypeScript tests plus formatting/lint/typecheck, then the workspace build passed. Post-change tests and read-only local checks are recorded in [Phase 10 validation](phase-10/VALIDATION.md). Earlier live wallet/lifecycle gates remain open.
 
-## 13. Measurable MVP release gate
+## 13. Closing plan after Phase 10
+
+The product owner asked on 2026-10-31 to continue development and state how many phases remain. The remaining MVP work is grouped into three closing phases below. This grouping does not declare earlier live acceptance complete, and does not promise release while a gate remains unresolved.
+
+### Phase 11: keeper readiness and reported runtime identity
+
+- Expose a versioned health response with public network, contract, signer, and instance identity.
+- Keep readiness false after a failed cycle, including during its retry, until a full cycle and database heartbeat succeed.
+- Reject stale/future polling timestamps and provide an explicit readiness reason.
+- Require the local doctor to compare reported runtime identity with intended configuration.
+- Verify state transitions and actual HTTP status/cache behavior without starting a payment worker or signing a transaction.
+
+Implementation on 2026-10-31 adds versioned public identity and readiness reasons, preserves failure state during retries, persists the database heartbeat before marking success, rejects future/stale timestamps, and requires doctor identity matches. The 229-test baseline and full workspace build passed before code changes. See [Phase 11 validation](phase-11/VALIDATION.md) for final evidence. This completes the local development scope; it does not claim that an operational keeper or wallet has passed live acceptance.
+
+### Phase 12: integrated wallet and payment acceptance
+
+- Verify the selected wallet, canonical manual/AI-fallback flow, rejection, uncertain finality, and reload recovery on testnet.
+- Close gaps exposed by acceptance, including the supported sponsorship path and user-facing execution history where necessary.
+- Capture missing live lifecycle, duplicate-trigger, callback/withdrawal rejection, and explorer/final-RPC evidence using bounded, reviewed fixtures.
+- Human wallet signatures and any new funded fixtures require their concrete approval flow; automated mocks do not replace live acceptance.
+
+### Phase 13: release and demo package
+
+- Reconcile the PRD, README, evidence, limitations, and final release checklist against the actual tested behavior.
+- Verify fresh setup, repeatable demo instructions, dependency/key-material gates, and the final build.
+- Prepare a concrete repository/demo/submission package for human review. Public hosting, publication, and submission remain separately authorized human actions.
+
+Phase count is a work breakdown, not a readiness score. Findings can add work within these phases. Optional product expansion beyond the MVP is not part of this closing plan.
+
+## 14. Measurable MVP release gate
 
 The MVP is a go only if all are true:
 
@@ -511,7 +540,7 @@ The MVP is a go only if all are true:
 
 If time is short, remove forecasts, extra dashboard charts, HOT integration, and optional analytics before weakening contract tests or finality handling.
 
-## 14. Technical risks
+## 15. Technical risks
 
 | Risk | Probability | Impact | Mitigation and evidence required |
 | --- | --- | --- | --- |
@@ -532,7 +561,7 @@ If time is short, remove forecasts, extra dashboard charts, HOT integration, and
 | FlowPilot code copied without notice | Low | Medium | Concept-only reuse by default; notice file if copied |
 | Hackathon rules change | Low | High | Re-fetch live `HACKATHON.md` before publication and submission |
 
-## 15. Approved decisions and remaining approvals
+## 16. Approved decisions and remaining approvals
 
 Approved on 2026-10-22:
 

@@ -140,6 +140,8 @@ Use `--offline` to check local configuration without network requests, or `--jso
 
 The doctor checks ignored environment files, supported Node, configuration alignment, the local web page, keeper polling health, RPC testnet identity, finalized contract status, and the keeper key's on-chain method/receiver restriction and remaining allowance. Output omits secrets and raw RPC errors. It does not start services, migrate the database, sign, provision keys, or send transactions. A passing result is not proof of a completed payment or real wallet acceptance. The name `local:doctor` avoids pnpm's built-in `doctor` command.
 
+Keeper health now includes `healthVersion: 1` and its public network, contract, signer, and instance identity. The doctor compares those reported values with `.env.keeper.local`; restart an older keeper before using the updated doctor. `/live` remains HTTP 200 while the service runs. `/ready` returns HTTP 503 before the first successful cycle, after a failure, or when the last successful poll is stale or in the future. Starting a retry does not clear a failure; a successful cycle must persist its database heartbeat first. Both endpoints use `Cache-Control: no-store`. Reported identity is a consistency check, not cryptographic attestation.
+
 If the keeper check fails, confirm PostgreSQL is available, then run the migration and keeper commands from **Run locally**. If the web check fails, start the web app or specify the correct local port. After changing public web configuration, restart development mode or rebuild production mode.
 
 ## Validation commands

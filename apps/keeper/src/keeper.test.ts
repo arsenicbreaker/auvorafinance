@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import type {
   FinalizedExecution,
@@ -147,10 +147,62 @@ describe("keeper cycle", () => {
     expect(store.finalizations.has(TRANSACTION_HASH)).toBe(true);
   });
 
+  it("does not declare a successful poll until its database heartbeat is persisted", async () => {
+    const near = new FakeNearClient({ ...dueWorkflow(), state: "Cancelled" });
+    const store = new InMemoryKeeperStore();
+    const state = new KeeperRuntimeState();
+    const previous = new Date(NOW_MS - 1000);
+    state.completePoll(previous);
+    const persist = store.recordHeartbeat.bind(store);
+    const heartbeat = vi
+      .spyOn(store, "recordHeartbeat")
+      .mockImplementation(async (input) => {
+        expect(state.snapshot().pollRunning).toBe(true);
+        expect(state.snapshot().lastSuccessfulPollAt).toEqual(previous);
+        await persist(input);
+      });
+    await runKeeperCycle(cycleOptions({ near, store, state }));
+    expect(heartbeat).toHaveBeenCalledTimes(1);
+    expect(state.snapshot()).toMatchObject({
+      pollRunning: false,
+      lastErrorCode: null,
+      lastSuccessfulPollAt: new Date(NOW_MS),
+    });
+    expect(near.submitCount).toBe(0);
+  });
+
+  it("retains the previous success and failed state when heartbeat persistence fails", async () => {
+    const near = new FakeNearClient({ ...dueWorkflow(), state: "Cancelled" });
+    const store = new InMemoryKeeperStore();
+    const state = new KeeperRuntimeState();
+    const previous = new Date(NOW_MS - 1000);
+    state.completePoll(previous);
+    vi.spyOn(store, "recordHeartbeat").mockRejectedValue(
+      new Error("database unavailable"),
+    );
+    await expect(
+      runKeeperCycle(cycleOptions({ near, store, state })),
+    ).rejects.toThrow("database unavailable");
+    expect(state.snapshot()).toMatchObject({
+      pollRunning: false,
+      lastErrorCode: "Error",
+      lastSuccessfulPollAt: previous,
+    });
+    state.startPoll(new Date(NOW_MS + 1));
+    expect(state.snapshot().lastErrorCode).toBe("Error");
+    expect(near.submitCount).toBe(0);
+  });
+
   it("exposes readiness only after a recent successful poll", () => {
     const state = new KeeperRuntimeState();
     expect(
       getHealthPayload({
+        identity: {
+          networkId: "testnet",
+          contractId: "auvora.testnet",
+          signerId: "keeper.testnet",
+          instanceId: "keeper-a",
+        },
         state,
         now: new Date(NOW_MS),
         staleAfterMs: 30_000,
@@ -160,6 +212,12 @@ describe("keeper cycle", () => {
     state.completePoll(new Date(NOW_MS));
     expect(
       getHealthPayload({
+        identity: {
+          networkId: "testnet",
+          contractId: "auvora.testnet",
+          signerId: "keeper.testnet",
+          instanceId: "keeper-a",
+        },
         state,
         now: new Date(NOW_MS + 20_000),
         staleAfterMs: 30_000,

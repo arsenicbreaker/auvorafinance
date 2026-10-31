@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { KeyPair } from "near-api-js";
+import { once } from "node:events";
+import { createHealthServer } from "../apps/keeper/src/health.ts";
+import { KeeperRuntimeState } from "../apps/keeper/src/state.ts";
 import {
   formatDoctor,
   parseDoctorArgs,
@@ -36,6 +39,14 @@ function fixture({
       return url.endsWith("/ready")
         ? Response.json({
             service: "auvora-keeper",
+            healthVersion: 1,
+            identity: {
+              networkId: "testnet",
+              contractId: "treasury.testnet",
+              signerId: "keeper.testnet",
+              instanceId: "keeper-1",
+            },
+            readinessReason: "ready",
             live: true,
             ready: true,
             lastSuccessfulPollAt: new Date(now - 1000).toISOString(),
@@ -212,6 +223,42 @@ describe("local readiness doctor", () => {
   });
 
   it.each([
+    { healthVersion: undefined },
+    { identity: undefined },
+    {
+      identity: {
+        networkId: "mainnet",
+        contractId: "treasury.testnet",
+        signerId: "keeper.testnet",
+        instanceId: "keeper-1",
+      },
+    },
+    {
+      identity: {
+        networkId: "testnet",
+        contractId: "other.testnet",
+        signerId: "keeper.testnet",
+        instanceId: "keeper-1",
+      },
+    },
+    {
+      identity: {
+        networkId: "testnet",
+        contractId: "treasury.testnet",
+        signerId: "other.testnet",
+        instanceId: "keeper-1",
+      },
+    },
+    {
+      identity: {
+        networkId: "testnet",
+        contractId: "treasury.testnet",
+        signerId: "keeper.testnet",
+        instanceId: "another-instance",
+      },
+    },
+    { readinessReason: "poll_failed" },
+    { lastSuccessfulPollAt: new Date(now + 1).toISOString() },
     { ready: false },
     { service: "another-app" },
     { lastErrorCode: secret },
@@ -323,6 +370,55 @@ describe("local readiness doctor", () => {
     "rejects invalid CLI options: %j",
     (args) => {
       expect(() => parseDoctorArgs(args)).toThrow();
+    },
+  );
+});
+
+describe("doctor against the keeper HTTP endpoint", () => {
+  it.each(["healthy", "wrong-instance", "failed-retry"])(
+    "checks a real health server: %s",
+    async (mode) => {
+      const state = new KeeperRuntimeState();
+      state.completePoll(new Date());
+      if (mode === "failed-retry") {
+        state.failPoll("DatabaseError");
+        state.startPoll(new Date());
+      }
+      const server = createHealthServer({
+        state,
+        identity: {
+          networkId: "testnet",
+          contractId: "treasury.testnet",
+          signerId: "keeper.testnet",
+          instanceId: mode === "wrong-instance" ? "wrong-instance" : "keeper-1",
+        },
+        port: 0,
+        staleAfterMs: 45000,
+      });
+      try {
+        await once(server, "listening");
+        const port = server.address().port;
+        const input = fixture({
+          keeper: { KEEPER_HEALTH_PORT: String(port) },
+          now: Date.now(),
+        });
+        const mocked = input.fetchImpl.getMockImplementation();
+        input.fetchImpl.mockImplementation((url, options) =>
+          url === `http://127.0.0.1:${port}/ready`
+            ? fetch(url, options)
+            : mocked(url, options),
+        );
+        const report = await runDoctor(input);
+        expect(check(report, "keeper_ready").status).toBe(
+          mode === "healthy" ? "pass" : "fail",
+        );
+        expect(report.runtimeReady).toBe(mode === "healthy");
+        expect(JSON.stringify(report)).not.toContain(privateKey);
+      } finally {
+        await new Promise((resolve, reject) =>
+          server.close((error) => (error ? reject(error) : resolve())),
+        );
+      }
     },
   );
 });

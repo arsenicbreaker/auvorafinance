@@ -262,16 +262,23 @@ export async function runDoctor({
               const lastPoll = Date.parse(body.lastSuccessfulPollAt);
               return (
                 body.service === "auvora-keeper" &&
+                body.healthVersion === 1 &&
+                body.identity?.networkId === "testnet" &&
+                body.identity?.contractId === keeper.AUVORA_CONTRACT_ID &&
+                body.identity?.signerId === keeper.KEEPER_ACCOUNT_ID &&
+                body.identity?.instanceId ===
+                  (keeper.KEEPER_INSTANCE_ID ?? "keeper-1") &&
                 body.live === true &&
                 body.ready === true &&
+                body.readinessReason === "ready" &&
                 body.lastErrorCode === null &&
                 Number.isFinite(lastPoll) &&
-                lastPoll <= now + 5000 &&
+                lastPoll <= now &&
                 now - lastPoll <= poll * 3
               );
             },
-            "Keeper must report a recent successful poll with no current error.",
-            "Check PostgreSQL, run pnpm db:migrate:deploy, then pnpm keeper:dev in a separate terminal. Inspect keeper logs if readiness stays unavailable.",
+            "Keeper must report the expected testnet contract, signer, instance, and a recent error-free poll.",
+            "Check PostgreSQL and the keeper port/configuration; run pnpm db:migrate:deploy, then restart pnpm keeper:dev. An old or mismatched health response is not accepted. Inspect keeper logs if readiness stays unavailable.",
           )
         : Promise.resolve(
             skip(
@@ -358,7 +365,7 @@ export async function runDoctor({
     checks,
     limitations: [
       "Reads local configuration and public status only; sends no transaction and starts no service.",
-      "Keeper readiness is a recent-poll signal, not proof of a new payment or an attestation of the running service's configuration.",
+      "Keeper readiness compares self-reported runtime identity and a recent poll; it is not cryptographic attestation or proof of a payment.",
       "Web HTTP checks do not attest the public configuration embedded in an existing build.",
       "Wallet acceptance, completed payments, and release approval remain separate checks.",
     ],
