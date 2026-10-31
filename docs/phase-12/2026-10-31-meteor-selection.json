@@ -1,0 +1,39 @@
+{
+  "date": "2026-10-31",
+  "timezone": "Asia/Jakarta",
+  "selected_wallet": "Meteor Wallet",
+  "selection_source": "Explicit product-owner reply",
+  "installed_adapter": {
+    "package": "@near-wallet-selector/meteor-wallet",
+    "version": "10.1.4"
+  },
+  "installed_sdk": { "package": "@meteorwallet/sdk", "version": "1.0.24" },
+  "capability_audit": {
+    "ordinary_transaction_path": "Present in installed adapter; live acceptance pending",
+    "delegate_signing_method": "Present as an unsupported-method stub",
+    "sponsored_management": "Not integrated"
+  },
+  "sender_public_account": "oceanear.testnet",
+  "sender_account_check": {
+    "network": "testnet",
+    "method": "query/view_account",
+    "finality": "final",
+    "exists": true,
+    "block_height": 275615075,
+    "error_code": null,
+    "corrected_by_product_owner": true,
+    "address_automatically_changed": false
+  },
+  "proposed_recipient": {
+    "account": "oceanrelayer.testnet",
+    "exists": true,
+    "block_height": 275615076,
+    "selected_by_product_owner": false
+  },
+  "recipient_public_account": null,
+  "browser_handoff_url": "http://127.0.0.1:3013/#proof",
+  "browser_control_this_step": "Unavailable",
+  "wallet_login_performed": false,
+  "signed_or_broadcast_transactions": 0,
+  "phase_12_status": "in_progress"
+}
