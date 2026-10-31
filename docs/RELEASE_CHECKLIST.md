@@ -63,6 +63,18 @@ Automated wallet-state verification now covers rejection/abandonment, missing ha
 
 See [Phase 8 validation](phase-8/VALIDATION.md). These development checks do not close the earlier live wallet/lifecycle or human publication gates.
 
+## Phase 9 development verification
+
+- [x] Before implementation, 150 TypeScript tests, format/lint/typecheck, and the workspace build passed.
+- [x] Pending workflow hashes recover after remount without restoring financial approval or requesting another signature.
+- [x] Recipient authorization, creation, pause, resume, cancel, and withdrawal use the original hash for finality checks.
+- [x] Owner, contract, RPC, and component channels isolate stored records; storage events update mounted readers.
+- [x] Corrupt records and storage errors prevent new signatures; post-submission write failure keeps the hash and displays a warning.
+- [x] Only final success/failure removes the matching hash; checking an old hash cannot overwrite or remove another saved transaction.
+- [x] 181 TypeScript tests (88 web), format/lint/typecheck, production build, and the high-severity audit gate passed.
+
+See [Phase 9 validation](phase-9/VALIDATION.md). Automated wallet/RPC regressions remain distinct from real selected-wallet acceptance.
+
 ## Documentation truth check
 
 - [ ] README lists live, local-only, configurable, deferred, and excluded features accurately

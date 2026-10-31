@@ -1,6 +1,6 @@
 # Auvora Finance MVP Implementation Plan
 
-Status: Phases 1–6 are implemented; Phase 7 live/product acceptance remains in progress. Phase 8 treasury planning is implemented and tested locally. Live evidence and product acceptance remain release gates.
+Status: Phases 1–6 are implemented; Phase 7 live/product acceptance remains in progress. Phase 8 treasury planning and Phase 9 workflow transaction recovery are implemented and tested locally. Live evidence and product acceptance remain release gates.
 
 Rule: do not begin a phase until the prior phase is accepted by the product owner
 
@@ -434,7 +434,7 @@ Submission is not sent until the human reviews the exact immutable payload and e
 - Added integer-only per-workflow forecasts, protected reserves and remaining obligations, an editable fee buffer, funding gaps, paused/no-catch-up handling, and explicit pending-transfer uncertainty.
 - Added a separate one-year APY scenario with editable assumptions, a principal cap at uncommitted funds, default zero APY, and no wallet/provider/DeFi transaction capability.
 - After implementation: 150 TypeScript tests, formatting, lint, typecheck, and the full production build passed. Browser verification used existing public testnet data, including a nonzero ledger, invalid owner recovery, and an empty owner account. See [Phase 8 validation](phase-8/VALIDATION.md).
-- Remaining Phase 7 live wallet/lifecycle acceptance continues to gate release. No Phase 9 is defined in this implementation plan.
+- Remaining Phase 7 live wallet/lifecycle acceptance continues to gate release. The subsequent request to continue development extends the plan with Phase 9 below.
 
 ### Objective
 
@@ -451,7 +451,29 @@ Add deterministic treasury forecast and a clearly labeled yield simulation witho
 - Simulated values never appear as on-chain balances or guaranteed returns.
 - No lending, staking, swap, cross-chain, or yield transaction exists.
 
-## 11. Measurable MVP release gate
+## 11. Phase 9: workflow transaction recovery
+
+### Objective
+
+Preserve known unresolved workflow transaction hashes across reloads and reconnects, so an owner can check the original transaction before signing another action. This follow-up addresses the browser-session limitation recorded after Phase 8.
+
+### Scope and acceptance criteria
+
+- A versioned browser journal stores only a hash, sender, action, and workflow ID where relevant. Records are separated by testnet RPC, contract, owner, and builder/ledger channel.
+- Recipient authorization, creation, pause, resume, cancel, and withdrawal restore a status-check path without restoring a draft approval or requesting a signature.
+- Pending or unavailable finality keeps the original hash and blocks a new action in the same channel. Only verified final success or failure clears its matching record.
+- Invalid records and unavailable storage block signing. A write failure after wallet submission retains the hash in the mounted component and displays a copy/keep-open instruction.
+- Other tabs receive storage changes, and signing checks storage again. This is not a cross-tab signing mutex; simultaneous wallet requests remain an operational limitation.
+- Component and journal regressions cover remounts, scope isolation, corruption, unavailable reads/writes, all supported actions, and same-hash finality without another signature.
+- Wallet redirects before a hash is returned, the separate deployment-owner proof action, cleared browser storage, and cross-device recovery remain outside this phase.
+
+### Transition baseline
+
+Before implementation on 2026-10-31, `pnpm check` passed all 150 TypeScript tests plus format/lint/typecheck, and `pnpm build` passed across the workspace. The Rust contract and workers are unchanged in this phase; the preceding Phase 8 baseline already passed 34 Rust unit tests and one Linux sandbox scenario.
+
+Remaining live wallet/lifecycle and publication gates still apply. See [Phase 9 validation](phase-9/VALIDATION.md) for final verification.
+
+## 12. Measurable MVP release gate
 
 The MVP is a go only if all are true:
 
@@ -470,7 +492,7 @@ The MVP is a go only if all are true:
 
 If time is short, remove forecasts, extra dashboard charts, HOT integration, and optional analytics before weakening contract tests or finality handling.
 
-## 12. Technical risks
+## 13. Technical risks
 
 | Risk | Probability | Impact | Mitigation and evidence required |
 | --- | --- | --- | --- |
@@ -491,7 +513,7 @@ If time is short, remove forecasts, extra dashboard charts, HOT integration, and
 | FlowPilot code copied without notice | Low | Medium | Concept-only reuse by default; notice file if copied |
 | Hackathon rules change | Low | High | Re-fetch live `HACKATHON.md` before publication and submission |
 
-## 13. Approved decisions and remaining approvals
+## 14. Approved decisions and remaining approvals
 
 Approved on 2026-10-22:
 

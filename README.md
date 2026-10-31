@@ -39,6 +39,12 @@ The exact commands, expected outputs, and human-only signing steps are in [Demo 
 
 The **Treasury outlook** section works without a wallet connection. Enter a public testnet owner account and select **Read finalized balances**. Change the forecast horizon or planning fee buffer to inspect commitments, reserves, per-workflow funding gaps, and uncommitted funds. Expand **Model a hypothetical one-year return** to edit a principal and assumed APY; this scenario never opens a wallet or moves assets. Refresh the snapshot to incorporate newer chain state.
 
+## Workflow transaction recovery
+
+Known pending workflow hashes are saved on this browser for recipient authorization, creation, pause, resume, cancel, and withdrawal. After a reload, reconnect the same owner with the same contract and RPC, then select **Check transaction status**. This reads the original hash without opening the wallet again. A pending or unavailable result keeps new actions in that section blocked; confirmed success or failure clears the matching saved record.
+
+Only public transaction identifiers are stored. Financial-field approval is not restored. Recovery cannot recover a wallet response that never returned a hash, cleared storage, or transactions from another device/origin. Use one signing tab; browser storage is not a cross-tab signing lock. See [known limitations](docs/KNOWN_LIMITATIONS.md).
+
 ## Prerequisites
 
 - Node.js 22.12 or newer within 22.x (tested with 22.22.1)

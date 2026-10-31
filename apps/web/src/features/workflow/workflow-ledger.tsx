@@ -9,6 +9,7 @@ import {
   type WorkflowView,
 } from "../../lib/near-rpc";
 import type { WorkflowWalletSession } from "./workflow-builder";
+import { useTransactionJournal } from "../../lib/transaction-journal";
 
 type LoadState = "empty" | "error" | "loading" | "ready" | "signed-out";
 type OwnerAction = "cancel" | "pause" | "resume" | "withdraw";
@@ -38,17 +39,44 @@ export function WorkflowLedger({
   const [workflows, setWorkflows] = useState<WorkflowView[]>([]);
   const [loadState, setLoadState] = useState<LoadState>("signed-out");
   const [loadError, setLoadError] = useState("");
-  const [message, setMessage] = useState("");
+  const [currentMessage, setMessage] = useState("");
   const [messageTone, setMessageTone] = useState<
     "error" | "pending" | "success"
   >("success");
   const [actionState, setActionState] = useState<ActionState>(null);
   const [confirmCancelId, setConfirmCancelId] = useState<number | null>(null);
-  const [transactionHash, setTransactionHash] = useState("");
-  const [submittedAction, setSubmittedAction] =
+  const [currentTransactionHash, setTransactionHash] = useState("");
+  const [currentSubmittedAction, setSubmittedAction] =
     useState<SubmittedAction | null>(null);
+  const journal = useTransactionJournal({
+    accountId: walletSession?.accountId ?? "",
+    contractId,
+    rpcUrl,
+    channel: "ledger",
+  });
+  const [journalError, setJournalError] = useState("");
+  const submittedAction =
+    currentSubmittedAction ??
+    (journal.entry
+      ? {
+          hash: journal.entry.hash,
+          sender: journal.entry.sender,
+          kind: journal.entry.action as OwnerAction,
+          workflowId: journal.entry.workflowId!,
+        }
+      : null);
+  const transactionHash = currentTransactionHash || submittedAction?.hash || "";
+  const message =
+    currentMessage ||
+    (submittedAction
+      ? "Recovered a submitted transaction from this browser. Check its status before signing another action."
+      : "");
   const actionLock = useRef(false);
-  const actionsBlocked = actionState !== null || submittedAction !== null;
+  const actionsBlocked =
+    !journal.ready ||
+    !!journal.issue ||
+    actionState !== null ||
+    submittedAction !== null;
 
   const loadWorkflows = useCallback(async () => {
     if (!walletSession || !contractId) {
@@ -99,7 +127,13 @@ export function WorkflowLedger({
   );
 
   async function submitOwnerAction(workflow: WorkflowView, kind: OwnerAction) {
-    if (!walletSession || actionLock.current || submittedAction) return;
+    if (!walletSession || actionLock.current || actionsBlocked) return;
+    if (!journal.canSign()) {
+      setJournalError(
+        "A new transaction could not be safely recorded. Check browser storage and any pending transaction before signing again.",
+      );
+      return;
+    }
     if (kind === "withdraw" && BigInt(workflow.withdrawable) <= 0n) return;
     actionLock.current = true;
     const methodName = `${kind}_workflow`;
@@ -128,6 +162,18 @@ export function WorkflowLedger({
         sender: walletSession.accountId,
       };
       setSubmittedAction(submitted);
+      if (
+        !journal.save({
+          hash,
+          sender: submitted.sender,
+          action: kind,
+          workflowId: workflow.id,
+        })
+      ) {
+        setJournalError(
+          "The submitted hash could not be saved on this device. Keep this page open or copy the hash before leaving.",
+        );
+      }
       await confirmOwnerAction(submitted);
     } catch (error) {
       setMessageTone("error");
@@ -141,6 +187,7 @@ export function WorkflowLedger({
   }
 
   async function confirmOwnerAction(submitted: SubmittedAction) {
+    setTransactionHash(submitted.hash);
     setActionState({
       kind: submitted.kind,
       phase: "finality",
@@ -160,6 +207,7 @@ export function WorkflowLedger({
         );
         return;
       }
+      journal.clear(submitted.hash);
       setSubmittedAction(null);
       if (finality === "failure") {
         setMessageTone("error");
@@ -414,6 +462,11 @@ export function WorkflowLedger({
         </>
       ) : null}
 
+      {journal.issue || journalError ? (
+        <p className="ledger-message ledger-message-error" role="alert">
+          {journal.issue || journalError}
+        </p>
+      ) : null}
       {message ? (
         <div
           className={`ledger-message ledger-message-${messageTone}`}

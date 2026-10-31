@@ -46,7 +46,10 @@ Status date: 2026-10-31
 ## Web transaction feedback
 
 - Mocked wallet/component tests cover rejection, abandonment, pending/final states, failed receipts, and rechecking a known hash without another signature. Real selected-wallet behavior and sponsored management remain unverified.
-- Unresolved transaction state is retained within the mounted component session. Reloading or changing accounts does not restore that context; inspect known hashes and final contract state before retrying an uncertain action.
+- Known unresolved workflow transaction hashes are now retained in versioned browser storage for recipient authorization, creation, pause, resume, cancel, and withdrawal. Reconnect the same account on the same origin, contract, and RPC to check the original hash without signing again. Approval of financial fields is not restored.
+- Recovery requires the wallet to have returned a hash before navigation. A redirect or closed page before that response, cleared/blocked storage, another device/origin/RPC, and the separate deployment-owner proof transaction are not covered. Keep any known hash and inspect final contract state before retrying.
+- Browser records contain public identifiers, not secrets or signed bytes. Invalid records block new signatures until the owner inspects wallet history and repairs storage. A failed write after submission retains the hash only while that component stays mounted and displays a warning.
+- Storage events and a fresh signing-time read reduce stale-tab retries, but do not atomically lock simultaneous wallet requests in multiple tabs. Use one signing tab; the contract remains the idempotency boundary for execution slots.
 - Mobile browser verification covers a disconnected 390 px view and a keyboard sample. Complete device and keyboard acceptance, including focus trapping in the third-party selector, remains open.
 
 ## Demo evidence

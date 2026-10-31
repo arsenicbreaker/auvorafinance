@@ -67,7 +67,7 @@ export default function Home() {
       />
 
       <WorkflowBuilder
-        key={`builder:${walletSession?.accountId ?? "signed-out"}`}
+        key={`builder:${rpcUrl}:${contractId}:${walletSession?.accountId ?? "signed-out"}`}
         contractId={contractId}
         rpcUrl={rpcUrl}
         walletSession={walletSession}
@@ -77,7 +77,7 @@ export default function Home() {
       />
 
       <WorkflowLedger
-        key={`ledger:${walletSession?.accountId ?? "signed-out"}`}
+        key={`ledger:${rpcUrl}:${contractId}:${walletSession?.accountId ?? "signed-out"}`}
         contractId={contractId}
         refreshToken={workflowRefreshToken}
         rpcUrl={rpcUrl}

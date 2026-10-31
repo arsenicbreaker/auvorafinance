@@ -12,6 +12,7 @@ import {
   readTransactionFinality,
   readWorkflowStorageCost,
 } from "../../lib/near-rpc";
+import { useTransactionJournal } from "../../lib/transaction-journal";
 
 export interface WorkflowWalletSession {
   accountId: string;
@@ -58,8 +59,8 @@ export function WorkflowBuilder({
   const [parserNotes, setParserNotes] = useState<string[]>([]);
   const [draftState, setDraftState] = useState<DraftState>("idle");
   const [error, setError] = useState("");
-  const [transactionHash, setTransactionHash] = useState("");
-  const [submittedTransaction, setSubmittedTransaction] = useState<{
+  const [currentTransactionHash, setTransactionHash] = useState("");
+  const [currentSubmittedTransaction, setSubmittedTransaction] = useState<{
     hash: string;
     actionName: "Recipient authorization" | "Workflow creation";
     sender: string;
@@ -82,7 +83,30 @@ export function WorkflowBuilder({
   const [transactionState, setTransactionState] = useState<
     "error" | "finalizing" | "idle" | "pending" | "submitted" | "success"
   >("idle");
+  const journal = useTransactionJournal({
+    accountId: walletSession?.accountId ?? "",
+    contractId,
+    rpcUrl,
+    channel: "builder",
+  });
+  const [journalError, setJournalError] = useState("");
+  const submittedTransaction =
+    currentSubmittedTransaction ??
+    (journal.entry
+      ? {
+          hash: journal.entry.hash,
+          sender: journal.entry.sender,
+          actionName: journal.entry.action as
+            | "Recipient authorization"
+            | "Workflow creation",
+        }
+      : null);
+  const transactionHash =
+    currentTransactionHash || submittedTransaction?.hash || "";
   const transactionBusy =
+    !journal.ready ||
+    !!journal.issue ||
+    !!submittedTransaction ||
     transactionState === "pending" ||
     transactionState === "finalizing" ||
     transactionState === "submitted";
@@ -312,6 +336,12 @@ export function WorkflowBuilder({
 
   async function allowRecipient() {
     if (transactionBusy) return;
+    if (!journal.canSign()) {
+      setJournalError(
+        "A new transaction could not be safely recorded. Check browser storage and any pending transaction before signing again.",
+      );
+      return;
+    }
     if (allowlistState === "allowed") return;
     let draft: ReturnType<typeof validateDraft>;
     try {
@@ -429,6 +459,12 @@ export function WorkflowBuilder({
 
   async function createWorkflow(currentTimeMs: number) {
     if (transactionBusy) return;
+    if (!journal.canSign()) {
+      setJournalError(
+        "A new transaction could not be safely recorded. Check browser storage and any pending transaction before signing again.",
+      );
+      return;
+    }
     if (!walletSession) {
       setError("Connect the owner wallet and review the fields first.");
       return;
@@ -502,7 +538,13 @@ export function WorkflowBuilder({
     sender = walletSession?.accountId,
   ): Promise<boolean> {
     if (!sender) return false;
+    setTransactionHash(transactionHash);
     setSubmittedTransaction({ hash: transactionHash, actionName, sender });
+    if (!journal.save({ hash: transactionHash, action: actionName, sender })) {
+      setJournalError(
+        "The submitted hash could not be saved on this device. Keep this page open or copy the hash before leaving.",
+      );
+    }
     setTransactionState("finalizing");
     try {
       const finality = await readTransactionFinality(
@@ -512,6 +554,7 @@ export function WorkflowBuilder({
         contractId,
       );
       if (finality === "failure") {
+        journal.clear(transactionHash);
         setSubmittedTransaction(null);
         setTransactionState("error");
         setError(`${actionName} failed at finality.`);
@@ -525,6 +568,7 @@ export function WorkflowBuilder({
         return false;
       }
       setTransactionState("success");
+      journal.clear(transactionHash);
       setSubmittedTransaction(null);
       setError("");
       return true;
@@ -862,6 +906,17 @@ export function WorkflowBuilder({
               Draft saved on this device. No funds moved.
             </p>
           ) : null}
+          {journal.issue || journalError ? (
+            <p className="builder-error" role="alert">
+              {journal.issue || journalError}
+            </p>
+          ) : null}
+          {journal.entry && !currentSubmittedTransaction ? (
+            <p className="saved-note" role="status">
+              Recovered a submitted transaction from this browser. Check its
+              status before signing another action.
+            </p>
+          ) : null}
           {transactionHash ? (
             <p className="saved-note" role="status">
               {transactionState === "success"
@@ -884,7 +939,9 @@ export function WorkflowBuilder({
               ) : null}
             </p>
           ) : null}
-          {submittedTransaction && transactionState === "submitted" ? (
+          {submittedTransaction &&
+          transactionState !== "finalizing" &&
+          transactionState !== "pending" ? (
             <button
               className="secondary"
               type="button"
