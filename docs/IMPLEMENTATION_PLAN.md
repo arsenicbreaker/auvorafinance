@@ -1,6 +1,6 @@
 # Auvora Finance MVP Implementation Plan
 
-Status: Phases 1–6 are implemented; Phase 7 live/product acceptance remains in progress. Phase 8 treasury planning and Phase 9 workflow transaction recovery are implemented and tested locally. Live evidence and product acceptance remain release gates.
+Status: Phases 1–6 are implemented; Phase 7 live/product acceptance remains in progress. Phases 8–10 (treasury planning, workflow transaction recovery, and local readiness diagnostics) are implemented and tested locally. Live evidence and product acceptance remain release gates.
 
 Rule: do not begin a phase until the prior phase is accepted by the product owner
 
@@ -473,7 +473,26 @@ Before implementation on 2026-10-31, `pnpm check` passed all 150 TypeScript test
 
 Remaining live wallet/lifecycle and publication gates still apply. See [Phase 9 validation](phase-9/VALIDATION.md) for final verification.
 
-## 12. Measurable MVP release gate
+## 12. Phase 10: local readiness diagnostics
+
+### Objective
+
+Make local testing reproducible by identifying configuration, web, keeper, RPC, contract, and restricted-key blockers before an owner starts a wallet/payment test. The product owner's request to continue after Phase 9 extends the roadmap with this operational follow-up.
+
+### Implemented scope
+
+- `pnpm local:doctor` checks ignored/untracked local configuration, supported Node, web/keeper contract and RPC alignment, the local Auvora page, recent keeper readiness, testnet RPC identity, finalized contract status, and the keeper's exact `execute_due` restriction and positive allowance.
+- A configurable loopback web port, configuration-only `--offline`, structured `--json`, and bounded requests support manual troubleshooting and repeatable diagnostics.
+- A failed or unverified network identity prevents further chain queries. Only read-only RPC methods are used, and raw errors, database credentials, and private keys never enter the report.
+- Failures include concrete next steps. Offline success and HTTP health remain distinct from signed wallet acceptance, completed payment evidence, and release readiness.
+- No service startup, database mutation, key provisioning, signature, deployment, or publication is part of this command.
+- The doctor regression suite is included in root `pnpm test`, so the existing `pnpm check` CI path runs it.
+
+### Verification
+
+Before implementation, `pnpm check` passed all 181 TypeScript tests plus formatting/lint/typecheck, then the workspace build passed. Post-change tests and read-only local checks are recorded in [Phase 10 validation](phase-10/VALIDATION.md). Earlier live wallet/lifecycle gates remain open.
+
+## 13. Measurable MVP release gate
 
 The MVP is a go only if all are true:
 
@@ -492,7 +511,7 @@ The MVP is a go only if all are true:
 
 If time is short, remove forecasts, extra dashboard charts, HOT integration, and optional analytics before weakening contract tests or finality handling.
 
-## 13. Technical risks
+## 14. Technical risks
 
 | Risk | Probability | Impact | Mitigation and evidence required |
 | --- | --- | --- | --- |
@@ -513,7 +532,7 @@ If time is short, remove forecasts, extra dashboard charts, HOT integration, and
 | FlowPilot code copied without notice | Low | Medium | Concept-only reuse by default; notice file if copied |
 | Hackathon rules change | Low | High | Re-fetch live `HACKATHON.md` before publication and submission |
 
-## 14. Approved decisions and remaining approvals
+## 15. Approved decisions and remaining approvals
 
 Approved on 2026-10-22:
 

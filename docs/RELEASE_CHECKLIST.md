@@ -75,6 +75,18 @@ See [Phase 8 validation](phase-8/VALIDATION.md). These development checks do not
 
 See [Phase 9 validation](phase-9/VALIDATION.md). Automated wallet/RPC regressions remain distinct from real selected-wallet acceptance.
 
+## Phase 10 development verification
+
+- [x] Phase 9 transition baseline: all 181 existing tests and format/lint/typecheck passed, followed by the full workspace build.
+- [x] `pnpm local:doctor` provides text/JSON and offline modes, accepts only loopback web URLs, and bounds HTTP/RPC requests.
+- [x] Configuration alignment, ignore/tracking rules, runtime health, network identity, contract status, and exact keeper-key restrictions have deterministic regressions.
+- [x] Output omits raw credentials and error bodies; chain requests are restricted to read-only `status` and finalized `query` calls.
+- [x] Root `pnpm check` passed 229 tests, including 48 doctor cases; the full workspace build and high-severity audit gate passed.
+- [x] Live local checks distinguish a working web page from an unavailable keeper. A later unavailable RPC check correctly prevented further chain queries.
+- [x] Offline success is explicitly marked as configuration-only; no service is started and no transaction is sent.
+
+See [Phase 10 validation](phase-10/VALIDATION.md). Operational dependencies and the earlier real wallet/release acceptance gates remain separate from this development verification.
+
 ## Documentation truth check
 
 - [ ] README lists live, local-only, configurable, deferred, and excluded features accurately

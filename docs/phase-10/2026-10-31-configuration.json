@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "mode": "configuration-only",
+  "ok": true,
+  "runtimeReady": null,
+  "webUrl": "http://127.0.0.1:3000",
+  "checks": [
+    {
+      "id": "node",
+      "status": "pass",
+      "message": "Node 22.12+ within 22.x is required."
+    },
+    {
+      "id": "web_env",
+      "status": "pass",
+      "message": "apps/web/.env.local can be read."
+    },
+    {
+      "id": "keeper_env",
+      "status": "pass",
+      "message": ".env.keeper.local can be read."
+    },
+    {
+      "id": "web_env_ignored",
+      "status": "pass",
+      "message": "apps/web/.env.local must be ignored and untracked."
+    },
+    {
+      "id": "keeper_env_ignored",
+      "status": "pass",
+      "message": ".env.keeper.local must be ignored and untracked."
+    },
+    {
+      "id": "web_config",
+      "status": "pass",
+      "message": "Web needs a named testnet contract and HTTPS RPC."
+    },
+    {
+      "id": "keeper_config",
+      "status": "pass",
+      "message": "Keeper needs testnet accounts, a valid key, PostgreSQL URL, HTTPS RPC, and valid runtime settings."
+    },
+    {
+      "id": "config_alignment",
+      "status": "pass",
+      "message": "Web and keeper must use the same contract and RPC."
+    },
+    {
+      "id": "web_http",
+      "status": "skip",
+      "message": "Runtime check skipped in offline mode."
+    },
+    {
+      "id": "keeper_ready",
+      "status": "skip",
+      "message": "Runtime check skipped in offline mode."
+    },
+    {
+      "id": "rpc_network",
+      "status": "skip",
+      "message": "Runtime check skipped in offline mode."
+    },
+    {
+      "id": "contract",
+      "status": "skip",
+      "message": "Runtime check skipped in offline mode."
+    },
+    {
+      "id": "keeper_key",
+      "status": "skip",
+      "message": "Runtime check skipped in offline mode."
+    }
+  ],
+  "limitations": [
+    "Reads local configuration and public status only; sends no transaction and starts no service.",
+    "Keeper readiness is a recent-poll signal, not proof of a new payment or an attestation of the running service's configuration.",
+    "Web HTTP checks do not attest the public configuration embedded in an existing build.",
+    "Wallet acceptance, completed payments, and release approval remain separate checks."
+  ]
+}

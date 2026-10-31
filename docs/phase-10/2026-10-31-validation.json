@@ -1,0 +1,47 @@
+{
+  "phase": 10,
+  "date": "2026-10-31",
+  "timezone": "Asia/Jakarta",
+  "scope": "Read-only local readiness diagnostics",
+  "command": "pnpm local:doctor",
+  "baseline": {
+    "tests": 181,
+    "check": "passed",
+    "workspace_build": "passed"
+  },
+  "final": {
+    "tests": 229,
+    "doctor_tests": 48,
+    "check": "passed",
+    "workspace_build": "passed",
+    "high_severity_audit": "passed",
+    "remaining_advisories": { "low": 1, "moderate": 1 },
+    "cli_help": "passed",
+    "diff_whitespace": "passed"
+  },
+  "local_observations": {
+    "offline_exit": 0,
+    "initial_runtime_exit": 1,
+    "initial_runtime_passed": [
+      "configuration",
+      "web_http",
+      "rpc_network",
+      "contract",
+      "keeper_key"
+    ],
+    "initial_runtime_failed": ["keeper_ready"],
+    "later_saved_runtime_exit": 1,
+    "later_saved_runtime_failed": ["keeper_ready", "rpc_network"],
+    "later_saved_runtime_skipped": ["contract", "keeper_key"],
+    "configuration_artifact": "2026-10-31-configuration.json",
+    "runtime_artifact": "2026-10-31-readiness.json"
+  },
+  "signed_or_broadcast_transactions": 0,
+  "services_started": 0,
+  "migrations_executed": 0,
+  "new_dependencies": 0,
+  "rust_rerun": false,
+  "production_contract_worker_web_code_changed": false,
+  "real_wallet_acceptance": "open",
+  "publication": "not performed"
+}

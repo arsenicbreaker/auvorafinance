@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "mode": "local-readiness",
+  "ok": false,
+  "runtimeReady": false,
+  "webUrl": "http://127.0.0.1:3010",
+  "checks": [
+    {
+      "id": "node",
+      "status": "pass",
+      "message": "Node 22.12+ within 22.x is required."
+    },
+    {
+      "id": "web_env",
+      "status": "pass",
+      "message": "apps/web/.env.local can be read."
+    },
+    {
+      "id": "keeper_env",
+      "status": "pass",
+      "message": ".env.keeper.local can be read."
+    },
+    {
+      "id": "web_env_ignored",
+      "status": "pass",
+      "message": "apps/web/.env.local must be ignored and untracked."
+    },
+    {
+      "id": "keeper_env_ignored",
+      "status": "pass",
+      "message": ".env.keeper.local must be ignored and untracked."
+    },
+    {
+      "id": "web_config",
+      "status": "pass",
+      "message": "Web needs a named testnet contract and HTTPS RPC."
+    },
+    {
+      "id": "keeper_config",
+      "status": "pass",
+      "message": "Keeper needs testnet accounts, a valid key, PostgreSQL URL, HTTPS RPC, and valid runtime settings."
+    },
+    {
+      "id": "config_alignment",
+      "status": "pass",
+      "message": "Web and keeper must use the same contract and RPC."
+    },
+    {
+      "id": "keeper_ready",
+      "status": "fail",
+      "message": "Keeper must report a recent successful poll with no current error.",
+      "fix": "Check PostgreSQL, run pnpm db:migrate:deploy, then pnpm keeper:dev in a separate terminal. Inspect keeper logs if readiness stays unavailable."
+    },
+    {
+      "id": "web_http",
+      "status": "pass",
+      "message": "Local URL must serve the Auvora payment page."
+    },
+    {
+      "id": "rpc_network",
+      "status": "fail",
+      "message": "RPC must identify its chain as testnet.",
+      "fix": "Check NEAR_RPC_URL and connectivity. No further chain queries run when network identity is unverified."
+    },
+    {
+      "id": "contract",
+      "status": "skip",
+      "message": "Testnet identity was not verified."
+    },
+    {
+      "id": "keeper_key",
+      "status": "skip",
+      "message": "Testnet identity was not verified."
+    }
+  ],
+  "limitations": [
+    "Reads local configuration and public status only; sends no transaction and starts no service.",
+    "Keeper readiness is a recent-poll signal, not proof of a new payment or an attestation of the running service's configuration.",
+    "Web HTTP checks do not attest the public configuration embedded in an existing build.",
+    "Wallet acceptance, completed payments, and release approval remain separate checks."
+  ]
+}

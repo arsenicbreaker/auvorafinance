@@ -122,6 +122,26 @@ It independently verifies recorded execution hashes with final RPC outcomes and 
 
 `pnpm proof:payments` previews the two signed Phase 7 fixtures without sending transactions. After human approval, `pnpm proof:payments --execute` runs the scheduled payments, reserve rejection, persisted-hash recovery, and concurrent keeper cycles, then withdraws remaining fixture balances. Read the accounts, testnet deposits, limitations, and recovery instructions in the [Demo runbook](docs/DEMO_RUNBOOK.md) first.
 
+## Check local readiness
+
+Run the read-only local doctor before testing a payment:
+
+```bash
+pnpm local:doctor
+```
+
+The default web URL is `http://127.0.0.1:3000`. For the existing production preview, use:
+
+```bash
+pnpm local:doctor --web-url http://127.0.0.1:3010
+```
+
+Use `--offline` to check local configuration without network requests, or `--json` for a machine-readable report. Exit code 0 means the requested checks passed, 1 means a readiness blocker, and 2 means invalid options or an internal failure. Offline success does not certify running services.
+
+The doctor checks ignored environment files, supported Node, configuration alignment, the local web page, keeper polling health, RPC testnet identity, finalized contract status, and the keeper key's on-chain method/receiver restriction and remaining allowance. Output omits secrets and raw RPC errors. It does not start services, migrate the database, sign, provision keys, or send transactions. A passing result is not proof of a completed payment or real wallet acceptance. The name `local:doctor` avoids pnpm's built-in `doctor` command.
+
+If the keeper check fails, confirm PostgreSQL is available, then run the migration and keeper commands from **Run locally**. If the web check fails, start the web app or specify the correct local port. After changing public web configuration, restart development mode or rebuild production mode.
+
 ## Validation commands
 
 ```bash

@@ -10,6 +10,7 @@
     "build": "pnpm -r --if-present build",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
     "db:migrate:deploy": "node --env-file=.env.keeper.local scripts/migrate-db.mjs",
+    "local:doctor": "node scripts/doctor.mjs",
     "deploy:testnet": "node --env-file=.env.deploy.local scripts/deploy-testnet.mjs",
     "upgrade:phase1:testnet": "node --env-file=.env.deploy.local scripts/upgrade-phase1-testnet.mjs",
     "upgrade:phase2:testnet": "node --env-file=.env.deploy.local scripts/upgrade-phase2-testnet.mjs",
@@ -23,7 +24,8 @@
     "proof:report": "pnpm --filter @auvora/keeper evidence:report",
     "proof:payments": "pnpm --filter @auvora/keeper proof:payments",
     "proof:phase1": "node --env-file=.env.deploy.local scripts/prove-phase1-testnet.mjs",
-    "test": "pnpm -r --if-present test",
+    "test": "pnpm -r --if-present test && pnpm test:doctor",
+    "test:doctor": "vitest run scripts/doctor.test.mjs",
     "typecheck": "pnpm -r --if-present typecheck"
   },
   "devDependencies": {

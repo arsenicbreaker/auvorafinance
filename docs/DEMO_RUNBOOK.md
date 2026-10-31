@@ -32,6 +32,18 @@ git check-ignore .env.deploy.local .env.keeper.local .env.relayer.local apps/web
 
 Expected: all four paths are printed. Do not print their contents during a demo.
 
+### Local readiness diagnosis
+
+Before connecting a wallet or running payment fixtures:
+
+```bash
+pnpm local:doctor
+```
+
+It checks the web app at `http://127.0.0.1:3000`. If using the existing production preview, run `pnpm local:doctor --web-url http://127.0.0.1:3010`. Use `--offline` for configuration-only checks or `--json` for structured output. The script reads ignored local configuration and public status; it does not start the keeper, migrate the database, provision keys, or send transactions.
+
+A failed web check means the app is unavailable or the selected port is wrong. A failed keeper check means its readiness endpoint did not report a recent error-free poll; inspect PostgreSQL and keeper logs, then follow the startup commands below. Exit 1 indicates these operational blockers, not a failed automated test. Offline exit 0 does not prove service readiness. Existing web builds may retain older public configuration, and keeper health does not attest the identity of the running process. Wallet and scheduled-payment acceptance still require the following demo steps.
+
 ## 2. Read final contract state
 
 Run the read-only evidence report:
