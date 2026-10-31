@@ -45,6 +45,10 @@ Status date: 2026-10-31
 
 ## Web transaction feedback
 
+- The new execution history indexes keeper submissions, not the entire chain. It scopes records to on-chain owner workflows and verifies final calls/events per page, but does not reconstruct unrecorded older/external executions. Failed or unavailable evidence stays `Unverified`; even a previously verified hash can be unavailable in a later RPC check.
+- History requires the server-only `AUVORA_HISTORY_DATABASE_URL`. It uses a bounded connection pool and per-process API limits; a public multi-instance deployment needs shared rate limiting and a database role restricted to public-history SELECT operations.
+- History does not add wallet sponsorship. The current web management adapter signs ordinary calls and charges the connected wallet testnet gas, as disclosed next to the controls. The relayer remains a separate proof/policy implementation, and the installed Wallet Selector interface does not expose the required delegate-signing flow. Product sponsorship remains a release blocker.
+
 - Mocked wallet/component tests cover rejection, abandonment, pending/final states, failed receipts, and rechecking a known hash without another signature. Real selected-wallet behavior and sponsored management remain unverified.
 - Known unresolved workflow transaction hashes are now retained in versioned browser storage for recipient authorization, creation, pause, resume, cancel, and withdrawal. Reconnect the same account on the same origin, contract, and RPC to check the original hash without signing again. Approval of financial fields is not restored.
 - Recovery requires the wallet to have returned a hash before navigation. A redirect or closed page before that response, cleared/blocked storage, another device/origin/RPC, and the separate deployment-owner proof transaction are not covered. Keep any known hash and inspect final contract state before retrying.

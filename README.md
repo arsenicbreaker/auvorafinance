@@ -9,11 +9,13 @@ This repository is a NEAR Hackathon 2026 project. It is not audited, production-
 | Capability                                           | Status                              | Authority boundary                                          |
 | ---------------------------------------------------- | ----------------------------------- | ----------------------------------------------------------- |
 | Recurring native NEAR workflow                       | Live on `oceanear.testnet`          | Owner wallet creates and funds it                           |
-| Recipient allowlist                                  | Live                                | Contract owner signs changes                                |
+| Recipient allowlist                                  | Live                                | Workflow owner signs recipient authorization                |
 | Due-run execution and callback accounting            | Live                                | Keeper supplies only the workflow ID; contract decides      |
 | Pause, resume, cancel, and safe withdrawal           | Live                                | Workflow owner signs each action                            |
 | Keeper discovery and restart reconciliation          | Implemented                         | Restricted keeper key and PostgreSQL records                |
 | Sponsored nonpayable call proof                      | Live proof recorded                 | Relayer cannot sponsor deposits or change signed arguments  |
+| Sponsored management in the web app                  | Not integrated                      | Current management actions charge the wallet testnet gas    |
+| Execution history                                    | Implemented and locally verified    | Final RPC evidence checked for keeper-recorded hashes       |
 | Natural-language draft parsing                       | Implemented locally                 | Produces editable fields only; cannot open or sign a wallet |
 | NEAR AI Cloud adapter                                | Configurable, not yet live-verified | Falls back to deterministic parsing when unavailable        |
 | Treasury forecast                                    | Implemented and locally verified    | Reads workflow pages at one finalized testnet block         |
@@ -44,6 +46,16 @@ The **Treasury outlook** section works without a wallet connection. Enter a publ
 Known pending workflow hashes are saved on this browser for recipient authorization, creation, pause, resume, cancel, and withdrawal. After a reload, reconnect the same owner with the same contract and RPC, then select **Check transaction status**. This reads the original hash without opening the wallet again. A pending or unavailable result keeps new actions in that section blocked; confirmed success or failure clears the matching saved record.
 
 Only public transaction identifiers are stored. Financial-field approval is not restored. Recovery cannot recover a wallet response that never returned a hash, cleared storage, or transactions from another device/origin. Use one signing tab; browser storage is not a cross-tab signing lock. See [known limitations](docs/KNOWN_LIMITATIONS.md).
+
+## Execution history
+
+The **Execution record** section reads keeper-recorded attempts for a public testnet owner without opening a wallet. It checks ownership at one finalized block and verifies each hash's final call and contract events. `Pending` and `Unverified` remain explicit when the outcome is unresolved or unavailable. The list is an index of keeper records and can omit older or external transactions; an empty list does not prove that no on-chain execution occurred.
+
+Set the server-only `AUVORA_HISTORY_DATABASE_URL` in `apps/web/.env.local` to connect the existing keeper PostgreSQL database. Use a SELECT-only role for a deployed service and never prefix this value with `NEXT_PUBLIC_`. Without configuration, the UI displays an unavailable-history explanation and does not fabricate records. Local configuration was connected during Phase 12 development without printing credentials.
+
+Pages contain up to 20 attempts. Verification is read-only and bounded; API limits are per process (20 requests per minute, four concurrent reads). The database pool has at most two connections per configured database and ten-second connection/query timeouts. Before starting a production web server, run `pnpm build`; the development command prepares its server workspace dependencies automatically.
+
+Phase 12 remains open for the selected-wallet, sponsored management, and remaining live lifecycle acceptance gates. See [Phase 12 validation](docs/phase-12/VALIDATION.md) and [live acceptance handoff](docs/phase-12/LIVE_ACCEPTANCE.md).
 
 ## Prerequisites
 

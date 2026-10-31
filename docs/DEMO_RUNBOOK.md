@@ -145,6 +145,8 @@ Expected keeper output is one JSON line per cycle. A healthy idle cycle has `eve
 
 ## 4. Parse the hero instruction
 
+To inspect previously recorded payments without a wallet, open the **Execution record** section (current development preview: `http://127.0.0.1:3013/#history`) and read `oceanear.testnet`. The server needs the ignored `AUVORA_HISTORY_DATABASE_URL` setting pointing to the keeper database. Expect real recorded hashes with individually verified outcomes; unavailable hashes remain `Unverified`. The history is not a complete chain index. The selected-wallet and sponsorship acceptance plan remains open in [Phase 12 handoff](phase-12/LIVE_ACCEPTANCE.md).
+
 Paste this non-sensitive instruction into **Describe the payment**:
 
 ```text

@@ -1,0 +1,75 @@
+{
+  "phase": 12,
+  "date": "2026-10-31",
+  "timezone": "Asia/Jakarta",
+  "status": "in_progress",
+  "delivered": "Owner-scoped execution history with independent final-RPC evidence",
+  "baseline": { "tests": 256, "check": "passed", "workspace_build": "passed" },
+  "final": {
+    "tests": 291,
+    "web_tests": 117,
+    "database_tests": 6,
+    "new_tests": 35,
+    "check": "passed",
+    "workspace_build": "passed",
+    "high_severity_audit": "passed",
+    "remaining_advisories": { "low": 1, "moderate": 1 }
+  },
+  "live_read_only": {
+    "contract": "oceanear.testnet",
+    "database_records": 6,
+    "initial_successful_api": { "http": 200, "succeeded": 4, "skipped": 2 },
+    "browser_sample": {
+      "block_height": 275611546,
+      "observed_at": "2026-10-31T14:29:46.692Z",
+      "succeeded": 4,
+      "skipped": 1,
+      "unverified": 1,
+      "unverified_reason": "Individual RPC status unavailable"
+    },
+    "final_browser_read": {
+      "block_height": 275612462,
+      "observed_at": "2026-10-31T14:38:52.954Z",
+      "succeeded": 4,
+      "skipped": 2,
+      "unverified": 0
+    },
+    "initial_browser_failures": "Database stage; UI failed closed. Connection handling subsequently changed to a reused bounded pool.",
+    "private_database_url_printed": false,
+    "signed_bytes_selected": false
+  },
+  "browser": {
+    "preview": "http://127.0.0.1:3013/#history",
+    "mobile_viewport": { "width": 390, "height": 844 },
+    "mobile_document_width": 375,
+    "mobile_scroll_width": 375,
+    "table_view_width": 307,
+    "table_content_width": 700,
+    "keyboard_table_scroll_left": 40,
+    "page_scroll_x": 0,
+    "desktop_document_width": 1265,
+    "desktop_scroll_width": 1265,
+    "viewport_reset": true,
+    "non_testnet_owner_rejected": true,
+    "empty_owner": "oceanrelayer.testnet",
+    "empty_owner_block_height": 275612373,
+    "empty_owner_observed_at": "2026-10-31T14:37:47.886Z",
+    "owner_change_clears_old_rows": true,
+    "screenshots": [
+      "2026-10-31-desktop-history.jpg",
+      "2026-10-31-mobile-history.jpg"
+    ]
+  },
+  "signed_or_broadcast_transactions": 0,
+  "new_live_fixtures": 0,
+  "third_party_packages_downloaded": 0,
+  "new_workspace_links": ["@auvora/db", "@auvora/near-client"],
+  "rust_rerun": false,
+  "open_gates": [
+    "Selected-wallet live acceptance",
+    "Integrated sponsored management",
+    "Remaining live lifecycle/rejection evidence"
+  ],
+  "phase_13": "pending",
+  "publication": "not performed"
+}

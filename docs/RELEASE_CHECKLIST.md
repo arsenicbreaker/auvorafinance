@@ -99,6 +99,21 @@ See [Phase 10 validation](phase-10/VALIDATION.md). Operational dependencies and 
 
 See [Phase 11 validation](phase-11/VALIDATION.md). These are local development proofs; no production keeper was started and no new live wallet/payment evidence was captured. The closing plan has two remaining phases: integrated wallet/payment acceptance, then release/demo preparation.
 
+## Phase 12 progress: integrated history
+
+- [x] Prior-phase baseline passed all 256 tests and the full workspace build before implementation.
+- [x] History scopes keeper records to on-chain owner workflow IDs and independently verifies final calls/events.
+- [x] Database projection excludes signed bytes, credentials, cached final-state claims, and raw errors from the public response.
+- [x] Stable pagination, bounded pool/query/RPC concurrency, request limits, and no-store responses are tested.
+- [x] Browser history supports owner changes, response validation, honest unavailable results, empty/loading/error states, and keyboard/mobile table scrolling.
+- [x] Full check passed 291 tests; full production build and high-severity audit gate passed.
+- [x] Existing public hashes were read through the API and browser without a new wallet signature or fixture.
+- [ ] Real selected-wallet rejection, creation, redirect/reload recovery, and lifecycle acceptance passed.
+- [ ] Product wallet/relayer sponsorship path is integrated and independently verifies the owner's gas outcome.
+- [ ] All remaining Phase 7 live evidence has been captured and reconciled.
+
+Phase 12 remains in progress. See [validation](phase-12/VALIDATION.md) and the [concrete live acceptance plan](phase-12/LIVE_ACCEPTANCE.md). Phase 13 is pending; history delivery does not close the wallet or sponsorship gates.
+
 ## Documentation truth check
 
 - [ ] README lists live, local-only, configurable, deferred, and excluded features accurately

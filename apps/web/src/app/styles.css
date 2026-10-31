@@ -910,6 +910,85 @@ button:disabled {
   line-height: 1.5;
 }
 
+.history-shell {
+  margin-bottom: 64px;
+  border-top: 5px solid var(--forest);
+  border-bottom: 1px solid var(--ink);
+  background: #faf8f2;
+}
+
+.history-form {
+  display: flex;
+  align-items: end;
+  gap: 18px;
+  padding: 0 36px 26px;
+}
+.history-form label {
+  display: grid;
+  flex: 1;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.history-form input {
+  min-height: 48px;
+  border: 1px solid var(--muted);
+  padding: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+}
+.history-content {
+  display: grid;
+  gap: 18px;
+  padding: 0 36px 28px;
+}
+.history-table-wrap {
+  overflow-x: auto;
+}
+.history-table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 700px;
+  font-size: 0.8rem;
+  text-align: left;
+}
+.history-table caption {
+  text-align: left;
+  padding: 12px 0;
+  font-weight: 700;
+}
+.history-table th,
+.history-table td {
+  padding: 14px 10px;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+}
+.history-table small {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+}
+.history-table a {
+  color: var(--forest);
+  text-underline-offset: 4px;
+}
+.history-form input:focus-visible,
+.history-table-wrap:focus-visible {
+  outline: 3px solid var(--amber);
+  outline-offset: 3px;
+}
+@media (max-width: 720px) {
+  .history-form {
+    display: grid;
+    padding: 0 20px 22px;
+  }
+  .history-content {
+    padding: 0 20px 24px;
+    min-width: 0;
+  }
+}
+
 .ledger-shell {
   margin-bottom: 64px;
   border-top: 5px solid var(--forest);
@@ -1098,6 +1177,10 @@ button:disabled {
   color: var(--muted);
   font-size: 0.76rem;
   line-height: 1.5;
+}
+
+.ledger-fee-note {
+  padding: 0 36px 24px;
 }
 
 .cancel-confirm p {

@@ -254,6 +254,13 @@ export function WorkflowLedger({
         </button>
       </div>
 
+      {walletSession ? (
+        <p className="control-note ledger-fee-note">
+          Management actions currently charge testnet gas to your wallet. Review
+          the transaction fee before approving.
+        </p>
+      ) : null}
+
       {loadState === "signed-out" ? (
         <LedgerState
           title="Connect the owner wallet."

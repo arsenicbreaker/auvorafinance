@@ -4,7 +4,11 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./history": {
+      "types": "./src/history.ts",
+      "default": "./dist/history.js"
+    }
   },
   "scripts": {
     "build": "prisma generate --config prisma7.config.ts && tsc -p tsconfig.json",

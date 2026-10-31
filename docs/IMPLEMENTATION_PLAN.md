@@ -1,6 +1,6 @@
 # Auvora Finance MVP Implementation Plan
 
-Status: Phases 1–6 are implemented; Phase 7 live/product acceptance remains in progress. Phases 8–11 (treasury planning, transaction recovery, local diagnostics, and keeper readiness) are implemented and tested locally. Two closing phases remain: integrated wallet/payment acceptance and the release/demo package. Live evidence and product acceptance remain release gates.
+Status: Phases 1–6 are implemented; Phase 7 live/product acceptance remains in progress. Phases 8–11 are implemented and tested locally. Phase 12 is in progress: read-only execution history is integrated, while selected-wallet, sponsored management, and remaining live acceptance are open. Phase 13 release/demo preparation remains pending.
 
 Rule: do not begin a phase until the prior phase is accepted by the product owner
 
@@ -512,6 +512,8 @@ Implementation on 2026-10-31 adds versioned public identity and readiness reason
 - Close gaps exposed by acceptance, including the supported sponsorship path and user-facing execution history where necessary.
 - Capture missing live lifecycle, duplicate-trigger, callback/withdrawal rejection, and explorer/final-RPC evidence using bounded, reviewed fixtures.
 - Human wallet signatures and any new funded fixtures require their concrete approval flow; automated mocks do not replace live acceptance.
+
+Progress on 2026-10-31: the 256-test baseline and full build passed before implementation. Added owner-scoped keeper history with independent final-RPC verification, bounded database/API work, stable pagination, honest pending/unverified states, and responsive keyboard-accessible UI. Real read-only checks used six existing hashes; no new fixture or signature was created. The current wallet path still charges gas and the sponsorship adapter/service remains incomplete. This phase is not accepted or complete. See [Phase 12 validation](phase-12/VALIDATION.md) and [live acceptance handoff](phase-12/LIVE_ACCEPTANCE.md).
 
 ### Phase 13: release and demo package
 

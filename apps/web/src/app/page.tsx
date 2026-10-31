@@ -8,6 +8,7 @@ import {
 } from "../features/workflow/workflow-builder";
 import { WorkflowLedger } from "../features/workflow/workflow-ledger";
 import { TreasuryOutlook } from "../features/treasury/treasury-outlook";
+import { ExecutionHistory } from "../features/workflow/execution-history";
 
 export default function Home() {
   const [walletSession, setWalletSession] =
@@ -82,6 +83,11 @@ export default function Home() {
         refreshToken={workflowRefreshToken}
         rpcUrl={rpcUrl}
         walletSession={walletSession}
+      />
+
+      <ExecutionHistory
+        key={`history:${walletSession?.accountId ?? "public"}`}
+        initialOwnerId={walletSession?.accountId ?? contractId}
       />
 
       <TreasuryOutlook
