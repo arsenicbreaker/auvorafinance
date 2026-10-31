@@ -1,0 +1,71 @@
+{
+  "date": "2026-10-31",
+  "scope": "Local client transaction feedback, mocked wallet/RPC regressions, disconnected browser checks, and read-only queries of existing testnet hashes",
+  "signed_or_broadcast_transactions": 0,
+  "automated": {
+    "workspace_check": {
+      "command": "pnpm check",
+      "exit_code": 0,
+      "tests_passed": 95
+    },
+    "web": { "tests_passed": 38, "test_files_passed": 7 },
+    "workspace_build": { "command": "pnpm build", "exit_code": 0 },
+    "final_web_build": {
+      "command": "pnpm --filter @auvora/web build",
+      "exit_code": 0
+    },
+    "frozen_install": {
+      "command": "pnpm install --frozen-lockfile",
+      "exit_code": 0
+    },
+    "audit": {
+      "command": "pnpm audit --audit-level high",
+      "exit_code": 0,
+      "high": 0,
+      "moderate": 1,
+      "low": 1
+    }
+  },
+  "live_read_only": {
+    "rpc": "https://rpc.testnet.near.org",
+    "method": "tx",
+    "wait_until": "FINAL",
+    "expected_receiver": "oceanear.testnet",
+    "existing_transactions": [
+      {
+        "hash": "DLmUpQ1NXyXfqRARRMLNesw4ckb1uzm9gtFrJxp6TLoA",
+        "signer": "oceankeeper.testnet",
+        "classification": "success"
+      },
+      {
+        "hash": "2yxYqZPCUWwnfLfsJYxGn3PwfX3qHCWbovcLRLRaSTVD",
+        "signer": "oceanear.testnet",
+        "classification": "success"
+      }
+    ]
+  },
+  "browser": {
+    "production_url": "http://127.0.0.1:3006",
+    "viewport": { "width": 390, "height": 844 },
+    "document_width": 375,
+    "wallet_choices": ["Meteor Wallet", "MyNearWallet"],
+    "escape_closes_selector": true,
+    "focus_after_close": "Connect wallet",
+    "new_console_warning_or_error_entries_in_final_check": 0,
+    "keyboard_sample": "Tab from Refresh contract skips the disabled signing control and focuses payment-instruction"
+  },
+  "dependency_fix": {
+    "advisory": "GHSA-qr28-fpjm-wq7f",
+    "decoder": "decode-uri-component@0.5.1",
+    "compatibility_patch": "patches/query-string@7.1.3.patch",
+    "node_requirement": ">=22.12.0 <23"
+  },
+  "phase_7_status": "In progress",
+  "remaining_acceptance": [
+    "Real selected-wallet rejection, abandonment, redirect, and sponsored management",
+    "Real signed workflow UI confirmation",
+    "Captured live contract lifecycle and rejection evidence",
+    "Complete device and keyboard acceptance, including selector focus trapping"
+  ],
+  "limitation": "Unresolved transaction context is held in component memory and is not restored after reload or account change"
+}

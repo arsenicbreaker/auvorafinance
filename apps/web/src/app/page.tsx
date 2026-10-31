@@ -7,6 +7,7 @@ import {
   type WorkflowWalletSession,
 } from "../features/workflow/workflow-builder";
 import { WorkflowLedger } from "../features/workflow/workflow-ledger";
+import { TreasuryOutlook } from "../features/treasury/treasury-outlook";
 
 export default function Home() {
   const [walletSession, setWalletSession] =
@@ -66,6 +67,7 @@ export default function Home() {
       />
 
       <WorkflowBuilder
+        key={`builder:${walletSession?.accountId ?? "signed-out"}`}
         contractId={contractId}
         rpcUrl={rpcUrl}
         walletSession={walletSession}
@@ -75,10 +77,18 @@ export default function Home() {
       />
 
       <WorkflowLedger
+        key={`ledger:${walletSession?.accountId ?? "signed-out"}`}
         contractId={contractId}
         refreshToken={workflowRefreshToken}
         rpcUrl={rpcUrl}
         walletSession={walletSession}
+      />
+
+      <TreasuryOutlook
+        key={`outlook:${walletSession?.accountId ?? "public"}`}
+        contractId={contractId}
+        rpcUrl={rpcUrl}
+        initialOwnerId={walletSession?.accountId ?? contractId}
       />
 
       <footer>

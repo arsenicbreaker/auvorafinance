@@ -17,7 +17,7 @@ import {
 } from "../../lib/near-rpc";
 
 type SetupState = "error" | "loading" | "missing-config" | "ready";
-type ActionState = "error" | "idle" | "pending" | Finality;
+type ActionState = "error" | "idle" | "pending" | "submitted" | Finality;
 
 interface WalletProofProps {
   contractId: string;
@@ -136,9 +136,12 @@ export function WalletProof({
         setSelector(nextSelector);
         setModal(nextModal);
         setAccounts(nextSelector.store.getState().accounts);
-        unsubscribe = nextSelector.store.observable.subscribe((state) => {
-          setAccounts(state.accounts);
-        }).unsubscribe;
+        const subscription = nextSelector.store.observable.subscribe(
+          (state) => {
+            setAccounts(state.accounts);
+          },
+        );
+        unsubscribe = () => subscription.unsubscribe();
         setSetupState("ready");
         void readStatus();
       })
@@ -157,19 +160,46 @@ export function WalletProof({
   }, [contractId, readStatus, rpcUrl]);
 
   useEffect(() => {
+    if (!modal) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") modal.hide();
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [modal]);
+
+  useEffect(() => {
     if (!transactionHash || !activeAccount || callState !== "pending") return;
-    void readTransactionFinality(rpcUrl, transactionHash, activeAccount)
+    let active = true;
+    void readTransactionFinality(
+      rpcUrl,
+      transactionHash,
+      activeAccount,
+      contractId,
+    )
       .then(async (finality) => {
-        setCallState(finality);
+        if (!active) return;
+        setCallState(finality === "pending" ? "submitted" : finality);
         if (finality === "success") await readStatus();
       })
       .catch((error: unknown) => {
+        if (!active) return;
         setMessage(
           error instanceof Error ? error.message : "Finality check failed",
         );
-        setCallState("error");
+        setCallState("submitted");
       });
-  }, [activeAccount, callState, readStatus, rpcUrl, transactionHash]);
+    return () => {
+      active = false;
+    };
+  }, [
+    activeAccount,
+    callState,
+    contractId,
+    readStatus,
+    rpcUrl,
+    transactionHash,
+  ]);
 
   const explorerUrl = useMemo(
     () =>
@@ -188,7 +218,15 @@ export function WalletProof({
   }
 
   async function signProof() {
-    if (!selector || !activeAccount || !isOwner) return;
+    if (
+      !selector ||
+      !activeAccount ||
+      !isOwner ||
+      callState === "pending" ||
+      callState === "submitted"
+    )
+      return;
+    setTransactionHash("");
     setCallState("pending");
     setMessage("");
     try {
@@ -206,7 +244,11 @@ export function WalletProof({
         signerId: activeAccount,
       });
 
-      if (!outcome) return;
+      if (!outcome?.transaction.hash) {
+        throw new Error(
+          "The wallet returned no transaction hash. No proof has been confirmed.",
+        );
+      }
       const hash = outcome.transaction.hash;
       setTransactionHash(hash);
       setCallState("pending");
@@ -310,7 +352,9 @@ export function WalletProof({
             <button
               className="secondary"
               type="button"
-              disabled={!isOwner || callState === "pending"}
+              disabled={
+                !isOwner || callState === "pending" || callState === "submitted"
+              }
               onClick={() => void signProof()}
             >
               {callState === "pending"
@@ -331,6 +375,27 @@ export function WalletProof({
             >
               View proof transaction
             </a>
+          ) : null}
+          {transactionHash ? (
+            <p role="status">
+              {callState === "success"
+                ? "Proof transaction finalized."
+                : callState === "failure"
+                  ? "Proof transaction failed at finality."
+                  : "Proof transaction submitted. Finality has not been confirmed."}
+            </p>
+          ) : null}
+          {callState === "submitted" ? (
+            <button
+              className="secondary"
+              type="button"
+              onClick={() => {
+                setMessage("");
+                setCallState("pending");
+              }}
+            >
+              Check transaction status
+            </button>
           ) : null}
         </div>
       </details>

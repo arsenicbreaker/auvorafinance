@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { formatNear } from "@auvora/domain";
 
 import {
@@ -17,6 +17,12 @@ type ActionState = {
   phase: "finality" | "wallet";
   workflowId: number;
 } | null;
+type SubmittedAction = {
+  kind: OwnerAction;
+  workflowId: number;
+  hash: string;
+  sender: string;
+};
 
 export function WorkflowLedger({
   contractId,
@@ -31,13 +37,18 @@ export function WorkflowLedger({
 }) {
   const [workflows, setWorkflows] = useState<WorkflowView[]>([]);
   const [loadState, setLoadState] = useState<LoadState>("signed-out");
+  const [loadError, setLoadError] = useState("");
   const [message, setMessage] = useState("");
-  const [messageTone, setMessageTone] = useState<"error" | "success">(
-    "success",
-  );
+  const [messageTone, setMessageTone] = useState<
+    "error" | "pending" | "success"
+  >("success");
   const [actionState, setActionState] = useState<ActionState>(null);
   const [confirmCancelId, setConfirmCancelId] = useState<number | null>(null);
   const [transactionHash, setTransactionHash] = useState("");
+  const [submittedAction, setSubmittedAction] =
+    useState<SubmittedAction | null>(null);
+  const actionLock = useRef(false);
+  const actionsBlocked = actionState !== null || submittedAction !== null;
 
   const loadWorkflows = useCallback(async () => {
     if (!walletSession || !contractId) {
@@ -46,8 +57,7 @@ export function WorkflowLedger({
       return;
     }
     setLoadState("loading");
-    setMessage("");
-    setTransactionHash("");
+    setLoadError("");
     try {
       const next = await readOwnerWorkflows(
         rpcUrl,
@@ -58,7 +68,7 @@ export function WorkflowLedger({
       setLoadState(next.length ? "ready" : "empty");
     } catch (error) {
       setLoadState("error");
-      setMessage(
+      setLoadError(
         error instanceof Error ? error.message : "Workflow read failed",
       );
     }
@@ -89,8 +99,9 @@ export function WorkflowLedger({
   );
 
   async function submitOwnerAction(workflow: WorkflowView, kind: OwnerAction) {
-    if (!walletSession) return;
+    if (!walletSession || actionLock.current || submittedAction) return;
     if (kind === "withdraw" && BigInt(workflow.withdrawable) <= 0n) return;
+    actionLock.current = true;
     const methodName = `${kind}_workflow`;
     setActionState({ kind, phase: "wallet", workflowId: workflow.id });
     setMessage("");
@@ -110,31 +121,60 @@ export function WorkflowLedger({
         throw new Error("WALLET_TRANSACTION_HASH_MISSING");
       }
       setTransactionHash(hash);
-      setActionState({ kind, phase: "finality", workflowId: workflow.id });
-      const finality = await readTransactionFinality(
-        rpcUrl,
+      const submitted = {
         hash,
-        walletSession.accountId,
-      );
-      if (finality === "failure") {
-        setMessageTone("error");
-        setMessage(`${actionLabel(kind)} failed at finality.`);
-        return;
-      }
-      if (finality === "pending") {
-        setMessage(
-          `${actionLabel(kind)} was submitted, but finality is not confirmed yet.`,
-        );
-        return;
-      }
-      await loadWorkflows();
-      setTransactionHash(hash);
-      setMessageTone("success");
-      setMessage(`${actionLabel(kind)} finalized on NEAR testnet.`);
+        kind,
+        workflowId: workflow.id,
+        sender: walletSession.accountId,
+      };
+      setSubmittedAction(submitted);
+      await confirmOwnerAction(submitted);
     } catch (error) {
       setMessageTone("error");
       setMessage(
         error instanceof Error ? error.message : `${actionLabel(kind)} failed`,
+      );
+    } finally {
+      actionLock.current = false;
+      setActionState(null);
+    }
+  }
+
+  async function confirmOwnerAction(submitted: SubmittedAction) {
+    setActionState({
+      kind: submitted.kind,
+      phase: "finality",
+      workflowId: submitted.workflowId,
+    });
+    try {
+      const finality = await readTransactionFinality(
+        rpcUrl,
+        submitted.hash,
+        submitted.sender,
+        contractId,
+      );
+      if (finality === "pending") {
+        setMessageTone("pending");
+        setMessage(
+          `${actionLabel(submitted.kind)} was submitted, but finality is not confirmed yet.`,
+        );
+        return;
+      }
+      setSubmittedAction(null);
+      if (finality === "failure") {
+        setMessageTone("error");
+        setMessage(
+          `${actionLabel(submitted.kind)} failed at finality. Refresh the ledger to inspect the current balance.`,
+        );
+        return;
+      }
+      await loadWorkflows();
+      setMessageTone("success");
+      setMessage(`${actionLabel(submitted.kind)} finalized on NEAR testnet.`);
+    } catch {
+      setMessageTone("pending");
+      setMessage(
+        `${actionLabel(submitted.kind)} was submitted, but the finality check is unavailable. Check this transaction again before signing another action.`,
       );
     } finally {
       setActionState(null);
@@ -188,7 +228,7 @@ export function WorkflowLedger({
       {loadState === "error" ? (
         <LedgerState
           title="The ledger could not reach final state."
-          detail={message || "Check the RPC connection and try again."}
+          detail={loadError || "Check the RPC connection and try again."}
           error
         />
       ) : null}
@@ -270,7 +310,7 @@ export function WorkflowLedger({
                         <button
                           className="secondary"
                           type="button"
-                          disabled={actionState !== null}
+                          disabled={actionsBlocked}
                           onClick={() =>
                             void submitOwnerAction(workflow, "pause")
                           }
@@ -281,7 +321,7 @@ export function WorkflowLedger({
                       {workflow.state === "Paused" ? (
                         <button
                           type="button"
-                          disabled={actionState !== null}
+                          disabled={actionsBlocked}
                           onClick={() =>
                             void submitOwnerAction(workflow, "resume")
                           }
@@ -308,7 +348,7 @@ export function WorkflowLedger({
                             <button
                               className="danger"
                               type="button"
-                              disabled={actionState !== null}
+                              disabled={actionsBlocked}
                               onClick={() =>
                                 void submitOwnerAction(workflow, "cancel")
                               }
@@ -322,7 +362,7 @@ export function WorkflowLedger({
                             <button
                               className="quiet"
                               type="button"
-                              disabled={actionState !== null}
+                              disabled={actionsBlocked}
                               onClick={() => setConfirmCancelId(null)}
                             >
                               Keep workflow
@@ -332,7 +372,7 @@ export function WorkflowLedger({
                           <button
                             className="quiet danger-text"
                             type="button"
-                            disabled={actionState !== null}
+                            disabled={actionsBlocked}
                             onClick={() => setConfirmCancelId(workflow.id)}
                           >
                             Cancel workflow
@@ -354,8 +394,7 @@ export function WorkflowLedger({
                         className="secondary"
                         type="button"
                         disabled={
-                          BigInt(workflow.withdrawable) <= 0n ||
-                          actionState !== null
+                          BigInt(workflow.withdrawable) <= 0n || actionsBlocked
                         }
                         onClick={() =>
                           void submitOwnerAction(workflow, "withdraw")
@@ -375,7 +414,7 @@ export function WorkflowLedger({
         </>
       ) : null}
 
-      {loadState === "ready" && message ? (
+      {message ? (
         <div
           className={`ledger-message ledger-message-${messageTone}`}
           role={messageTone === "error" ? "alert" : "status"}
@@ -389,6 +428,16 @@ export function WorkflowLedger({
             >
               Inspect transaction
             </a>
+          ) : null}
+          {submittedAction ? (
+            <button
+              className="secondary"
+              type="button"
+              disabled={actionState !== null}
+              onClick={() => void confirmOwnerAction(submittedAction)}
+            >
+              {actionState ? "Checking finality" : "Check transaction status"}
+            </button>
           ) : null}
         </div>
       ) : null}

@@ -1,8 +1,10 @@
 # Auvora Finance MVP Implementation Plan
 
-Status: Phases 1–6 have implementation in the repository; Phase 7 verification is in progress. Live evidence and product acceptance remain release gates.
+Status: Phases 1–6 are implemented; Phase 7 live/product acceptance remains in progress. Phase 8 treasury planning is implemented and tested locally. Live evidence and product acceptance remain release gates.
 
 Rule: do not begin a phase until the prior phase is accepted by the product owner
+
+On 2026-10-31, the product owner explicitly requested continuing to the next development phase with testing before progression. Phase 8 development therefore followed a passing Phase 7 automated baseline; the open live/product release gates were not marked accepted.
 
 ## 1. Delivery strategy
 
@@ -350,6 +352,15 @@ AI integration must not destabilize the already passing manual flow.
 
 ## 9. Phase 7: hardening and reproducible demo
 
+### Progress on 2026-10-31
+
+- Hardened web finality classification and added same-hash status rechecks for builder, ledger, and proof actions. Mock wallet/RPC regressions cover rejection, missing hashes, unresolved outcomes, failed receipts, and cleanup; real wallet acceptance remains open. Read-only RPC checks accepted two existing finalized testnet hashes. See [wallet verification](phase-7/WALLET_VALIDATION.md).
+- Updated the Meteor SDK's decoder to 0.5.1 with a one-line CommonJS loader patch. SDK URI compatibility tests pass; audit has no high findings. Node 22.12+ within 22.x is now required for the ESM loader interop.
+- Expanded the local NEAR sandbox scenario to verify finalized retry rejection, pause across an observed due timestamp, withdrawal rejection one yoctoNEAR above the unlocked amount, resume to completion, repeated failed-transfer restoration, external callback rejection, and dispatch prevention plus full withdrawal after cancellation.
+- Added pending-transfer unit cases proving cancellation cannot unlock in-flight funds and failed callback replay cannot double-credit the ledger after available funds have been withdrawn.
+- All 34 Rust unit tests and the expanded sandbox scenario passed in WSL Ubuntu. Clippy passed on Windows and Linux; Linux includes the sandbox code. The test now waits for observed block timestamps rather than assuming a fixed block count equals a payment interval.
+- These are local-runtime proofs, not new testnet hashes or product acceptance. Phase 7 remains in progress; live lifecycle/rejection evidence and wallet/device acceptance remain open. See [contract verification](phase-7/CONTRACT_VALIDATION.md).
+
 ### Progress on 2026-10-30
 
 - Added independent final-RPC verification of keeper transaction hashes, signer, receiver, decoded `execute_due` arguments, zero deposit, and contract-origin execution events.
@@ -414,7 +425,16 @@ Produce the proof required by the PRD and hackathon rules, remove misleading sta
 
 Submission is not sent until the human reviews the exact immutable payload and explicitly confirms it, as required by `HACKATHON.md`.
 
-## 10. Phase 8: optional P1 only after P0 acceptance
+## 10. Phase 8: optional P1 treasury planning
+
+### Progress on 2026-10-31
+
+- Before implementation: `pnpm check` passed 95 TypeScript tests plus format/lint/typecheck; the full workspace build passed; WSL Rust tests passed 34 unit tests and one sandbox scenario.
+- Added a read-only outlook that pins every workflow page to one finalized block and checks returned block identity, ownership, and duplicate workflow IDs.
+- Added integer-only per-workflow forecasts, protected reserves and remaining obligations, an editable fee buffer, funding gaps, paused/no-catch-up handling, and explicit pending-transfer uncertainty.
+- Added a separate one-year APY scenario with editable assumptions, a principal cap at uncommitted funds, default zero APY, and no wallet/provider/DeFi transaction capability.
+- After implementation: 150 TypeScript tests, formatting, lint, typecheck, and the full production build passed. Browser verification used existing public testnet data, including a nonzero ledger, invalid owner recovery, and an empty owner account. See [Phase 8 validation](phase-8/VALIDATION.md).
+- Remaining Phase 7 live wallet/lifecycle acceptance continues to gate release. No Phase 9 is defined in this implementation plan.
 
 ### Objective
 

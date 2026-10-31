@@ -1,0 +1,77 @@
+{
+  "date": "2026-10-31",
+  "phase": 8,
+  "status": "Implemented and locally verified; global release acceptance remains open",
+  "authorization": "User explicitly requested the next development phase with testing before progression",
+  "baseline_before_implementation": {
+    "pnpm_check_exit_code": 0,
+    "typescript_tests_passed": 95,
+    "workspace_build_exit_code": 0,
+    "rust_unit_tests_passed": 34,
+    "linux_sandbox_tests_passed": 1,
+    "sandbox_duration_seconds": 140.7
+  },
+  "verification_after_implementation": {
+    "pnpm_check_exit_code": 0,
+    "typescript_tests_passed": 150,
+    "domain_tests_passed": 40,
+    "web_tests_passed": 57,
+    "new_treasury_domain_cases": 36,
+    "new_snapshot_rpc_cases": 11,
+    "new_outlook_ui_cases": 8,
+    "workspace_build_exit_code": 0,
+    "final_web_build_exit_code": 0,
+    "frozen_install_exit_code": 0,
+    "audit_high_gate_exit_code": 0,
+    "remaining_audit_findings": { "low": 1, "moderate": 1, "high": 0 }
+  },
+  "read_only_testnet_evidence": {
+    "rpc": "https://rpc.testnet.near.org",
+    "contract_id": "oceanear.testnet",
+    "owner_id": "oceanear.testnet",
+    "block_height": 275537471,
+    "block_hash": "HB8FsAHYUegLVdad1iEGN4LYKQVPwS3BXCaYL1jbTk1d",
+    "workflow_count": 6,
+    "available_yocto": "4560000000000000000000",
+    "forecast_uncommitted_yocto": "4560000000000000000000",
+    "contract_withdrawable_yocto": "4560000000000000000000",
+    "equality_assertion_passed": true
+  },
+  "browser_scenario": {
+    "production_url": "http://127.0.0.1:3009",
+    "wallet_connected": false,
+    "empty_owner_test": "oceanrelayer.testnet",
+    "invalid_owner_test": "oceanear.near",
+    "principal_above_limit_rejected_near": "0.005",
+    "hypothetical_principal_near": "0.004",
+    "user_entered_hypothetical_apy_percent": "2.35",
+    "hypothetical_one_year_gain_near": "0.000094",
+    "hypothetical_ending_amount_near": "0.004094",
+    "on_chain_available_near": "0.00456",
+    "mobile_viewport": { "width": 390, "height": 844 },
+    "mobile_document_width": 375,
+    "table_has_contained_horizontal_scroll": true,
+    "final_browser_block_height": 275538847,
+    "final_browser_block_hash": "7CgKgoYCZHnAw42CmU3tQAnKYyyYfsR6xDXVXG9hfyR2",
+    "minimum_input_height_px": 48,
+    "keyboard_table_scroll_left_after_right_arrow_px": 40,
+    "keyboard_enter_opens_simulator": true,
+    "new_console_warning_or_error_entries_in_final_check": 0,
+    "desktop_viewport": { "width": 1280, "height": 900 },
+    "desktop_document_width": 1265,
+    "screenshots": [
+      "2026-10-31-mobile-yield.jpg",
+      "2026-10-31-desktop-outlook.jpg"
+    ]
+  },
+  "text_contrast_on_paper": {
+    "ink": 14.07,
+    "muted": 5.48,
+    "forest": 10.41,
+    "error": 6.65,
+    "focus_indicator": 3.3
+  },
+  "signed_or_broadcast_transactions": 0,
+  "yield_provider_connected": false,
+  "new_phase_after_8": "Not defined in the current implementation plan"
+}

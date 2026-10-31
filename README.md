@@ -6,17 +6,19 @@ This repository is a NEAR Hackathon 2026 project. It is not audited, production-
 
 ## What works
 
-| Capability                                      | Status                              | Authority boundary                                          |
-| ----------------------------------------------- | ----------------------------------- | ----------------------------------------------------------- |
-| Recurring native NEAR workflow                  | Live on `oceanear.testnet`          | Owner wallet creates and funds it                           |
-| Recipient allowlist                             | Live                                | Contract owner signs changes                                |
-| Due-run execution and callback accounting       | Live                                | Keeper supplies only the workflow ID; contract decides      |
-| Pause, resume, cancel, and safe withdrawal      | Live                                | Workflow owner signs each action                            |
-| Keeper discovery and restart reconciliation     | Implemented                         | Restricted keeper key and PostgreSQL records                |
-| Sponsored nonpayable call proof                 | Live proof recorded                 | Relayer cannot sponsor deposits or change signed arguments  |
-| Natural-language draft parsing                  | Implemented locally                 | Produces editable fields only; cannot open or sign a wallet |
-| NEAR AI Cloud adapter                           | Configurable, not yet live-verified | Falls back to deterministic parsing when unavailable        |
-| Mainnet, stablecoins, swaps, lending, and yield | Not implemented                     | Outside the MVP                                             |
+| Capability                                           | Status                              | Authority boundary                                          |
+| ---------------------------------------------------- | ----------------------------------- | ----------------------------------------------------------- |
+| Recurring native NEAR workflow                       | Live on `oceanear.testnet`          | Owner wallet creates and funds it                           |
+| Recipient allowlist                                  | Live                                | Contract owner signs changes                                |
+| Due-run execution and callback accounting            | Live                                | Keeper supplies only the workflow ID; contract decides      |
+| Pause, resume, cancel, and safe withdrawal           | Live                                | Workflow owner signs each action                            |
+| Keeper discovery and restart reconciliation          | Implemented                         | Restricted keeper key and PostgreSQL records                |
+| Sponsored nonpayable call proof                      | Live proof recorded                 | Relayer cannot sponsor deposits or change signed arguments  |
+| Natural-language draft parsing                       | Implemented locally                 | Produces editable fields only; cannot open or sign a wallet |
+| NEAR AI Cloud adapter                                | Configurable, not yet live-verified | Falls back to deterministic parsing when unavailable        |
+| Treasury forecast                                    | Implemented and locally verified    | Reads workflow pages at one finalized testnet block         |
+| Hypothetical one-year yield scenario                 | Implemented and locally verified    | Editable assumptions only; no provider or asset transaction |
+| Mainnet, stablecoins, swaps, lending, and real yield | Not implemented                     | Outside the MVP                                             |
 
 The live contract returned `phase-2-ready` at finality on 2026-10-30. Workflows `2` and `4` each completed two scheduled 0.001 NEAR payments with distinct finalized hashes; workflows `3` and `5` returned `RESERVE_GUARD`. All four fixture ledgers were withdrawn to zero. A keeper-cycle worker was terminated after broadcast and a separate OS process reconciled its persisted hash without submitting a replacement. Two independent keeper processes also produced one payment for the next slot. Direct concurrent contract triggers and remaining lifecycle/product gates stay open. See [Demo evidence](docs/DEMO_EVIDENCE.md).
 
@@ -33,9 +35,13 @@ The live contract returned `phase-2-ready` at finality on 2026-10-30. Workflows 
 
 The exact commands, expected outputs, and human-only signing steps are in [Demo runbook](docs/DEMO_RUNBOOK.md).
 
+## Read-only treasury planning
+
+The **Treasury outlook** section works without a wallet connection. Enter a public testnet owner account and select **Read finalized balances**. Change the forecast horizon or planning fee buffer to inspect commitments, reserves, per-workflow funding gaps, and uncommitted funds. Expand **Model a hypothetical one-year return** to edit a principal and assumed APY; this scenario never opens a wallet or moves assets. Refresh the snapshot to incorporate newer chain state.
+
 ## Prerequisites
 
-- Node.js 22.x
+- Node.js 22.12 or newer within 22.x (tested with 22.22.1)
 - Corepack with pnpm 12.14.0
 - Rust 1.99.1 with `rustfmt`, `clippy`, and `wasm32-unknown-unknown`
 - `cargo-near` 0.22.0

@@ -35,7 +35,11 @@ Use this checklist before the public repository, demo post, or hackathon submiss
 - [ ] Withdrawal cannot consume active obligations, reserve, or pending value
 - [ ] Every explorer URL agrees with final RPC state
 
+Local contract verification on 2026-10-31 passed 34 unit tests and an expanded Linux sandbox scenario covering duplicate dispatch, failed-transfer accounting, private callback rejection, pause/resume/cancel, and withdrawal rejection. See [contract verification](phase-7/CONTRACT_VALIDATION.md). The unchecked live-evidence gates above remain open; local sandbox results do not supply testnet hashes.
+
 ## Product evidence
+
+Automated wallet-state verification now covers rejection/abandonment, missing hashes, unknown/final results, receipt failures, and status rechecks without a second signature. Read-only RPC checks use two existing testnet hashes. These mocked component tests and the disconnected mobile browser sample do not replace real selected-wallet acceptance. See [wallet verification](phase-7/WALLET_VALIDATION.md).
 
 - [ ] Fresh setup follows [Demo runbook](DEMO_RUNBOOK.md) without undocumented credentials
 - [x] Natural-language parser fills an editable form and does not open a wallet ([desktop browser proof](phase-7/PRODUCT_VALIDATION.md))
@@ -46,6 +50,18 @@ Use this checklist before the public repository, demo post, or hackathon submiss
 - [ ] Submitted and unknown transactions are not presented as finalized
 - [ ] Empty, loading, error, and disconnected states are visible and understandable
 - [ ] Keyboard path and mobile layout have been checked
+
+## Optional Phase 8 development verification
+
+- [x] Prior-phase automated baseline passed before implementation: 95 TypeScript tests, 34 Rust unit tests, one Linux sandbox scenario, and the workspace build.
+- [x] Pinned-block pagination, owner checks, and duplicate workflow rejection have RPC regressions.
+- [x] Per-workflow obligations, reserve, pending value, fee assumptions, and one-yocto boundaries have domain regressions.
+- [x] Hypothetical APY and principal assumptions cannot consume protected funds or modify displayed on-chain balances.
+- [x] Phase 8 has no wallet session, signing method, or DeFi execution path.
+- [x] 150 TypeScript tests, lint, formatting, typecheck, and production builds pass.
+- [x] Public testnet views match the forecast; browser checks cover nonzero balances, invalid owner recovery, and empty results.
+
+See [Phase 8 validation](phase-8/VALIDATION.md). These development checks do not close the earlier live wallet/lifecycle or human publication gates.
 
 ## Documentation truth check
 

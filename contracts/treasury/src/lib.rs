@@ -1464,6 +1464,45 @@ mod tests {
     }
 
     #[test]
+    #[should_panic(expected = "WITHDRAWAL_EXCEEDS_AVAILABLE")]
+    fn withdrawal_cannot_take_pending_value_after_cancel() {
+        let (mut c, id) = due_workflow(100);
+        testing_env!(context_at("keeper.testnet", 0, 1_700_000_200_000));
+        assert!(matches!(c.execute_due(id), PromiseOrValue::Promise(_)));
+        testing_env!(context_at("owner.testnet", 0, 1_700_000_250_000));
+        c.cancel_workflow(id);
+        assert_eq!(c.total_pending_liability, 10);
+        assert_eq!(c.get_withdrawable(id), U128(90));
+        let _withdrawal = c.withdraw_available(id, U128(91));
+    }
+
+    #[test]
+    fn cancelled_pending_failure_restores_only_the_reserved_amount_once() {
+        let (mut c, id) = due_workflow(100);
+        testing_env!(context_at("keeper.testnet", 0, 1_700_000_200_000));
+        assert!(matches!(c.execute_due(id), PromiseOrValue::Promise(_)));
+        testing_env!(context_at("owner.testnet", 0, 1_700_000_250_000));
+        c.cancel_workflow(id);
+        let _withdrawal = c.withdraw_available(id, U128(90));
+        assert_eq!(c.total_available_liability, 0);
+        assert_eq!(c.total_pending_liability, 10);
+
+        callback_context(PromiseResult::Failed, 1_700_000_300_000);
+        let failure = c.on_execution_complete(id, 0, 1_700_000_100_000, U128(10));
+        assert_eq!(failure.status, ExecutionStatus::Failed);
+        assert_eq!(c.get_workflow(id).unwrap().state, WorkflowState::Cancelled);
+        assert_eq!(c.get_withdrawable(id), U128(10));
+        assert_eq!(c.total_available_liability, 10);
+        assert_eq!(c.total_pending_liability, 0);
+
+        let replay = c.on_execution_complete(id, 0, 1_700_000_100_000, U128(10));
+        assert_eq!(replay.status, ExecutionStatus::Ignored);
+        assert_eq!(c.get_withdrawable(id), U128(10));
+        assert_eq!(c.total_available_liability, 10);
+        assert_eq!(c.total_pending_liability, 0);
+    }
+
+    #[test]
     #[should_panic(expected = "PRIVATE_CALLBACK")]
     fn direct_external_callback_is_rejected() {
         let (mut c, id) = due_workflow(100);

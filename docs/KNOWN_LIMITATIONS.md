@@ -1,14 +1,23 @@
 # Known Limitations
 
-Status date: 2026-10-30
+Status date: 2026-10-31
 
 ## Product scope
 
 - Testnet only. Mainnet is intentionally blocked.
-- Native NEAR only. Stablecoins, swaps, lending, staking, yield, cross-chain execution, and NEAR Intents are not implemented.
+- Native NEAR only. Stablecoins, swaps, lending, staking, real yield transactions, cross-chain execution, and NEAR Intents are not implemented.
 - A workflow recipient and financial policy are immutable after creation. The owner cancels and replaces a workflow instead of editing it in place.
 - The contract remains upgrade-trusted by the deployment account.
 - The project has not received an independent security audit.
+
+## Treasury outlook and hypothetical yield
+
+- Forecasts read public workflow ledgers at one finalized block, not the owner's external wallet balance. Snapshots refresh only when requested.
+- Workflow ledgers remain segregated: a funding gap in one workflow is not automatically offset by another workflow's surplus.
+- Horizon timing assumes immediate confirmations and no burst catch-up. Actual payments may occur later. Paused obligations and reserves remain protected even though no paused payments are scheduled.
+- Pending transfers disable aggregate timing projections and the yield scenario until finality resolves. Their reserved value is already excluded from the available ledger.
+- Fee buffers are hypothetical planning assumptions. Scheduled execution gas is paid by the keeper; the forecast does not introduce a workflow fee.
+- APY is an editable one-year assumption, defaults to zero, and is not a market quote. No yield provider, deposit, staking, or lending integration exists. Losses, changing rates, and actual strategy liquidity are not modeled.
 
 ## AI draft parser
 
@@ -34,6 +43,12 @@ Status date: 2026-10-30
 - Production-grade shared rate limiting, monitoring, and budget alerting are not deployed.
 - Wallet compatibility for every NEP-366 signing implementation has not been demonstrated.
 
+## Web transaction feedback
+
+- Mocked wallet/component tests cover rejection, abandonment, pending/final states, failed receipts, and rechecking a known hash without another signature. Real selected-wallet behavior and sponsored management remain unverified.
+- Unresolved transaction state is retained within the mounted component session. Reloading or changing accounts does not restore that context; inspect known hashes and final contract state before retrying an uncertain action.
+- Mobile browser verification covers a disconnected 390 px view and a keyboard sample. Complete device and keyboard acceptance, including focus trapping in the third-party selector, remains open.
+
 ## Demo evidence
 
 - Workflow `2` completed two scheduled payments on 2026-10-30; workflow `3` produced a verified reserve rejection with zero recipient and workflow balance deltas. Both fixture balances were withdrawn to zero. Hashes and the final RPC report are recorded in [Demo evidence](DEMO_EVIDENCE.md).
@@ -45,6 +60,7 @@ Status date: 2026-10-30
 
 ## Dependency advisories
 
+- On 2026-10-31, `decode-uri-component` was overridden to 0.5.1 to address `GHSA-qr28-fpjm-wq7f`. A one-line pnpm patch preserves the CommonJS loading expected by `query-string` 7; SDK URI compatibility tests and the production build pass. Node 22.12+ within 22.x is required. The high-severity npm audit gate passes with one low and one moderate finding remaining.
 - The high-severity npm advisories from `nanoid@5.1.5` are mitigated by a workspace override to `5.1.16`. One low and one moderate npm advisory remain visible below the configured high-severity release threshold.
 - The coordinated upgrade to `near-sdk` 5.30.0 and `near-workspaces` 0.24.0 removed five of the nine RustSec findings, including the `rustls` and `rustls-webpki` findings.
 - Four findings remain in host-side NEAR unit-test and sandbox dependencies: `crypto-bigint` (`RUSTSEC-2026-0387`), `zstd` (`RUSTSEC-2026-0391`), and two `zstd-safe` findings (`RUSTSEC-2026-0398` and `RUSTSEC-2026-0403`). A target-specific dependency-tree check confirms these packages are absent from the contract's normal `wasm32-unknown-unknown` graph.

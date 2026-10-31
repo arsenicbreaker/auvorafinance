@@ -35,12 +35,24 @@ interface JsonRpcEnvelope<T> {
 
 interface CallFunctionResult {
   result: number[];
+  block_hash?: string;
+  block_height?: number;
+}
+
+export interface OwnerWorkflowSnapshot {
+  ownerId: string;
+  blockHash: string;
+  blockHeight: number;
+  timestampMs: number;
+  workflows: WorkflowView[];
 }
 
 interface TransactionResult {
   final_execution_status?: string;
   status?: Record<string, unknown>;
-  transaction?: { hash?: string };
+  transaction?: { hash?: string; signer_id?: string; receiver_id?: string };
+  transaction_outcome?: { outcome?: { status?: Record<string, unknown> } };
+  receipts_outcome?: Array<{ outcome?: { status?: Record<string, unknown> } }>;
 }
 
 async function rpc<T>(
@@ -52,6 +64,7 @@ async function rpc<T>(
     body: JSON.stringify({ id: "auvora-web", jsonrpc: "2.0", method, params }),
     headers: { "content-type": "application/json" },
     method: "POST",
+    signal: AbortSignal.timeout(15_000),
   });
 
   if (!response.ok) {
@@ -136,9 +149,11 @@ export async function readOwnerWorkflows(
   rpcUrl: string,
   contractId: string,
   ownerId: string,
+  atBlock?: { hash: string; height: number },
 ): Promise<WorkflowView[]> {
   const workflows: WorkflowView[] = [];
   const pageSize = 50;
+  const seen = new Set<number>();
 
   for (let cursor = 0; ; cursor += pageSize) {
     const result = await rpc<CallFunctionResult>(rpcUrl, "query", {
@@ -146,19 +161,74 @@ export async function readOwnerWorkflows(
       args_base64: btoa(
         JSON.stringify({ owner_id: ownerId, cursor, limit: pageSize }),
       ),
-      finality: "final",
+      ...(atBlock ? { block_id: atBlock.hash } : { finality: "final" }),
       method_name: "list_owner_workflows",
       request_type: "call_function",
     });
+    if (
+      atBlock &&
+      (result.block_hash !== atBlock.hash ||
+        result.block_height !== atBlock.height)
+    ) {
+      throw new Error("RPC_SNAPSHOT_BLOCK_MISMATCH");
+    }
     const decoded = new TextDecoder().decode(Uint8Array.from(result.result));
     const page: unknown = JSON.parse(decoded);
     if (!Array.isArray(page)) {
       throw new Error("RPC_INVALID_WORKFLOW_LIST");
     }
     const parsed = page.map(parseWorkflowView);
+    if (parsed.length > pageSize) throw new Error("RPC_INVALID_WORKFLOW_PAGE");
+    for (const workflow of parsed) {
+      if (workflow.owner_id !== ownerId || seen.has(workflow.id))
+        throw new Error("RPC_INVALID_WORKFLOW_PAGE");
+      seen.add(workflow.id);
+    }
     workflows.push(...parsed);
     if (parsed.length < pageSize) return workflows;
   }
+}
+
+export async function readOwnerWorkflowSnapshot(
+  rpcUrl: string,
+  contractId: string,
+  ownerId: string,
+): Promise<OwnerWorkflowSnapshot> {
+  if (
+    !/^[a-z0-9]+(?:[._-][a-z0-9]+)*\.testnet$/.test(ownerId) ||
+    ownerId.length > 64
+  ) {
+    throw new Error("INVALID_TESTNET_OWNER");
+  }
+  const block = await rpc<{
+    header: { hash: string; height: number; timestamp_nanosec: string };
+  }>(rpcUrl, "block", { finality: "final" });
+  const header = block?.header;
+  if (
+    !header ||
+    typeof header.hash !== "string" ||
+    !header.hash ||
+    !Number.isSafeInteger(header.height) ||
+    header.height < 0 ||
+    typeof header.timestamp_nanosec !== "string" ||
+    !/^\d{1,22}$/.test(header.timestamp_nanosec)
+  ) {
+    throw new Error("RPC_INVALID_SNAPSHOT_BLOCK");
+  }
+  const timestampMs = Number(BigInt(header.timestamp_nanosec) / 1_000_000n);
+  if (!Number.isSafeInteger(timestampMs) || timestampMs > 8_640_000_000_000_000)
+    throw new Error("RPC_INVALID_SNAPSHOT_BLOCK");
+  const workflows = await readOwnerWorkflows(rpcUrl, contractId, ownerId, {
+    hash: header.hash,
+    height: header.height,
+  });
+  return {
+    ownerId,
+    blockHash: header.hash,
+    blockHeight: header.height,
+    timestampMs,
+    workflows,
+  };
 }
 
 function parseWorkflowView(value: unknown): WorkflowView {
@@ -192,10 +262,31 @@ export function classifyFinalExecution(result: TransactionResult): Finality {
     return "pending";
   }
 
-  if (result.status && "Failure" in result.status) {
+  const statuses = [
+    result.status,
+    result.transaction_outcome?.outcome?.status,
+    ...(result.receipts_outcome ?? []).map(
+      (receipt) => receipt.outcome?.status,
+    ),
+  ];
+  if (statuses.some((status) => status && "Failure" in status)) {
     return "failure";
   }
 
+  if (
+    typeof result.status?.SuccessValue !== "string" ||
+    !result.receipts_outcome?.length ||
+    statuses.some(
+      (status) =>
+        !status ||
+        !(
+          typeof status.SuccessValue === "string" ||
+          typeof status.SuccessReceiptId === "string"
+        ),
+    )
+  ) {
+    return "pending";
+  }
   return "success";
 }
 
@@ -203,11 +294,20 @@ export async function readTransactionFinality(
   rpcUrl: string,
   transactionHash: string,
   senderAccountId: string,
+  receiverAccountId?: string,
 ): Promise<Finality> {
   const result = await rpc<TransactionResult>(rpcUrl, "tx", {
     sender_account_id: senderAccountId,
     tx_hash: transactionHash,
     wait_until: "FINAL",
   });
+  if (
+    result.transaction?.hash !== transactionHash ||
+    result.transaction.signer_id !== senderAccountId ||
+    (receiverAccountId !== undefined &&
+      result.transaction.receiver_id !== receiverAccountId)
+  ) {
+    throw new Error("RPC_TRANSACTION_IDENTITY_MISMATCH");
+  }
   return classifyFinalExecution(result);
 }

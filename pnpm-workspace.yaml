@@ -4,6 +4,7 @@ packages:
 
 overrides:
   "nanoid@>=5.0.0 <5.1.16": "5.1.16"
+  "query-string@7.1.3>decode-uri-component": "0.5.1"
 
 allowBuilds:
   "@prisma/engines": true
@@ -11,3 +12,7 @@ allowBuilds:
   prisma: true
   secp256k1: true
   unrs-resolver: true
+
+patchedDependencies:
+  # query-string 7's CommonJS loader must read the fixed decoder's ESM default export.
+  query-string@7.1.3: patches/query-string@7.1.3.patch

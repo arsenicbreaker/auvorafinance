@@ -59,6 +59,11 @@ export function WorkflowBuilder({
   const [draftState, setDraftState] = useState<DraftState>("idle");
   const [error, setError] = useState("");
   const [transactionHash, setTransactionHash] = useState("");
+  const [submittedTransaction, setSubmittedTransaction] = useState<{
+    hash: string;
+    actionName: "Recipient authorization" | "Workflow creation";
+    sender: string;
+  } | null>(null);
   const [reviewedSchedule, setReviewedSchedule] = useState<{
     intervalMs: number;
     startAtMs: number;
@@ -78,7 +83,9 @@ export function WorkflowBuilder({
     "error" | "finalizing" | "idle" | "pending" | "submitted" | "success"
   >("idle");
   const transactionBusy =
-    transactionState === "pending" || transactionState === "finalizing";
+    transactionState === "pending" ||
+    transactionState === "finalizing" ||
+    transactionState === "submitted";
 
   const selectedInterval = INTERVALS.find(
     (option) => String(option.value) === interval,
@@ -304,6 +311,7 @@ export function WorkflowBuilder({
   }
 
   async function allowRecipient() {
+    if (transactionBusy) return;
     if (allowlistState === "allowed") return;
     let draft: ReturnType<typeof validateDraft>;
     try {
@@ -321,6 +329,7 @@ export function WorkflowBuilder({
       return;
     }
     setTransactionState("pending");
+    setTransactionHash("");
     setError("");
     try {
       const hash = await walletSession.signFunctionCall({
@@ -419,6 +428,7 @@ export function WorkflowBuilder({
   }
 
   async function createWorkflow(currentTimeMs: number) {
+    if (transactionBusy) return;
     if (!walletSession) {
       setError("Connect the owner wallet and review the fields first.");
       return;
@@ -488,17 +498,21 @@ export function WorkflowBuilder({
 
   async function confirmFinality(
     transactionHash: string,
-    actionName: string,
+    actionName: "Recipient authorization" | "Workflow creation",
+    sender = walletSession?.accountId,
   ): Promise<boolean> {
-    if (!walletSession) return false;
+    if (!sender) return false;
+    setSubmittedTransaction({ hash: transactionHash, actionName, sender });
     setTransactionState("finalizing");
     try {
       const finality = await readTransactionFinality(
         rpcUrl,
         transactionHash,
-        walletSession.accountId,
+        sender,
+        contractId,
       );
       if (finality === "failure") {
+        setSubmittedTransaction(null);
         setTransactionState("error");
         setError(`${actionName} failed at finality.`);
         return false;
@@ -511,6 +525,8 @@ export function WorkflowBuilder({
         return false;
       }
       setTransactionState("success");
+      setSubmittedTransaction(null);
+      setError("");
       return true;
     } catch {
       setTransactionState("submitted");
@@ -846,12 +862,13 @@ export function WorkflowBuilder({
               Draft saved on this device. No funds moved.
             </p>
           ) : null}
-          {transactionState === "success" ||
-          transactionState === "submitted" ? (
+          {transactionHash ? (
             <p className="saved-note" role="status">
               {transactionState === "success"
                 ? "Transaction finalized"
-                : "Transaction submitted"}
+                : transactionState === "error"
+                  ? "Transaction failed at finality"
+                  : "Transaction submitted"}
               {transactionHash ? `: ${transactionHash}` : ""}.
               {transactionHash ? (
                 <>
@@ -866,6 +883,26 @@ export function WorkflowBuilder({
                 </>
               ) : null}
             </p>
+          ) : null}
+          {submittedTransaction && transactionState === "submitted" ? (
+            <button
+              className="secondary"
+              type="button"
+              onClick={() => {
+                void confirmFinality(
+                  submittedTransaction.hash,
+                  submittedTransaction.actionName,
+                  submittedTransaction.sender,
+                ).then((confirmed) => {
+                  if (!confirmed) return;
+                  if (submittedTransaction.actionName === "Workflow creation")
+                    onWorkflowSubmitted?.();
+                  else setContractCheckAttempt((attempt) => attempt + 1);
+                });
+              }}
+            >
+              Check transaction status
+            </button>
           ) : null}
         </aside>
       </div>
