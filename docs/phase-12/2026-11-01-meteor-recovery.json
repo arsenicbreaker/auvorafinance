@@ -1,0 +1,34 @@
+{
+  "date": "2026-11-01",
+  "timezone": "Asia/Jakarta",
+  "reported_issue": "After Meteor Cancel, the builder returned to initial fields without a visible rejection result",
+  "source": "User-provided screenshots and report",
+  "exact_native_reset_cause": "Not yet established; component remount and full reload are both covered by the recovery design",
+  "changes": [
+    "Owner/contract/RPC-scoped draft recovery without financial approval or AI prompt retention",
+    "Pre-wallet attempt marker persisted before invoking the wallet",
+    "Explicit late rejection survives builder remount",
+    "Interrupted or ambiguous requests stay unknown and block a new signature until manual wallet-activity review",
+    "Returned hash backup and existing finality journal remain authoritative for status checks"
+  ],
+  "validation": {
+    "baseline_web_tests": 117,
+    "web_tests": 138,
+    "new_regressions": 21,
+    "workspace_tests": 312,
+    "check": "passed",
+    "production_build": "passed"
+  },
+  "chain_snapshot": {
+    "contract": "oceanear.testnet",
+    "owner": "oceanear.testnet",
+    "block_height": 275681705,
+    "workflow_ids": [0, 1, 2, 3, 4, 5],
+    "all_completed_or_cancelled": true,
+    "pending_executions": 0,
+    "new_workflow_observed": false
+  },
+  "signed_or_broadcast_by_agent": 0,
+  "native_meteor_retest": "required",
+  "phase_12_status": "in_progress"
+}

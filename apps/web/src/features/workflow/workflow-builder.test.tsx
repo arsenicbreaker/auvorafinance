@@ -2,6 +2,7 @@
 
 import {
   cleanup,
+  act,
   fireEvent,
   render,
   screen,
@@ -59,6 +60,64 @@ async function reviewWorkflow() {
 }
 
 describe("workflow creation finality", () => {
+  it("retains the draft and a late wallet rejection when the builder was remounted", async () => {
+    let reject!: (error: Error) => void;
+    signFunctionCall.mockReturnValue(
+      new Promise((_, fail) => {
+        reject = fail;
+      }),
+    );
+    fireEvent.click(await reviewWorkflow());
+    await waitFor(() => expect(signFunctionCall).toHaveBeenCalledOnce());
+    cleanup();
+    render(
+      <WorkflowBuilder
+        contractId="treasury.testnet"
+        rpcUrl="https://rpc.testnet.near.org"
+        walletSession={{ accountId: "owner.testnet", signFunctionCall }}
+      />,
+    );
+    await waitFor(() =>
+      expect(screen.getByLabelText("Recipient account")).toHaveProperty(
+        "value",
+        "recipient.testnet",
+      ),
+    );
+    await act(async () => {
+      reject(new Error("User rejected"));
+    });
+    expect(
+      await screen.findByText(/The wallet request was rejected/),
+    ).toBeTruthy();
+    expect(screen.queryByText(/Transaction finalized/)).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Create payment schedule" }),
+    ).toBeNull();
+    expect(readTransactionFinality).not.toHaveBeenCalled();
+    expect(signFunctionCall).toHaveBeenCalledOnce();
+  });
+
+  it("restores a draft after a full remount without assuming an unanswered wallet request was rejected", async () => {
+    signFunctionCall.mockReturnValue(new Promise(() => {}));
+    fireEvent.click(await reviewWorkflow());
+    await waitFor(() => expect(signFunctionCall).toHaveBeenCalledOnce());
+    cleanup();
+    const create = await reviewWorkflowForRecovery();
+    expect(
+      await screen.findByText(
+        /wallet request was interrupted or its outcome is unknown/i,
+      ),
+    ).toBeTruthy();
+    expect(create).toHaveProperty("disabled", true);
+    expect(screen.queryByText(/wallet request was rejected/i)).toBeNull();
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "I checked Meteor activity: clear this interrupted request",
+      }),
+    );
+    await waitFor(() => expect(create).toHaveProperty("disabled", false));
+    expect(signFunctionCall).toHaveBeenCalledOnce();
+  });
   it("recovers recipient authorization without carrying over approval of a workflow", async () => {
     localStorage.setItem(
       journalKey({

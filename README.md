@@ -45,7 +45,9 @@ The **Treasury outlook** section works without a wallet connection. Enter a publ
 
 Known pending workflow hashes are saved on this browser for recipient authorization, creation, pause, resume, cancel, and withdrawal. After a reload, reconnect the same owner with the same contract and RPC, then select **Check transaction status**. This reads the original hash without opening the wallet again. A pending or unavailable result keeps new actions in that section blocked; confirmed success or failure clears the matching saved record.
 
-Only public transaction identifiers are stored. Financial-field approval is not restored. Recovery cannot recover a wallet response that never returned a hash, cleared storage, or transactions from another device/origin. Use one signing tab; browser storage is not a cross-tab signing lock. See [known limitations](docs/KNOWN_LIMITATIONS.md).
+The builder also saves reviewed form fields and a request marker before opening a wallet. After remount/reload, fields return without restoring financial approval. Explicit rejection is retained; an unanswered/interrupted request is shown as unknown and blocks another signature until the owner checks wallet activity and clears that marker. Known hashes still use their finality check. AI prompts, secrets, and signed bytes are not stored by this recovery. A draft lost before this update cannot be reconstructed.
+
+Recovery cannot discover a hash the wallet never returned, survive cleared storage, or recover transactions from another device/origin. Use one signing tab; browser storage is not a cross-tab signing lock. See [known limitations](docs/KNOWN_LIMITATIONS.md).
 
 ## Execution history
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { formatNear, parseNear } from "@auvora/domain";
 import {
   aiWorkflowParserResultSchema,
@@ -13,6 +13,7 @@ import {
   readWorkflowStorageCost,
 } from "../../lib/near-rpc";
 import { useTransactionJournal } from "../../lib/transaction-journal";
+import { useBuilderRecovery } from "../../lib/builder-recovery";
 
 export interface WorkflowWalletSession {
   accountId: string;
@@ -90,6 +91,38 @@ export function WorkflowBuilder({
     channel: "builder",
   });
   const [journalError, setJournalError] = useState("");
+  const recovery = useBuilderRecovery({
+    owner: walletSession?.accountId ?? "",
+    contractId,
+    rpcUrl,
+  });
+  const restored = useRef(false);
+  useEffect(() => {
+    let active = true;
+    void Promise.resolve().then(() => {
+      if (!active || restored.current || !recovery.ready) return;
+      restored.current = true;
+      const fields = recovery.record?.fields;
+      if (!fields) return;
+      setRecipient(fields.recipient);
+      setAmount(fields.amount);
+      setReserve(fields.reserve);
+      setInterval(fields.interval);
+      setMaxRuns(fields.maxRuns);
+      setStartAt(fields.startAt);
+    });
+    return () => {
+      active = false;
+    };
+  }, [recovery.ready, recovery.record]);
+  const recoveredTransaction =
+    recovery.record?.status === "submitted" && recovery.record.hash
+      ? {
+          hash: recovery.record.hash,
+          sender: walletSession?.accountId ?? "",
+          actionName: recovery.record.action,
+        }
+      : null;
   const submittedTransaction =
     currentSubmittedTransaction ??
     (journal.entry
@@ -100,10 +133,14 @@ export function WorkflowBuilder({
             | "Recipient authorization"
             | "Workflow creation",
         }
-      : null);
+      : recoveredTransaction);
   const transactionHash =
     currentTransactionHash || submittedTransaction?.hash || "";
   const transactionBusy =
+    !recovery.ready ||
+    !!recovery.issue ||
+    recovery.record?.status === "awaiting-wallet" ||
+    recovery.record?.status === "unknown" ||
     !journal.ready ||
     !!journal.issue ||
     !!submittedTransaction ||
@@ -115,6 +152,14 @@ export function WorkflowBuilder({
     (option) => String(option.value) === interval,
   );
   const ownerId = walletSession?.accountId ?? "";
+  const recoveryFields = {
+    recipient,
+    amount,
+    reserve,
+    interval,
+    maxRuns,
+    startAt,
+  };
   const currentDraftKey = JSON.stringify([
     recipient.trim(),
     amount,
@@ -298,6 +343,7 @@ export function WorkflowBuilder({
   function validateAndReview() {
     try {
       const draft = validateDraft();
+      recovery.saveDraft(recoveryFields);
       setReviewedDraftKey(currentDraftKey);
       setAllowlistCheck(null);
       setStorageQuote(null);
@@ -320,18 +366,14 @@ export function WorkflowBuilder({
   }
 
   function saveDraft() {
-    localStorage.setItem(
-      "auvora.workflow-draft",
-      JSON.stringify({
-        recipient,
-        amount,
-        reserve,
-        interval,
-        maxRuns,
-        startAt,
-      }),
-    );
-    setDraftState("saved");
+    try {
+      recovery.saveDraft(recoveryFields);
+      setDraftState("saved");
+    } catch {
+      setError(
+        "The draft could not be saved. Check browser storage before leaving this page.",
+      );
+    }
   }
 
   async function allowRecipient() {
@@ -361,19 +403,23 @@ export function WorkflowBuilder({
     setTransactionState("pending");
     setTransactionHash("");
     setError("");
+    let attemptId = "";
     try {
+      attemptId = recovery.begin(recoveryFields, "Recipient authorization");
       const hash = await walletSession.signFunctionCall({
         methodName: "add_allowed_recipient",
         args: { account_id: draft.recipientId },
         deposit: ALLOWLIST_DEPOSIT,
       });
       if (!hash) throw new Error("WALLET_TRANSACTION_HASH_MISSING");
+      recovery.settle(attemptId, { hash });
       setTransactionHash(hash);
       if (await confirmFinality(hash, "Recipient authorization")) {
         setAllowlistCheck(null);
         setContractCheckAttempt((attempt) => attempt + 1);
       }
     } catch (nextError) {
+      if (attemptId) recovery.settle(attemptId, { error: nextError });
       setTransactionState("error");
       setError(
         nextError instanceof Error ? nextError.message : "Wallet call failed",
@@ -479,6 +525,7 @@ export function WorkflowBuilder({
       setError("Allow the recipient and wait for contract confirmation first.");
       return;
     }
+    let attemptId = "";
     try {
       const draft = validateDraft();
       if (
@@ -502,6 +549,7 @@ export function WorkflowBuilder({
       setError("");
       setTransactionHash("");
       const startAtMs = reviewedSchedule.startAtMs;
+      attemptId = recovery.begin(recoveryFields, "Workflow creation");
       const hash = await walletSession.signFunctionCall({
         methodName: "create_workflow",
         args: {
@@ -519,11 +567,13 @@ export function WorkflowBuilder({
         deposit: totalDeposit,
       });
       if (!hash) throw new Error("WALLET_TRANSACTION_HASH_MISSING");
+      recovery.settle(attemptId, { hash });
       setTransactionHash(hash);
       if (await confirmFinality(hash, "Workflow creation")) {
         onWorkflowSubmitted?.();
       }
     } catch (nextError) {
+      if (attemptId) recovery.settle(attemptId, { error: nextError });
       setTransactionState("error");
       setTransactionHash("");
       setError(
@@ -555,6 +605,7 @@ export function WorkflowBuilder({
       );
       if (finality === "failure") {
         journal.clear(transactionHash);
+        recovery.clearFinal(transactionHash);
         setSubmittedTransaction(null);
         setTransactionState("error");
         setError(`${actionName} failed at finality.`);
@@ -569,6 +620,7 @@ export function WorkflowBuilder({
       }
       setTransactionState("success");
       journal.clear(transactionHash);
+      recovery.clearFinal(transactionHash);
       setSubmittedTransaction(null);
       setError("");
       return true;
@@ -598,6 +650,41 @@ export function WorkflowBuilder({
         </p>
       </div>
 
+      {recovery.issue ? (
+        <p className="builder-error" role="alert">
+          {recovery.issue}
+        </p>
+      ) : null}
+      {recovery.record?.status === "rejected" && !error ? (
+        <p className="builder-error" role="alert">
+          The wallet request was rejected. Your draft was restored; review it
+          again before another wallet request.
+        </p>
+      ) : null}
+      {(recovery.record?.status === "awaiting-wallet" ||
+        recovery.record?.status === "unknown") &&
+      transactionState !== "pending" ? (
+        <div className="builder-error" role="alert">
+          <p>
+            The wallet request was interrupted or its outcome is unknown. Your
+            draft was restored without restoring approval. Check Meteor activity
+            before trying again. Clear this request only after confirming its
+            final outcome or that nothing was sent. If it is pending, wait.
+          </p>
+          <button
+            className="secondary"
+            type="button"
+            disabled={!!submittedTransaction}
+            onClick={() => {
+              recovery.acknowledgeReviewedOutcome();
+              setTransactionState("idle");
+              setError("");
+            }}
+          >
+            I checked Meteor activity: clear this interrupted request
+          </button>
+        </div>
+      ) : null}
       <form
         className="instruction-panel"
         onSubmit={(event) => {
