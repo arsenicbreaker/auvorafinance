@@ -515,6 +515,8 @@ Implementation on 2026-10-31 adds versioned public identity and readiness reason
 
 Progress on 2026-10-31: the 256-test baseline and full build passed before implementation. Added owner-scoped keeper history with independent final-RPC verification, bounded database/API work, stable pagination, honest pending/unverified states, and responsive keyboard-accessible UI. Real read-only checks used six existing hashes; no new fixture or signature was created. The current wallet path still charges gas and the sponsorship adapter/service remains incomplete. This phase is not accepted or complete. See [Phase 12 validation](phase-12/VALIDATION.md) and [live acceptance handoff](phase-12/LIVE_ACCEPTANCE.md).
 
+Phase 12 follow-up on 2026-11-01: added constrained management-delegate admission and read-only final-block ownership/access-key snapshots. These modules do not enable wallet sponsorship or replace persisted replay/budget reservations, broadcast journaling, reconciliation, HTTP service integration, or selected-wallet acceptance. The release gates remain open.
+
 ### Phase 13: release and demo package
 
 - Reconcile the PRD, README, evidence, limitations, and final release checklist against the actual tested behavior.

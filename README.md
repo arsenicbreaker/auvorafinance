@@ -59,6 +59,8 @@ Pages contain up to 20 attempts. Verification is read-only and bounded; API limi
 
 Phase 12 remains open for the selected-wallet, sponsored management, and remaining live lifecycle acceptance gates. See [Phase 12 validation](docs/phase-12/VALIDATION.md) and [live acceptance handoff](docs/phase-12/LIVE_ACCEPTANCE.md).
 
+The relayer now exports `validateManagementDelegate` and `createManagementSnapshotReader` as server-side building blocks. Admission permits only signed, nonpayable pause/resume/cancel/withdraw calls with exact arguments, a bounded expiry, an unused on-chain nonce, a full-access signing key, and an owned workflow. The read-only reader pins ownership and key queries to one final block on an official HTTPS testnet endpoint, with a shared five-second deadline and bounded responses. Admission does not reserve a request, authorize a broadcast, or guarantee the contract action will succeed. Durable replay/budget reservations, transaction journaling/reconciliation, the HTTP service, and a compatible wallet integration are still required before enabling product sponsorship.
+
 ## Prerequisites
 
 - Node.js 22.12 or newer within 22.x (tested with 22.22.1)
