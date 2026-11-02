@@ -201,6 +201,31 @@ div[id] {
   color: var(--landing-line);
   pointer-events: none;
 }
+.payment-route-trace {
+  stroke: var(--landing-green);
+  stroke-width: 1.6;
+  stroke-dasharray: 10 90;
+  stroke-linecap: round;
+  opacity: 0.4;
+  animation: payment-travel 12s linear infinite;
+}
+.payment-route-token rect {
+  fill: var(--landing-white);
+  stroke: var(--landing-line);
+}
+.payment-route-token path {
+  stroke: var(--landing-green);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+@keyframes payment-travel {
+  to { stroke-dashoffset: -100; }
+}
+@keyframes payment-float {
+  0%, 100% { transform: translateY(0) rotate(-15deg); }
+  50% { transform: translateY(-8px) rotate(-10deg); }
+}
 .hero-kicker {
   display: inline-flex;
   align-items: center;
@@ -297,6 +322,7 @@ div[id] {
     10px 35px 35px #1c241d35,
     inset 0 0 30px #ffffff38;
   transform: rotate(-15deg);
+  animation: payment-float 7s ease-in-out infinite;
 }
 .flow-object-face > span {
   color: #494b40;
@@ -980,6 +1006,12 @@ div[id] {
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .payment-route-motion {
+    display: none;
+  }
+  .flow-object-face {
+    animation: none;
+  }
   .ui-button {
     transition: none;
   }

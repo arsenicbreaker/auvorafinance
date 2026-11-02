@@ -2,6 +2,13 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { LandingNavigation } from "./landing-navigation";
 
+const paymentRoutes = [
+  "M0 130h180q28 0 28 28v120q0 28 28 28h150",
+  "M1440 130h-180q-28 0-28 28v120q0 28-28 28h-150",
+  "M0 390h250q30 0 30 30v140q0 30 30 30h220",
+  "M1440 390h-250q-30 0-30 30v140q0 30-30 30H910",
+];
+
 const capabilities = [
   {
     number: "01",
@@ -67,12 +74,32 @@ export default async function Home({
             aria-hidden="true"
           >
             <g stroke="currentColor" strokeWidth="1.4">
-              <path d="M0 130h180q28 0 28 28v120q0 28 28 28h150" />
-              <path d="M1440 130h-180q-28 0-28 28v120q0 28-28 28h-150" />
-              <path d="M0 390h250q30 0 30 30v140q0 30 30 30h220" />
-              <path d="M1440 390h-250q-30 0-30 30v140q0 30-30 30H910" />
+              {paymentRoutes.map((route) => <path key={route} d={route} />)}
               <path d="M330 0v60q0 28 28 28h90" />
               <path d="M1110 0v60q0 28-28 28h-90" />
+            </g>
+            <g className="payment-route-motion">
+              {paymentRoutes.map((route, index) => (
+                <g key={route}>
+                  <path
+                    className="payment-route-trace"
+                    d={route}
+                    pathLength="100"
+                    style={{ animationDelay: `${index * -2}s` }}
+                  />
+                  <g className="payment-route-token">
+                    <animateMotion
+                      path={route}
+                      dur={`${10 + index * 2}s`}
+                      begin={`${index * -3}s`}
+                      repeatCount="indefinite"
+                      calcMode="paced"
+                    />
+                    <rect x="-14" y="-14" width="28" height="28" rx="6" />
+                    <path d="M-5 4L5-4M-3-4h8v8" />
+                  </g>
+                </g>
+              ))}
             </g>
             <g fill="var(--landing-paper)" stroke="currentColor">
               <rect x="92" y="111" width="60" height="38" rx="9" />
