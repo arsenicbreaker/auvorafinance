@@ -108,3 +108,22 @@ model ServiceHeartbeat {
   @@index([network, lastSuccessfulPollAt], map: "service_heartbeat_network_success_idx")
   @@map("service_heartbeat")
 }
+
+model SponsorshipRequest {
+  digest    String   @id
+  scope     String
+  sender    String
+  publicKey String   @map("public_key")
+  nonce     Decimal  @db.Decimal(20, 0)
+  workflow  BigInt
+  method    String
+  hash      String
+  signed    String
+  reserved  Decimal  @db.Decimal(39, 0)
+  state     String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@unique([scope, sender, publicKey, nonce], map: "auvora_sponsorship_scope_sender_public_key_nonce_key")
+  @@index([scope, createdAt], map: "auvora_sponsorship_scope_date")
+  @@map("auvora_sponsorship")
+}

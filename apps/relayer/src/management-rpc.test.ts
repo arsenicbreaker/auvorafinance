@@ -42,6 +42,15 @@ function fixture(
 }
 
 describe("management final snapshot reader", () => {
+  it("accepts the configured FastNEAR testnet endpoint", () => {
+    expect(() =>
+      createManagementSnapshotReader(
+        "https://test.rpc.fastnear.com",
+        "auvora.testnet",
+        vi.fn<typeof fetch>(),
+      ),
+    ).not.toThrow();
+  });
   it("pins access key and workflow to one final block with a shared deadline", async () => {
     const { fetcher, read } = fixture();
     await expect(read(query)).resolves.toEqual({

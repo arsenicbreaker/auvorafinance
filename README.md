@@ -124,6 +124,15 @@ pnpm db:migrate:deploy
 pnpm keeper:dev
 ```
 
+Sponsored management, after configuring the relayer account and the same database in `.env.relayer.local`:
+
+```bash
+pnpm relayer:migrate
+pnpm relayer:dev
+```
+
+Set `NEXT_PUBLIC_SPONSOR_URL=http://127.0.0.1:3002` in `apps/web/.env.local`, then restart the web server. The browser requests one NEP-366 delegate for pause, resume, cancel, or an exact contract-reported withdrawal. The relayer validates the signed payload, stores the relayer transaction and budget reservation before broadcast, reconciles the same hash after uncertain RPC responses, and never sponsors workflow creation or funding.
+
 The keeper exposes `/live` and `/ready` on port `3001` by default. It persists signed transaction bytes and the derived hash before broadcast, then reconciles that same hash after restart or an uncertain RPC response.
 
 Read-only evidence report:

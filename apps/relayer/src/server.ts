@@ -1,5 +1,6 @@
 import { createServer } from "node:http";
 import { createHash } from "node:crypto";
+import { decodeSignedDelegateAction } from "near-kit";
 import { Pool } from "pg";
 import { readRelayerConfig } from "@auvora/config";
 import {
@@ -43,7 +44,29 @@ const readSnapshot = createManagementSnapshotReader(
   config.AUVORA_CONTRACT_ID,
 );
 const reservation = 30_000_000_000_000_000_000_000n;
-const origins = new Set(["http://127.0.0.1:3013", "http://localhost:3013"]);
+const origins = new Set(
+  (
+    process.env.RELAYER_ALLOWED_ORIGINS ??
+    "http://127.0.0.1:3013,http://localhost:3013"
+  )
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean),
+);
+const host = process.env.RELAYER_HOST?.trim() || "127.0.0.1";
+const port = Number(process.env.RELAYER_PORT ?? "3002");
+if (!Number.isInteger(port) || port < 1 || port > 65535)
+  throw new Error("INVALID_RELAYER_PORT");
+for (const origin of origins) {
+  const url = new URL(origin);
+  if (
+    !/^https?:$/.test(url.protocol) ||
+    url.username ||
+    url.password ||
+    url.pathname !== "/"
+  )
+    throw new Error("INVALID_RELAYER_ORIGIN");
+}
 const publicRow = (row: SponsoredRequest) => ({
   digest: row.digest,
   sender: row.sender,
@@ -163,7 +186,10 @@ async function main() {
         res.end(JSON.stringify(publicRow(row)));
         return;
       }
-      if (req.method !== "POST" || req.url !== "/requests") {
+      if (
+        req.method !== "POST" ||
+        !["/requests", "/requests/expiry"].includes(req.url ?? "")
+      ) {
         res.writeHead(404).end('{"error":"NOT_FOUND"}');
         return;
       }
@@ -199,12 +225,44 @@ async function main() {
         return;
       }
       const payload = body.payload;
+      if (
+        payload.length === 0 ||
+        payload.length > 16384 ||
+        payload.length % 4 !== 0 ||
+        !/^[A-Za-z0-9+/]+={0,2}$/.test(payload) ||
+        Buffer.from(payload, "base64").toString("base64") !== payload
+      ) {
+        res.writeHead(400).end('{"error":"INVALID_REQUEST"}');
+        return;
+      }
       const digest = createHash("sha256")
         .update(Buffer.from(payload, "base64"))
         .digest("hex");
       const existing = await store.find(digest);
       if (existing) {
         res.end(JSON.stringify(publicRow(existing)));
+        return;
+      }
+      if (req.url === "/requests/expiry") {
+        let delegate;
+        try {
+          delegate =
+            decodeSignedDelegateAction(payload).signedDelegate.delegateAction;
+        } catch {
+          res.writeHead(400).end('{"error":"INVALID_REQUEST"}');
+          return;
+        }
+        const block = (await chain.rpc("block", { finality: "final" })) as {
+          header: { height: number };
+        };
+        res.end(
+          JSON.stringify({
+            digest,
+            expired: BigInt(block.header.height) > delegate.maxBlockHeight,
+            network: "testnet",
+            contractId: config.AUVORA_CONTRACT_ID,
+          }),
+        );
         return;
       }
       const decision = await validateManagementDelegate(
@@ -249,8 +307,8 @@ async function main() {
   });
   server.requestTimeout = 15000;
   server.headersTimeout = 10000;
-  server.listen(3002, "127.0.0.1", () =>
-    console.log("Sponsorship service: http://127.0.0.1:3002"),
+  server.listen(port, host, () =>
+    console.log(`Sponsorship service: http://${host}:${port}`),
   );
   const stop = () => {
     clearInterval(timer);

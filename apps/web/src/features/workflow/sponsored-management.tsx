@@ -17,6 +17,11 @@ type RequestRecord = {
   payload?: string;
   digest?: string;
 };
+type SponsoredMethod =
+  | "pause_workflow"
+  | "resume_workflow"
+  | "cancel_workflow"
+  | "withdraw_available";
 const EVENT = "auvora:sponsored-request";
 function subscribe(listener: () => void) {
   window.addEventListener(EVENT, listener);
@@ -139,10 +144,28 @@ export function SponsoredManagement({
       )
         throw new Error(`Connect ${ownerId} on testnet for sponsorship.`);
       setConnected(true);
-      setWorkflows(await readOwnerWorkflows(rpcUrl, contractId, ownerId));
-      setMessage(
-        "Delegate signing connected. Review one workflow action below.",
+      const nextWorkflows = await readOwnerWorkflows(
+        rpcUrl,
+        contractId,
+        ownerId,
       );
+      setWorkflows(nextWorkflows);
+      const firstActionable = nextWorkflows
+        .slice()
+        .reverse()
+        .find(preferredMethod);
+      if (firstActionable) {
+        setWorkflowId(String(firstActionable.id));
+        setMethod(preferredMethod(firstActionable)!);
+        setMessage(
+          "Delegate signing connected. Review one workflow action below.",
+        );
+      } else {
+        setWorkflowId("");
+        setMessage(
+          "Delegate signing connected, but every workflow is completed or cancelled with no withdrawable balance. Create one active test workflow before signing a sponsored action.",
+        );
+      }
     } catch (error) {
       setConnected(false);
       setMessage(
@@ -274,6 +297,41 @@ export function SponsoredManagement({
     }
   }
 
+  async function discardExpired() {
+    if (!saved?.payload || !saved.digest || busy) return;
+    setBusy(true);
+    try {
+      if ((await payloadDigest(saved.payload)) !== saved.digest)
+        throw new Error("Saved delegate does not match its digest.");
+      const data = await request("/requests/expiry", {
+        payload: saved.payload,
+      });
+      if (
+        data.digest !== saved.digest ||
+        data.network !== "testnet" ||
+        data.contractId !== contractId
+      )
+        throw new Error("Expiry response does not match this request.");
+      if (data.expired === true) {
+        save(null);
+        setMessage(
+          "The unsubmitted delegate has expired. Reconnect and review a new action.",
+        );
+      } else
+        setMessage(
+          data.hash
+            ? "This request was submitted. Check its recorded transaction status."
+            : "The delegate has not expired. Keep the saved request and check again later.",
+        );
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "Could not check expiry.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <section
       className="ledger-shell"
@@ -347,6 +405,17 @@ export function SponsoredManagement({
                       : "Review the selected action before signing."}
                 </p>
               ) : null}
+              {!selected ? (
+                <p role="status">
+                  Select a workflow. The action button stays disabled until the
+                  selected workflow is Active, Paused, or has an available
+                  balance to withdraw.
+                </p>
+              ) : !eligible ? (
+                <p role="status">
+                  {ineligibleReason(selected, method as SponsoredMethod)}
+                </p>
+              ) : null}
               <button
                 type="button"
                 disabled={
@@ -381,6 +450,13 @@ export function SponsoredManagement({
                     onClick={() => void retry(true)}
                   >
                     Submit saved delegate
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void discardExpired()}
+                  >
+                    Discard expired unsubmitted delegate
                   </button>
                 </>
               ) : (
@@ -423,4 +499,24 @@ export function SponsoredManagement({
       )}
     </section>
   );
+}
+
+function preferredMethod(workflow: WorkflowView): SponsoredMethod | null {
+  if (workflow.state === "Active") return "pause_workflow";
+  if (workflow.state === "Paused") return "resume_workflow";
+  if (BigInt(workflow.withdrawable) > 0n) return "withdraw_available";
+  return null;
+}
+
+function ineligibleReason(
+  workflow: WorkflowView,
+  method: SponsoredMethod,
+): string {
+  if (method === "pause_workflow")
+    return `WF-${workflow.id} must be Active before it can be paused.`;
+  if (method === "resume_workflow")
+    return `WF-${workflow.id} must be Paused before it can be resumed.`;
+  if (method === "cancel_workflow")
+    return `WF-${workflow.id} must be Active or Paused before it can be cancelled.`;
+  return `WF-${workflow.id} has no withdrawable balance.`;
 }

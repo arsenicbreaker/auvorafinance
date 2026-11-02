@@ -47,7 +47,11 @@ async function main() {
   }
   if (
     networkId !== "testnet" ||
-    new URL(rpcUrl).hostname !== "rpc.testnet.near.org"
+    ![
+      "test.rpc.fastnear.com",
+      "rpc.testnet.near.org",
+      "archival-rpc.testnet.near.org",
+    ].includes(new URL(rpcUrl).hostname)
   ) {
     throw new Error("Relayer proof is locked to NEAR testnet");
   }
