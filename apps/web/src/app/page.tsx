@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { LandingNavigation } from "./landing-navigation";
 
 const capabilities = [
   {
@@ -56,18 +57,7 @@ export default async function Home({
         Skip to content
       </a>
       <section className="landing-light">
-        <header className="landing-nav">
-          <Link href="/" className="wordmark" aria-label="Auvora home">
-            auvora<span>.</span>
-          </Link>
-          <nav aria-label="Main navigation">
-            <a href="#how-it-works">How it works</a>
-            <a href="#workspace">The workspace</a>
-          </nav>
-          <Link className="ui-button ui-button-dark" href="/dashboard">
-            Open dashboard <span aria-hidden="true">↗</span>
-          </Link>
-        </header>
+        <LandingNavigation />
         <div className="landing-hero" id="overview">
           <svg
             className="payment-paths"

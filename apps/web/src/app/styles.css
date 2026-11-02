@@ -479,7 +479,7 @@ h1 {
 }
 
 .wallet-primary button {
-  min-width: 180px;
+  justify-self: start;
 }
 
 .technical-details {
@@ -628,16 +628,17 @@ dd {
 }
 
 button {
-  min-height: 48px;
-  padding: 12px 18px;
+  min-height: var(--button-height);
+  padding: var(--button-padding);
   border: 1px solid var(--forest);
-  border-radius: 2px;
+  border-radius: var(--button-radius);
   background: var(--forest);
   color: #fffdf7;
   cursor: pointer;
   font: inherit;
-  font-size: 0.88rem;
-  font-weight: 700;
+  font-size: var(--button-font-size);
+  font-weight: 600;
+  line-height: 20px;
   transition:
     background 120ms ease,
     color 120ms ease;
@@ -657,8 +658,8 @@ button.secondary:hover:not(:disabled) {
 }
 
 button.quiet {
-  min-height: 44px;
-  padding: 9px 0;
+  min-height: var(--button-height);
+  padding: 7px 0;
   border-color: transparent;
   background: transparent;
   color: var(--forest);
@@ -789,7 +790,8 @@ button:disabled {
 }
 
 .instruction-entry button {
-  min-height: 96px;
+  align-self: end;
+  min-height: var(--button-height);
 }
 
 .instruction-panel > p {
@@ -1013,7 +1015,7 @@ button:disabled {
 }
 
 .ledger-heading button {
-  min-width: 180px;
+  flex-shrink: 0;
 }
 
 .ledger-state {
@@ -1422,7 +1424,7 @@ footer {
   }
 
   .instruction-entry button {
-    min-height: 52px;
+    min-height: var(--button-height);
   }
 
   .ledger-heading button {
