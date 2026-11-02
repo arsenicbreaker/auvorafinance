@@ -209,16 +209,6 @@ div[id] {
   opacity: 0.4;
   animation: payment-travel 12s linear infinite;
 }
-.payment-route-token rect {
-  fill: var(--landing-white);
-  stroke: var(--landing-line);
-}
-.payment-route-token path {
-  stroke: var(--landing-green);
-  stroke-width: 1.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
 @keyframes payment-travel {
   to { stroke-dashoffset: -100; }
 }

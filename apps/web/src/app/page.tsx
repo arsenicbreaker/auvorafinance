@@ -87,17 +87,6 @@ export default async function Home({
                     pathLength="100"
                     style={{ animationDelay: `${index * -2}s` }}
                   />
-                  <g className="payment-route-token">
-                    <animateMotion
-                      path={route}
-                      dur={`${10 + index * 2}s`}
-                      begin={`${index * -3}s`}
-                      repeatCount="indefinite"
-                      calcMode="paced"
-                    />
-                    <rect x="-14" y="-14" width="28" height="28" rx="6" />
-                    <path d="M-5 4L5-4M-3-4h8v8" />
-                  </g>
                 </g>
               ))}
             </g>
