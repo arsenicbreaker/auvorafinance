@@ -12,9 +12,10 @@
   },
   "dependencies": {
     "@auvora/db": "workspace:*",
-    "@auvora/near-client": "workspace:*",
     "@auvora/domain": "workspace:*",
+    "@auvora/near-client": "workspace:*",
     "@auvora/workflow-schema": "workspace:*",
+    "@fastnear/wallet": "2.5.0",
     "@near-js/transactions": "2.5.1",
     "@near-wallet-selector/core": "10.1.4",
     "@near-wallet-selector/meteor-wallet": "10.1.4",

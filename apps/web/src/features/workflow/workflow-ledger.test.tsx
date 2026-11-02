@@ -15,6 +15,7 @@ import {
 } from "../../lib/near-rpc";
 import { WorkflowLedger } from "./workflow-ledger";
 import { journalKey } from "../../lib/transaction-journal";
+import { ledgerRecoveryKey } from "../../lib/ledger-recovery";
 
 vi.mock("../../lib/near-rpc", () => ({
   readOwnerWorkflows: vi.fn(),
@@ -62,6 +63,49 @@ async function openLedger() {
 }
 
 describe("owner transaction outcomes", () => {
+  it("blocks signing when the pre-wallet recovery record is corrupt", async () => {
+    localStorage.setItem(
+      ledgerRecoveryKey({
+        accountId: "owner.testnet",
+        contractId: "treasury.testnet",
+        rpcUrl: "https://rpc.testnet.near.org",
+        channel: "ledger",
+      }),
+      "{",
+    );
+    expect(await openLedger()).toHaveProperty("disabled", true);
+    expect(screen.getByRole("alert").textContent).toContain(
+      "saved wallet request could not be read",
+    );
+    expect(signFunctionCall).not.toHaveBeenCalled();
+  });
+
+  it("recovers a backed-up hash when the primary journal was not saved", async () => {
+    localStorage.setItem(
+      ledgerRecoveryKey({
+        accountId: "owner.testnet",
+        contractId: "treasury.testnet",
+        rpcUrl: "https://rpc.testnet.near.org",
+        channel: "ledger",
+      }),
+      JSON.stringify({
+        version: 1,
+        id: "attempt",
+        entry: { sender: "owner.testnet", action: "withdraw", workflowId: 7 },
+        hash: "backup-hash",
+      }),
+    );
+    vi.mocked(readTransactionFinality).mockResolvedValue("success");
+    expect(await openLedger()).toHaveProperty("disabled", true);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Check transaction status" }),
+    );
+    await screen.findByText(/finalized on NEAR testnet/);
+    expect(signFunctionCall).not.toHaveBeenCalled();
+    cleanup();
+    expect(await openLedger()).toHaveProperty("disabled", false);
+  });
+
   it("persists an unanswered wallet request across remount and recovers a late hash", async () => {
     let resolveWallet!: (hash: string) => void;
     signFunctionCall.mockImplementation(

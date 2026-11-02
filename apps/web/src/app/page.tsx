@@ -9,6 +9,7 @@ import {
 import { WorkflowLedger } from "../features/workflow/workflow-ledger";
 import { TreasuryOutlook } from "../features/treasury/treasury-outlook";
 import { ExecutionHistory } from "../features/workflow/execution-history";
+import { SponsoredManagement } from "../features/workflow/sponsored-management";
 
 export default function Home() {
   const [walletSession, setWalletSession] =
@@ -85,6 +86,16 @@ export default function Home() {
         walletSession={walletSession}
       />
 
+      {process.env.NEXT_PUBLIC_SPONSOR_URL ? (
+        <SponsoredManagement
+          key={`${walletSession?.accountId ?? ""}:${contractId}:${rpcUrl}`}
+          ownerId={walletSession?.accountId ?? ""}
+          contractId={contractId}
+          rpcUrl={rpcUrl}
+          serviceUrl={process.env.NEXT_PUBLIC_SPONSOR_URL}
+          onChanged={() => setWorkflowRefreshToken((value) => value + 1)}
+        />
+      ) : null}
       <ExecutionHistory
         key={`history:${walletSession?.accountId ?? "public"}`}
         initialOwnerId={walletSession?.accountId ?? contractId}

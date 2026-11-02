@@ -35,9 +35,11 @@ export function createManagementSnapshotReader(
     url.protocol !== "https:" ||
     url.username ||
     url.password ||
-    !["rpc.testnet.near.org", "archival-rpc.testnet.near.org"].includes(
-      url.hostname,
-    ) ||
+    ![
+      "test.rpc.fastnear.com",
+      "rpc.testnet.near.org",
+      "archival-rpc.testnet.near.org",
+    ].includes(url.hostname) ||
     (url.port !== "" && url.port !== "443")
   ) {
     throw new Error(

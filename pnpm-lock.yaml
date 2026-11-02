@@ -228,6 +228,9 @@ importers:
       near-kit:
         specifier: 0.20.2
         version: 0.20.2(@near-wallet-selector/core@10.1.4(@near-js/keystores@2.2.5(@near-js/crypto@2.5.1(@near-js/types@2.5.1)(@near-js/utils@2.5.1(@near-js/types@2.5.1)))(@near-js/types@2.5.1))(@near-js/utils@2.5.1(@near-js/types@2.5.1)))
+      pg:
+        specifier: 8.23.1
+        version: 8.23.1
       zod:
         specifier: 4.6.7
         version: 4.6.7
@@ -235,6 +238,12 @@ importers:
       '@types/node':
         specifier: 26.6.5
         version: 26.6.5
+      '@types/pg':
+        specifier: 8.15.5
+        version: 8.15.5
+      tsx:
+        specifier: 4.23.15
+        version: 4.23.15
       typescript:
         specifier: 5.9.3
         version: 5.9.3
@@ -256,6 +265,9 @@ importers:
       '@auvora/workflow-schema':
         specifier: workspace:*
         version: link:../../packages/workflow-schema
+      '@fastnear/wallet':
+        specifier: 2.5.0
+        version: 2.5.0
       '@near-js/transactions':
         specifier: 2.5.1
         version: 2.5.1(@near-js/crypto@2.5.1(@near-js/types@2.5.1)(@near-js/utils@2.5.1(@near-js/types@2.5.1)))(@near-js/types@2.5.1)(@near-js/utils@2.5.1(@near-js/types@2.5.1))
@@ -708,6 +720,12 @@ packages:
   '@eslint/plugin-kit@0.4.1':
     resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@fastnear/near-connect@0.14.1':
+    resolution: {integrity: sha512-q/hC87Y1uo48c+eIwMF5m0TeRSl0ADCpfi0xy/98Gk+dszDRva1uWCT4YC3Yi4+WWzW3d/PYTz5j/EAd6f6L2A==}
+
+  '@fastnear/wallet@2.5.0':
+    resolution: {integrity: sha512-QmXYrPEwiHr0gQk7GLiv4SQ0S/67of6wF4x8QJWqCbvlkrpMR132bWlqHoahWuwM6PZJjC2CBFENpNrnmbX4qA==}
 
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
@@ -4267,6 +4285,12 @@ snapshots:
     dependencies:
       '@eslint/core': 0.17.0
       levn: 0.4.1
+
+  '@fastnear/near-connect@0.14.1': {}
+
+  '@fastnear/wallet@2.5.0':
+    dependencies:
+      '@fastnear/near-connect': 0.14.1
 
   '@humanfs/core@0.19.2':
     dependencies:
