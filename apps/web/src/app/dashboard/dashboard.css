@@ -1,5 +1,5 @@
-/* The supplied dashboard reference uses editorial serif headings, warm paper,
-   pale green selections, and icons that identify each payment-related action. */
+/* The dashboard shares the landing page's Inter Tight typography, with warm
+   paper, pale green selections, and icons identifying payment-related actions. */
 .dashboard-v2 {
   --dash-bg: #faf9f6;
   --dash-card: #fffefc;
@@ -10,9 +10,9 @@
   --dash-pale: #e4eddf;
   --dash-warm: #fff0e2;
   --dash-orange: #b94c08;
-  --dash-serif: Georgia, "Times New Roman", serif;
+  --sidebar-width: 244px;
   display: grid;
-  grid-template-columns: 244px minmax(0, 1fr);
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
   padding: 0;
   max-width: none;
   background: var(--dash-bg);
@@ -36,7 +36,7 @@
   display: block;
   margin: 0 14px 45px;
   color: var(--dash-ink);
-  font: 600 39px/1.1 var(--dash-serif);
+  font: 600 39px/1.1 var(--ui-font);
   letter-spacing: -1.7px;
   text-decoration: none;
 }
@@ -73,39 +73,6 @@
 .sidebar-bottom {
   margin-top: auto;
   padding-top: 32px;
-}
-.sidebar-tip {
-  position: relative;
-  overflow: hidden;
-  border-radius: 23px;
-  background: #f2eadf;
-  padding: 21px;
-}
-.sidebar-tip > svg {
-  display: block;
-  margin-left: auto;
-  width: 39px;
-  height: 39px;
-  color: #6f8056;
-}
-.sidebar-tip p {
-  position: relative;
-  margin: 9px 0 12px;
-  font-size: 17px;
-  line-height: 1.4;
-  font-weight: 550;
-}
-.sidebar-tip a {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 35px;
-  color: var(--dash-green);
-  text-decoration: none;
-  font-size: 13px;
-}
-.sidebar-tip a svg {
-  width: 17px;
 }
 .sidebar-account {
   display: flex;
@@ -247,7 +214,7 @@
 }
 .dashboard-v2 .app-page-heading h1 {
   margin: 0 0 8px;
-  font: 600 clamp(36px, 3.2vw, 49px) / 1.1 var(--dash-serif);
+  font: 600 clamp(36px, 3.2vw, 49px) / 1.1 var(--ui-font);
   letter-spacing: -1.8px;
 }
 .app-page-heading p {
@@ -359,7 +326,7 @@
 .stat-value {
   margin: 0 0 10px;
   color: #161d18;
-  font: 600 clamp(25px, 2.4vw, 37px) / 1 var(--dash-serif);
+  font: 600 clamp(25px, 2.4vw, 37px) / 1 var(--ui-font);
   letter-spacing: -0.8px;
   overflow-wrap: anywhere;
 }
@@ -515,7 +482,7 @@
 }
 .overview-empty h3 {
   margin: 20px 0 10px;
-  font: 500 21px/1.25 var(--dash-serif);
+  font: 500 21px/1.25 var(--ui-font);
   letter-spacing: -0.4px;
 }
 .overview-empty p {
@@ -632,7 +599,7 @@
 }
 .dashboard-v2 .overview-insight h2 {
   margin: 7px 0 5px;
-  font: 600 27px/1.15 var(--dash-serif);
+  font: 600 27px/1.15 var(--ui-font);
   letter-spacing: -0.8px;
 }
 .overview-insight p {
@@ -807,9 +774,6 @@
   }
 }
 @media (max-width: 1250px) {
-  .dashboard-v2 {
-    grid-template-columns: 205px minmax(0, 1fr);
-  }
   .app-sidebar {
     padding: 25px 14px 18px;
   }

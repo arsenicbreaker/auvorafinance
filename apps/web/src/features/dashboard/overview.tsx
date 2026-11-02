@@ -109,7 +109,8 @@ export function DashboardOverview({
       ).length,
     };
   });
-  const maximum = Math.max(4, ...buckets.map((item) => item.count));
+  const maximum =
+    Math.ceil(Math.max(4, ...buckets.map((item) => item.count)) / 4) * 4;
   const stats: {
     label: string;
     value: string;
@@ -192,7 +193,13 @@ export function DashboardOverview({
                       <small> NEAR</small>
                     ) : null}
                   </p>
-                  <p className="stat-note">{stat.note}</p>
+                  <p className="stat-note">
+                    {snapshot
+                      ? stat.note
+                      : loading
+                        ? "Reading finalized data"
+                        : "Refresh to load data"}
+                  </p>
                 </div>
               </article>
             ))}

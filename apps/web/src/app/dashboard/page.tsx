@@ -148,16 +148,6 @@ export default function Dashboard() {
             ))}
         </nav>
         <div className="sidebar-bottom">
-          <div className="sidebar-tip">
-            <DashboardIcon name="leaf" />
-            <p>
-              A little setup.
-              <br />A steadier routine.
-            </p>
-            <a href="#builder" onClick={() => setSearch("")}>
-              Set up a payment <DashboardIcon name="arrow" />
-            </a>
-          </div>
           <a
             className="sidebar-account"
             href="#proof"
