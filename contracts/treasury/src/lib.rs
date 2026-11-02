@@ -1147,6 +1147,16 @@ mod tests {
     }
 
     #[test]
+    #[should_panic(expected = "WITHDRAWAL_EXCEEDS_AVAILABLE")]
+    fn active_withdrawal_rejects_one_yocto_from_locked_balance() {
+        let mut c = setup();
+        let id = create_with_deposit(&mut c, 10u128.pow(24));
+        let w = c.workflows.get_mut(&id).unwrap();
+        w.available_balance = w.amount * u128::from(w.max_runs - w.runs_completed) + w.min_reserve;
+        let _withdrawal = c.withdraw_available(id, U128(1));
+    }
+
+    #[test]
     fn completed_workflow_unlocks_its_full_ledger() {
         let mut c = setup();
         let id = create_with_deposit(&mut c, 10u128.pow(24));

@@ -62,6 +62,83 @@ async function openLedger() {
 }
 
 describe("owner transaction outcomes", () => {
+  it("persists an unanswered wallet request across remount and recovers a late hash", async () => {
+    let resolveWallet!: (hash: string) => void;
+    signFunctionCall.mockImplementation(
+      () =>
+        new Promise<string>((resolve) => {
+          resolveWallet = resolve;
+        }),
+    );
+    vi.mocked(readTransactionFinality).mockResolvedValue("pending");
+    fireEvent.click(await openLedger());
+    await screen.findByText(/outcome is unknown/);
+    cleanup();
+    expect(await openLedger()).toHaveProperty("disabled", true);
+    fireEvent.click(screen.getByRole("button", { name: "Pause future runs" }));
+    expect(signFunctionCall).toHaveBeenCalledTimes(1);
+    resolveWallet("late-hash");
+    await screen.findByRole("button", { name: "Check transaction status" });
+    expect(
+      screen
+        .getByRole("link", { name: "Inspect transaction" })
+        .getAttribute("href"),
+    ).toContain("late-hash");
+    expect(signFunctionCall).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps an ambiguous wallet error blocked after remount until reviewed", async () => {
+    signFunctionCall.mockRejectedValue(new Error("Wallet connection lost"));
+    fireEvent.click(await openLedger());
+    await screen.findByRole("alert");
+    cleanup();
+    expect(await openLedger()).toHaveProperty("disabled", true);
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "I checked wallet activity; no transaction is pending",
+      }),
+    );
+    expect(
+      screen.getByRole("button", { name: "Pause future runs" }),
+    ).toHaveProperty("disabled", false);
+    expect(signFunctionCall).toHaveBeenCalledTimes(1);
+  });
+
+  it("allows another reviewed request after explicit wallet rejection", async () => {
+    signFunctionCall.mockRejectedValue(new Error("User cancelled the action"));
+    fireEvent.click(await openLedger());
+    await screen.findByRole("alert");
+    cleanup();
+    expect(await openLedger()).toHaveProperty("disabled", false);
+  });
+
+  it("never opens the wallet to withdraw a fully locked balance", async () => {
+    vi.mocked(readOwnerWorkflows).mockResolvedValue([
+      { ...workflow, withdrawable: "0" },
+    ]);
+    await openLedger();
+    const withdraw = screen.getByRole("button", {
+      name: "Withdraw available funds",
+    });
+    expect(withdraw).toHaveProperty("disabled", true);
+    fireEvent.click(withdraw);
+    expect(signFunctionCall).not.toHaveBeenCalled();
+  });
+
+  it("submits only the contract-reported withdrawable amount", async () => {
+    vi.mocked(readTransactionFinality).mockResolvedValue("success");
+    await openLedger();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Withdraw available funds" }),
+    );
+    await screen.findByText(/finalized on NEAR testnet/);
+    expect(signFunctionCall).toHaveBeenCalledWith({
+      methodName: "withdraw_available",
+      args: { workflow_id: 7, amount: workflow.withdrawable },
+      deposit: 0n,
+    });
+  });
+
   it.each(["pause", "resume", "cancel", "withdraw"] as const)(
     "reconciles a saved %s without signing",
     async (kind) => {

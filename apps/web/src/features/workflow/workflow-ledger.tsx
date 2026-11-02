@@ -10,6 +10,7 @@ import {
 } from "../../lib/near-rpc";
 import type { WorkflowWalletSession } from "./workflow-builder";
 import { useTransactionJournal } from "../../lib/transaction-journal";
+import { useLedgerRecovery } from "../../lib/ledger-recovery";
 
 type LoadState = "empty" | "error" | "loading" | "ready" | "signed-out";
 type OwnerAction = "cancel" | "pause" | "resume" | "withdraw";
@@ -55,14 +56,21 @@ export function WorkflowLedger({
     channel: "ledger",
   });
   const [journalError, setJournalError] = useState("");
+  const recovery = useLedgerRecovery({
+    accountId: walletSession?.accountId ?? "",
+    contractId,
+    rpcUrl,
+    channel: "ledger",
+  });
+  const recoveredEntry = journal.entry ?? recovery.recovered;
   const submittedAction =
     currentSubmittedAction ??
-    (journal.entry
+    (recoveredEntry
       ? {
-          hash: journal.entry.hash,
-          sender: journal.entry.sender,
-          kind: journal.entry.action as OwnerAction,
-          workflowId: journal.entry.workflowId!,
+          hash: recoveredEntry.hash,
+          sender: recoveredEntry.sender,
+          kind: recoveredEntry.action as OwnerAction,
+          workflowId: recoveredEntry.workflowId!,
         }
       : null);
   const transactionHash = currentTransactionHash || submittedAction?.hash || "";
@@ -74,6 +82,9 @@ export function WorkflowLedger({
   const actionLock = useRef(false);
   const actionsBlocked =
     !journal.ready ||
+    !recovery.ready ||
+    !!recovery.issue ||
+    recovery.attempt !== null ||
     !!journal.issue ||
     actionState !== null ||
     submittedAction !== null;
@@ -142,7 +153,13 @@ export function WorkflowLedger({
     setMessageTone("success");
     setTransactionHash("");
     setConfirmCancelId(null);
+    let attemptId: string | undefined;
     try {
+      attemptId = recovery.begin({
+        sender: walletSession.accountId,
+        action: kind,
+        workflowId: workflow.id,
+      });
       const hash = await walletSession.signFunctionCall({
         methodName: kind === "withdraw" ? "withdraw_available" : methodName,
         args:
@@ -162,6 +179,13 @@ export function WorkflowLedger({
         sender: walletSession.accountId,
       };
       setSubmittedAction(submitted);
+      try {
+        recovery.submitted(attemptId, hash);
+      } catch {
+        setJournalError(
+          "Could not back up the wallet response. Keep the transaction hash until finality is confirmed.",
+        );
+      }
       if (
         !journal.save({
           hash,
@@ -176,6 +200,13 @@ export function WorkflowLedger({
       }
       await confirmOwnerAction(submitted);
     } catch (error) {
+      if (attemptId) {
+        try {
+          recovery.reject(attemptId, error);
+        } catch {
+          /* Retain the unresolved request. */
+        }
+      }
       setMessageTone("error");
       setMessage(
         error instanceof Error ? error.message : `${actionLabel(kind)} failed`,
@@ -208,6 +239,7 @@ export function WorkflowLedger({
         return;
       }
       journal.clear(submitted.hash);
+      recovery.clearFinal(submitted.hash);
       setSubmittedAction(null);
       if (finality === "failure") {
         setMessageTone("error");
@@ -469,9 +501,33 @@ export function WorkflowLedger({
         </>
       ) : null}
 
-      {journal.issue || journalError ? (
+      {recovery.attempt && !recovery.attempt.hash && !submittedAction ? (
+        <div className="ledger-message ledger-message-pending" role="status">
+          <p>
+            A {recovery.attempt.entry.action} wallet request for workflow #
+            {recovery.attempt.entry.workflowId} has no recorded transaction
+            hash. Its outcome is unknown. Check Meteor activity before trying
+            again; wait if a transaction is pending.
+          </p>
+          <button
+            className="secondary"
+            type="button"
+            disabled={actionState !== null}
+            onClick={() => {
+              try {
+                recovery.acknowledge(recovery.attempt!.id);
+              } catch {
+                setJournalError("Could not update the saved wallet request.");
+              }
+            }}
+          >
+            I checked wallet activity; no transaction is pending
+          </button>
+        </div>
+      ) : null}
+      {journal.issue || recovery.issue || journalError ? (
         <p className="ledger-message ledger-message-error" role="alert">
-          {journal.issue || journalError}
+          {journal.issue || recovery.issue || journalError}
         </p>
       ) : null}
       {message ? (
