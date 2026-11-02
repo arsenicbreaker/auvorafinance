@@ -4,6 +4,7 @@ import { useCallback, useRef, useState, useSyncExternalStore } from "react";
 import { formatNear } from "@auvora/domain";
 import { readOwnerWorkflows, type WorkflowView } from "../../lib/near-rpc";
 import { isWalletRejection } from "../../lib/builder-recovery";
+import { DashboardIcon } from "../dashboard/dashboard-icon";
 import {
   delegatePayload,
   payloadDigest,
@@ -334,169 +335,198 @@ export function SponsoredManagement({
 
   return (
     <section
-      className="ledger-shell"
+      className="ledger-shell sponsorship-shell"
       id="sponsorship"
       aria-labelledby="sponsorship-title"
     >
-      <div className="ledger-heading">
+      <div className="sponsorship-heading">
         <div>
-          <h2 id="sponsorship-title">Sponsored workflow controls</h2>
-          <p>
-            Sign one management action with your wallet. The relayer pays gas;
-            no deposit is attached. Creation and funding still use the ordinary
-            wallet flow above.
+          <p className="step-label">Gas sponsorship</p>
+          <h2 id="sponsorship-title">Manage a workflow. We cover the gas.</h2>
+          <p className="section-intro">
+            Pause, resume, cancel, or withdraw from an existing workflow. You
+            approve the action in your wallet; the relayer pays the transaction
+            gas.
           </p>
         </div>
+        <span className="sponsorship-network">NEAR testnet</span>
       </div>
-      {!ownerId ? (
-        <p>Connect the owner wallet above first.</p>
-      ) : (
-        <>
-          <p>
-            Owner: {ownerId}. Contract: {contractId}. Network: testnet.
-          </p>
-          <button
-            type="button"
-            className="secondary"
-            disabled={busy || !!saved || storageIssue}
-            onClick={() => void connect()}
-          >
-            Connect sponsored management
-          </button>
-          {connected && !saved ? (
-            <div className="review-actions">
-              <label>
-                Workflow for sponsored action
-                <select
-                  value={workflowId}
-                  onChange={(e) => setWorkflowId(e.target.value)}
-                  disabled={busy}
-                >
-                  <option value="">Select workflow</option>
-                  {workflows.map((w) => (
-                    <option key={w.id} value={w.id}>
-                      WF-{w.id}: {w.state}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Sponsored action
-                <select
-                  value={method}
-                  onChange={(e) => setMethod(e.target.value)}
-                  disabled={busy}
-                >
-                  <option value="pause_workflow">Pause</option>
-                  <option value="resume_workflow">Resume</option>
-                  <option value="cancel_workflow">Cancel</option>
-                  <option value="withdraw_available">
-                    Withdraw available funds
-                  </option>
-                </select>
-              </label>
-              {selected ? (
-                <p>
-                  WF-{selected.id}: {selected.state}.{" "}
-                  {method === "withdraw_available"
-                    ? `Withdraw ${formatNear(BigInt(selected.withdrawable))} NEAR to ${ownerId}.`
-                    : method === "cancel_workflow"
-                      ? "Cancellation permanently stops future runs for this workflow."
-                      : "Review the selected action before signing."}
-                </p>
-              ) : null}
-              {!selected ? (
-                <p role="status">
-                  Select a workflow. The action button stays disabled until the
-                  selected workflow is Active, Paused, or has an available
-                  balance to withdraw.
-                </p>
-              ) : !eligible ? (
-                <p role="status">
-                  {ineligibleReason(selected, method as SponsoredMethod)}
-                </p>
-              ) : null}
-              <button
-                type="button"
-                disabled={
-                  busy || !eligible || storageIssue || raw === "!loading"
-                }
-                onClick={() => void sign()}
-              >
-                Sign sponsored action
-              </button>
-            </div>
-          ) : null}
-          {saved ? (
-            <div className="ledger-message" role="status">
+      <div className="sponsorship-body">
+        {!ownerId ? (
+          <div className="sponsorship-connect">
+            <span className="stat-symbol">
+              <DashboardIcon name="wallet" />
+            </span>
+            <div>
+              <h3>Connect your wallet to continue</h3>
               <p>
-                Saved {saved.method} request for WF-{saved.workflow}.{" "}
-                {saved.payload
-                  ? "Check or resubmit this exact signed request without another wallet signature."
-                  : "No signed delegate was saved. Its outcome is unknown; check Meteor activity before clearing it."}
+                Use the account that owns your workflows to access sponsored
+                controls.
               </p>
-              {saved.payload ? (
-                <>
-                  <button
-                    type="button"
+            </div>
+            <a className="new-payment" href="#proof">
+              Connect wallet <DashboardIcon name="arrow" />
+            </a>
+          </div>
+        ) : (
+          <>
+            <dl className="sponsorship-account">
+              <div>
+                <dt>Owner account</dt>
+                <dd>{ownerId}</dd>
+              </div>
+              <div>
+                <dt>Contract</dt>
+                <dd>{contractId}</dd>
+              </div>
+            </dl>
+            <button
+              type="button"
+              className="secondary"
+              disabled={busy || !!saved || storageIssue}
+              onClick={() => void connect()}
+            >
+              Connect sponsored management
+            </button>
+            {connected && !saved ? (
+              <div className="review-actions sponsorship-form">
+                <label>
+                  Workflow for sponsored action
+                  <select
+                    value={workflowId}
+                    onChange={(e) => setWorkflowId(e.target.value)}
                     disabled={busy}
-                    onClick={() => void retry(false)}
                   >
-                    Check sponsored request
-                  </button>
-                  <button
-                    type="button"
+                    <option value="">Select workflow</option>
+                    {workflows.map((w) => (
+                      <option key={w.id} value={w.id}>
+                        WF-{w.id}: {w.state}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Sponsored action
+                  <select
+                    value={method}
+                    onChange={(e) => setMethod(e.target.value)}
                     disabled={busy}
-                    onClick={() => void retry(true)}
                   >
-                    Submit saved delegate
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void discardExpired()}
-                  >
-                    Discard expired unsubmitted delegate
-                  </button>
-                </>
-              ) : (
+                    <option value="pause_workflow">Pause</option>
+                    <option value="resume_workflow">Resume</option>
+                    <option value="cancel_workflow">Cancel</option>
+                    <option value="withdraw_available">
+                      Withdraw available funds
+                    </option>
+                  </select>
+                </label>
+                {selected ? (
+                  <p>
+                    WF-{selected.id}: {selected.state}.{" "}
+                    {method === "withdraw_available"
+                      ? `Withdraw ${formatNear(BigInt(selected.withdrawable))} NEAR to ${ownerId}.`
+                      : method === "cancel_workflow"
+                        ? "Cancellation permanently stops future runs for this workflow."
+                        : "Review the selected action before signing."}
+                  </p>
+                ) : null}
+                {!selected ? (
+                  <p role="status">
+                    Select a workflow. The action button stays disabled until
+                    the selected workflow is Active, Paused, or has an available
+                    balance to withdraw.
+                  </p>
+                ) : !eligible ? (
+                  <p role="status">
+                    {ineligibleReason(selected, method as SponsoredMethod)}
+                  </p>
+                ) : null}
                 <button
                   type="button"
-                  disabled={busy}
-                  onClick={() => {
-                    try {
-                      save(null);
-                    } catch {
-                      setMessage("Browser storage unavailable.");
-                    }
-                  }}
+                  disabled={
+                    busy || !eligible || storageIssue || raw === "!loading"
+                  }
+                  onClick={() => void sign()}
                 >
-                  I checked wallet activity; no transaction is pending
+                  Sign sponsored action
                 </button>
-              )}
-            </div>
-          ) : null}
-          {storageIssue ? (
-            <p role="alert">
-              Saved sponsorship data could not be read. Check wallet activity
-              before repairing browser storage.
-            </p>
-          ) : null}
-          {message ? <p role="status">{message}</p> : null}
-          {result ? (
-            <p>
-              <a
-                href={`https://testnet.nearblocks.io/txns/${result.hash}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Inspect sponsored transaction
-              </a>{" "}
-              · {result.state}
-            </p>
-          ) : null}
-        </>
-      )}
+              </div>
+            ) : null}
+            {saved ? (
+              <div className="ledger-message" role="status">
+                <p>
+                  Saved {saved.method} request for WF-{saved.workflow}.{" "}
+                  {saved.payload
+                    ? "Check or resubmit this exact signed request without another wallet signature."
+                    : "No signed delegate was saved. Its outcome is unknown; check Meteor activity before clearing it."}
+                </p>
+                {saved.payload ? (
+                  <>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void retry(false)}
+                    >
+                      Check sponsored request
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void retry(true)}
+                    >
+                      Submit saved delegate
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void discardExpired()}
+                    >
+                      Discard expired unsubmitted delegate
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => {
+                      try {
+                        save(null);
+                      } catch {
+                        setMessage("Browser storage unavailable.");
+                      }
+                    }}
+                  >
+                    I checked wallet activity; no transaction is pending
+                  </button>
+                )}
+              </div>
+            ) : null}
+            {storageIssue ? (
+              <p role="alert">
+                Saved sponsorship data could not be read. Check wallet activity
+                before repairing browser storage.
+              </p>
+            ) : null}
+            {message ? <p role="status">{message}</p> : null}
+            {result ? (
+              <p>
+                <a
+                  href={`https://testnet.nearblocks.io/txns/${result.hash}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Inspect sponsored transaction
+                </a>{" "}
+                · {result.state}
+              </p>
+            ) : null}
+          </>
+        )}
+      </div>
+      <p className="sponsorship-footnote">
+        Sponsorship covers management actions only. Creating and funding
+        payments still use your wallet.
+      </p>
     </section>
   );
 }

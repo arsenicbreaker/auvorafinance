@@ -3,13 +3,45 @@
 import { useEffect, useState } from "react";
 import { formatNear } from "@auvora/domain";
 import {
-  readContractStatus,
   readOwnerWorkflowSnapshot,
   type OwnerWorkflowSnapshot,
 } from "../../lib/near-rpc";
 import { DashboardIcon, type DashboardIconName } from "./dashboard-icon";
 
-export function DashboardOverview({
+export function WalletRequired() {
+  return (
+    <section
+      className="overview-panel overview-empty"
+      aria-label="Wallet connection required"
+    >
+      <span className="empty-calendar">
+        <DashboardIcon name="wallet" />
+      </span>
+      <h2>Connect your wallet to see your data</h2>
+      <p>
+        Your balances, recipients, and schedules will appear after you connect
+        your NEAR wallet.
+      </p>
+      <a href="#proof">
+        Connect wallet <DashboardIcon name="arrow" />
+      </a>
+    </section>
+  );
+}
+
+export function DashboardOverview(
+  props: Parameters<typeof ConnectedDashboardOverview>[0],
+) {
+  if (!props.accountId) return <WalletRequired />;
+  return (
+    <ConnectedDashboardOverview
+      key={`${props.accountId}:${props.contractId}:${props.rpcUrl}`}
+      {...props}
+    />
+  );
+}
+
+function ConnectedDashboardOverview({
   contractId,
   rpcUrl,
   accountId,
@@ -42,9 +74,13 @@ export function DashboardOverview({
           throw new Error(
             "Connect a deployed testnet contract to see your overview.",
           );
-        const owner =
-          accountId || (await readContractStatus(rpcUrl, contractId)).owner_id;
-        const next = await readOwnerWorkflowSnapshot(rpcUrl, contractId, owner);
+        const next = await readOwnerWorkflowSnapshot(
+          rpcUrl,
+          contractId,
+          accountId,
+        );
+        if (next.ownerId !== accountId)
+          throw new Error("Unexpected snapshot owner");
         if (!cancelled) setSnapshot(next);
       } catch (failure) {
         if (!cancelled)
@@ -154,8 +190,7 @@ export function DashboardOverview({
           "Reading finalized testnet data…"
         ) : snapshot ? (
           <>
-            {accountId ? "Your account" : "Read-only overview"}:{" "}
-            <strong>{snapshot.ownerId}</strong>
+            Your account: <strong>{snapshot.ownerId}</strong>
           </>
         ) : (
           "Overview unavailable"

@@ -11,7 +11,10 @@ import { WorkflowLedger } from "../../features/workflow/workflow-ledger";
 import { TreasuryOutlook } from "../../features/treasury/treasury-outlook";
 import { ExecutionHistory } from "../../features/workflow/execution-history";
 import { SponsoredManagement } from "../../features/workflow/sponsored-management";
-import { DashboardOverview } from "../../features/dashboard/overview";
+import {
+  DashboardOverview,
+  WalletRequired,
+} from "../../features/dashboard/overview";
 import {
   DashboardIcon,
   type DashboardIconName,
@@ -134,6 +137,8 @@ export default function Dashboard() {
               <a
                 key={page.id}
                 href={`#${page.id}`}
+                aria-label={page.title}
+                title={page.title}
                 className={
                   current.id === page.id && !isSearching ? "selected" : ""
                 }
@@ -171,6 +176,9 @@ export default function Dashboard() {
         </div>
       </aside>
       <div className="app-main">
+        <Link href="/" className="mobile-brand" aria-label="Auvora home">
+          Auvora
+        </Link>
         <header className="app-topbar">
           <div className="topbar-network">
             <span />
@@ -315,18 +323,26 @@ export default function Dashboard() {
             )}
           </div>
           <div hidden={!show("history")}>
-            <ExecutionHistory
-              key={`history:${account ?? "public"}`}
-              initialOwnerId={account ?? contractId}
-            />
+            {account ? (
+              <ExecutionHistory
+                key={`history:${account}`}
+                initialOwnerId={account}
+              />
+            ) : (
+              <WalletRequired />
+            )}
           </div>
           <div hidden={!show("outlook")}>
-            <TreasuryOutlook
-              key={`outlook:${account ?? "public"}`}
-              contractId={contractId}
-              rpcUrl={rpcUrl}
-              initialOwnerId={account ?? contractId}
-            />
+            {account ? (
+              <TreasuryOutlook
+                key={`outlook:${account}`}
+                contractId={contractId}
+                rpcUrl={rpcUrl}
+                initialOwnerId={account}
+              />
+            ) : (
+              <WalletRequired />
+            )}
           </div>
           <footer className="app-footer">
             <span>Built for a calmer payment routine.</span>
