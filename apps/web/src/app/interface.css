@@ -193,6 +193,7 @@ div[id] {
   isolation: isolate;
 }
 .payment-paths {
+  overflow: visible;
   position: absolute;
   z-index: -1;
   inset: -90px 0 auto;

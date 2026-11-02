@@ -3,10 +3,10 @@ import { redirect } from "next/navigation";
 import { LandingNavigation } from "./landing-navigation";
 
 const paymentRoutes = [
-  "M0 130h180q28 0 28 28v120q0 28 28 28h150",
-  "M1440 130h-180q-28 0-28 28v120q0 28-28 28h-150",
-  "M0 390h250q30 0 30 30v140q0 30 30 30h220",
-  "M1440 390h-250q-30 0-30 30v140q0 30-30 30H910",
+  "M0 130h180q28 0 28 28v120q0 28 28 28h150q28 0 28 28V2000",
+  "M1440 130h-180q-28 0-28 28v120q0 28-28 28h-150q-28 0-28 28V2000",
+  "M0 390h250q30 0 30 30v140q0 30 30 30h220q30 0 30 30V2000",
+  "M1440 390h-250q-30 0-30 30v140q0 30-30 30H910q-30 0-30 30V2000",
 ];
 
 const capabilities = [
@@ -75,8 +75,8 @@ export default async function Home({
           >
             <g stroke="currentColor" strokeWidth="1.4">
               {paymentRoutes.map((route) => <path key={route} d={route} />)}
-              <path d="M330 0v60q0 28 28 28h90" />
-              <path d="M1110 0v60q0 28-28 28h-90" />
+              <path d="M330-200v260q0 28 28 28h90q28 0 28-28V-200" />
+              <path d="M1110-200v260q0 28-28 28h-90q-28 0-28-28V-200" />
             </g>
             <g className="payment-route-motion">
               {paymentRoutes.map((route, index) => (
