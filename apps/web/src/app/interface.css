@@ -16,7 +16,9 @@
   --forest: #305641;
   --amber: #77523a;
   --error: #982f27;
-  --ui-font: "Inter Tight", "Inter", "Geist", "Segoe UI", sans-serif;
+  --ui-font:
+    var(--font-inter-tight), "Inter Tight", "Inter", "Geist", "Segoe UI",
+    sans-serif;
 }
 
 body {
