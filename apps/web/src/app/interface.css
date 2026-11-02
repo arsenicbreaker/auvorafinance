@@ -195,12 +195,50 @@ div[id] {
 .payment-paths {
   overflow: visible;
   position: absolute;
-  z-index: -1;
+  z-index: 0;
   inset: -90px 0 auto;
   width: 100%;
   height: 720px;
   color: var(--landing-line);
   pointer-events: none;
+}
+.landing-hero > :not(.payment-paths) {
+  position: relative;
+  z-index: 1;
+}
+.payment-node {
+  pointer-events: all;
+}
+.payment-node rect {
+  fill: var(--landing-paper);
+  stroke: var(--landing-line);
+  transition: fill 220ms ease, stroke 220ms ease;
+}
+.payment-node text {
+  fill: var(--landing-line);
+  font-size: 17px;
+  text-anchor: middle;
+  pointer-events: none;
+  transition: opacity 180ms ease, transform 220ms ease;
+}
+.payment-node .payment-node-hover {
+  fill: var(--landing-green);
+  opacity: 0;
+  transform: translateY(4px);
+}
+@media (hover: hover) and (pointer: fine) {
+  .payment-node:hover rect {
+    fill: var(--landing-white);
+    stroke: var(--landing-green);
+  }
+  .payment-node:hover .payment-node-idle {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  .payment-node:hover .payment-node-hover {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .payment-route-trace {
   stroke: var(--landing-green);
@@ -244,19 +282,23 @@ div[id] {
   color: var(--landing-muted);
 }
 .hero-description {
+  width: fit-content;
   margin: 18px auto;
   color: var(--landing-muted);
   font-size: 14px;
   line-height: 1.6;
 }
 .hero-actions {
+  width: fit-content;
+  margin-inline: auto;
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
   gap: 10px;
 }
 .hero-footnote {
-  margin: 10px 0 0;
+  width: fit-content;
+  margin: 10px auto 0;
   color: var(--landing-muted);
   font-size: 12px;
 }
@@ -997,6 +1039,10 @@ div[id] {
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .payment-node rect,
+  .payment-node text {
+    transition: none;
+  }
   .payment-route-motion {
     display: none;
   }

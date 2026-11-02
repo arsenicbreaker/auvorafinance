@@ -90,26 +90,18 @@ export default async function Home({
                 </g>
               ))}
             </g>
-            <g fill="var(--landing-paper)" stroke="currentColor">
-              <rect x="92" y="111" width="60" height="38" rx="9" />
-              <rect x="1288" y="111" width="60" height="38" rx="9" />
-              <rect x="120" y="371" width="60" height="38" rx="9" />
-              <rect x="1260" y="371" width="60" height="38" rx="9" />
-            </g>
-            <g fill="currentColor" fontSize="17" textAnchor="middle">
-              <text x="122" y="136">
-                ↗
-              </text>
-              <text x="1318" y="136">
-                ↗
-              </text>
-              <text x="150" y="397">
-                ≈
-              </text>
-              <text x="1290" y="397">
-                ≈
-              </text>
-            </g>
+            {[
+              { x: 92, y: 111, symbol: "↗" },
+              { x: 1288, y: 111, symbol: "↗" },
+              { x: 120, y: 371, symbol: "≈" },
+              { x: 1260, y: 371, symbol: "≈" },
+            ].map(({ x, y, symbol }) => (
+              <g key={x} className="payment-node" transform={`translate(${x} ${y})`}>
+                <rect width="60" height="38" rx="9" />
+                <text className="payment-node-idle" x="30" y="25">{symbol}</text>
+                <text className="payment-node-hover" x="30" y="25">$</text>
+              </g>
+            ))}
           </svg>
           <p className="hero-kicker">
             <span aria-hidden="true" /> Recurring payments, built on NEAR
