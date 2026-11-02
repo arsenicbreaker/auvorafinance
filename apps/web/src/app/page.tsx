@@ -16,7 +16,7 @@ export default function Home() {
   const [workflowRefreshToken, setWorkflowRefreshToken] = useState(0);
   const contractId = process.env.NEXT_PUBLIC_AUVORA_CONTRACT_ID ?? "";
   const rpcUrl =
-    process.env.NEXT_PUBLIC_NEAR_RPC_URL ?? "https://rpc.testnet.near.org";
+    process.env.NEXT_PUBLIC_NEAR_RPC_URL ?? "https://test.rpc.fastnear.com";
 
   return (
     <main>

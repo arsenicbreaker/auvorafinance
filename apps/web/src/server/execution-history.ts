@@ -59,7 +59,7 @@ export async function loadExecutionHistory(
   const databaseUrl = environment.AUVORA_HISTORY_DATABASE_URL;
   const contractId = environment.NEXT_PUBLIC_AUVORA_CONTRACT_ID;
   const rpcUrl =
-    environment.NEXT_PUBLIC_NEAR_RPC_URL ?? "https://rpc.testnet.near.org";
+    environment.NEXT_PUBLIC_NEAR_RPC_URL ?? "https://test.rpc.fastnear.com";
   if (
     !databaseUrl ||
     !contractId?.endsWith(".testnet") ||

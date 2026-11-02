@@ -93,7 +93,7 @@ Never paste a seed phrase into the app. Never commit a private key or AI provide
 Minimal web configuration:
 
 ```dotenv
-NEXT_PUBLIC_NEAR_RPC_URL=https://rpc.testnet.near.org
+NEXT_PUBLIC_NEAR_RPC_URL=https://test.rpc.fastnear.com
 NEXT_PUBLIC_AUVORA_CONTRACT_ID=oceanear.testnet
 ```
 
