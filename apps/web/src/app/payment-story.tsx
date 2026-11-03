@@ -86,18 +86,6 @@ export function PaymentStory({ items }: { items: Capability[] }) {
         <br />
         <span>Now your workspace does, too.</span>
       </h2>
-      <div className="story-controls" aria-label="Explore the payment steps">
-        {steps.map((step, index) => (
-          <button
-            key={step}
-            type="button"
-            aria-pressed={active === index}
-            onClick={() => selectStep(index)}
-          >
-            <span>0{index + 1}</span> {step}
-          </button>
-        ))}
-      </div>
       <div
         ref={stage}
         className="story-stage"
