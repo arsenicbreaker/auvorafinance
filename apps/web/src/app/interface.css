@@ -121,7 +121,7 @@ div[id] {
 }
 .landing-light {
   overflow: hidden;
-  border-radius: 7px 7px 0 0;
+  border-radius: 7px;
   background: var(--landing-paper);
   color: var(--ink);
 }
@@ -216,17 +216,16 @@ div[id] {
     fill 220ms ease,
     stroke 220ms ease;
 }
-.payment-node text {
-  fill: var(--landing-line);
-  font-size: 17px;
-  text-anchor: middle;
+.payment-node-idle,
+.payment-node-hover {
+  color: var(--landing-line);
   pointer-events: none;
   transition:
     opacity 180ms ease,
     transform 220ms ease;
 }
 .payment-node .payment-node-hover {
-  fill: var(--landing-green);
+  color: var(--landing-green);
   opacity: 0;
   transform: translateY(4px);
 }
@@ -1124,7 +1123,8 @@ div[id] {
 }
 @media (prefers-reduced-motion: reduce) {
   .payment-node rect,
-  .payment-node text {
+  .payment-node-idle,
+  .payment-node-hover {
     transition: none;
   }
   .payment-route-motion {

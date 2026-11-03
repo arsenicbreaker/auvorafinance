@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { DashboardIcon } from "../features/dashboard/dashboard-icon";
 import { useEffect, useRef, useState } from "react";
 import "./payment-story.css";
 
@@ -232,14 +233,16 @@ export function PaymentStory({ items }: { items: Capability[] }) {
                     <br />
                     Your workspace.
                   </strong>
-                  <span className="story-wallet-mark">↗</span>
+                  <span className="story-wallet-mark">
+                    <DashboardIcon name="wallet" />
+                  </span>
                   <span className="story-demo-card">
                     <small>OWNER ACCOUNT</small>
                     <b>you.testnet</b>
                     <span className="story-status">Ready to connect</span>
                   </span>
                   <span className="story-screen-action">
-                    Connect wallet <span>↗</span>
+                    Connect wallet
                   </span>
                   <small>You approve every schedule.</small>
                 </span>
@@ -265,7 +268,7 @@ export function PaymentStory({ items }: { items: Capability[] }) {
                     <span>Monthly</span>
                   </span>
                   <span className="story-screen-action">
-                    Review schedule <span>↗</span>
+                    Review schedule
                   </span>
                   <small>Your timing. Your approval.</small>
                 </span>
@@ -296,7 +299,7 @@ export function PaymentStory({ items }: { items: Capability[] }) {
                     </span>
                   </span>
                   <span className="story-screen-action">
-                    View schedule <span>↗</span>
+                    View schedule
                   </span>
                 </span>
               )}
@@ -319,7 +322,7 @@ export function PaymentStory({ items }: { items: Capability[] }) {
                 <h3>{item.title}</h3>
                 <p>{item.text}</p>
                 <Link href={item.href}>
-                  {item.label} <span aria-hidden="true">↗</span>
+                  {item.label}
                 </Link>
               </article>
             </div>

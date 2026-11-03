@@ -211,6 +211,10 @@
   color: #fff;
   font-size: 11px;
 }
+.story-wallet-mark svg {
+  width: 30px;
+  height: 30px;
+}
 .story-timeline {
   display: grid;
   gap: 14px;

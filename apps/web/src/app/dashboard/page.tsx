@@ -272,7 +272,8 @@ export default function Dashboard() {
                 href="#proof"
                 aria-current={show("proof") ? "step" : undefined}
               >
-                <span>{account ? "✓" : "1"}</span>Connect wallet
+                <span>{account ? <DashboardIcon name="check" /> : "1"}</span>
+                Connect wallet
               </a>
               <a
                 href="#builder"

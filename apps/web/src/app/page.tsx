@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DashboardIcon } from "../features/dashboard/dashboard-icon";
 import { redirect } from "next/navigation";
 import { LandingNavigation } from "./landing-navigation";
 import { PaymentStory } from "./payment-story";
@@ -94,10 +95,10 @@ export default async function Home({
               ))}
             </g>
             {[
-              { x: 92, y: 111, symbol: "↗" },
-              { x: 1288, y: 111, symbol: "↗" },
-              { x: 120, y: 371, symbol: "≈" },
-              { x: 1260, y: 371, symbol: "≈" },
+              { x: 92, y: 111, symbol: "payment" as const },
+              { x: 1288, y: 111, symbol: "payment" as const },
+              { x: 120, y: 371, symbol: "waves" as const },
+              { x: 1260, y: 371, symbol: "waves" as const },
             ].map(({ x, y, symbol }) => (
               <g
                 key={x}
@@ -105,12 +106,14 @@ export default async function Home({
                 transform={`translate(${x} ${y})`}
               >
                 <rect width="60" height="38" rx="9" />
-                <text className="payment-node-idle" x="30" y="25">
-                  {symbol}
-                </text>
-                <text className="payment-node-hover" x="30" y="25">
-                  $
-                </text>
+                <g transform="translate(19 8)">
+                  <g className="payment-node-idle">
+                    <DashboardIcon name={symbol} />
+                  </g>
+                  <g className="payment-node-hover">
+                    <DashboardIcon name="dollar" />
+                  </g>
+                </g>
               </g>
             ))}
           </svg>
@@ -290,7 +293,9 @@ export default async function Home({
         <nav aria-label="Footer navigation">
           <a href="#how-it-works">How it works</a>
           <Link href="/dashboard">Dashboard</Link>
-          <a href="#top">Back to top ↑</a>
+          <a href="#top">
+            Back to top
+          </a>
         </nav>
         <div className="footer-type" aria-hidden="true">
           auvora<span>.</span>

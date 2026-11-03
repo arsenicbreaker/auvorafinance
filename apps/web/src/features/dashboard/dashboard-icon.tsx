@@ -8,6 +8,11 @@ export type DashboardIconName =
   | "search"
   | "plus"
   | "arrow"
+  | "arrow-up-right"
+  | "arrow-up"
+  | "check"
+  | "waves"
+  | "dollar"
   | "close"
   | "balance"
   | "leaf";
@@ -23,6 +28,11 @@ const paths: Record<DashboardIconName, string> = {
   search: "M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm5 12 6 6",
   plus: "M12 4v16M4 12h16",
   arrow: "M4 12h16m-6-6 6 6-6 6",
+  "arrow-up-right": "M6 18 18 6M6 6h12v12",
+  "arrow-up": "M12 20V4m-6 6 6-6 6 6",
+  check: "m5 12 4 4L19 6",
+  waves: "M3 8c3-5 6 5 9 0s6 5 9 0M3 16c3-5 6 5 9 0s6 5 9 0",
+  dollar: "M12 2v20m5-16H9a4 4 0 0 0 0 8h6a4 4 0 0 1 0 8H6",
   close: "m6 6 12 12M6 18 18 6",
   balance:
     "M4 6c0-5 16-5 16 0s-16 5-16 0Zm0 0v6c0 5 16 5 16 0V6M4 12v6c0 5 16 5 16 0v-6",

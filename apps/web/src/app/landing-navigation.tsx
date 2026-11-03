@@ -34,7 +34,8 @@ export function LandingNavigation() {
         className="landing-menu-group"
         ref={groupRef}
         onBlur={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+          if (!event.currentTarget.contains(event.relatedTarget))
+            setOpen(false);
         }}
       >
         <Link href="/" className="wordmark" aria-label="Auvora home">
@@ -74,7 +75,7 @@ export function LandingNavigation() {
         </nav>
       </div>
       <Link className="ui-button ui-button-dark" href="/dashboard">
-        Open dashboard <span aria-hidden="true">↗</span>
+        Open dashboard
       </Link>
     </header>
   );
