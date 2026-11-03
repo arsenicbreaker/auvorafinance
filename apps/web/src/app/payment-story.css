@@ -38,19 +38,34 @@
 }
 .story-stage {
   position: relative;
-  height: 565px;
-  margin-top: 25px;
+  display: grid;
+  grid-template-columns: repeat(3, 260px);
+  gap: 55px;
+  width: 890px;
+  max-width: 100%;
+  margin: 55px auto 0;
   perspective: 1200px;
 }
+.story-step {
+  position: relative;
+  min-width: 0;
+}
+.story-step-0 {
+  transform: translateX(calc(250px - var(--story-progress) * 250px));
+}
+.story-step-2 {
+  transform: translateX(calc(-250px + var(--story-progress) * 250px));
+}
+.story-step.is-active {
+  z-index: 3;
+}
 .story-phone {
-  position: absolute;
-  left: 50%;
-  top: 30px;
+  position: relative;
   display: flex;
   flex-direction: column;
   width: 260px;
   height: 510px;
-  margin-left: -130px;
+  margin: 0;
   padding: 42px 19px 18px;
   border: 5px solid #282b28;
   border-radius: 36px;
@@ -62,22 +77,17 @@
   text-align: left;
   font: inherit;
   cursor: pointer;
-  transform: translateY(calc(8px - var(--story-progress) * 8px));
   transition:
     box-shadow 220ms,
     border-color 220ms;
   z-index: 2;
 }
 .story-phone-0 {
-  transform: translateX(calc(-65px - var(--story-progress) * 250px))
-    translateY(calc(34px - var(--story-progress) * 12px))
-    rotate(calc(-8deg + var(--story-progress) * 8deg));
+  transform: rotate(calc(-8deg + var(--story-progress) * 8deg));
   z-index: 1;
 }
 .story-phone-2 {
-  transform: translateX(calc(65px + var(--story-progress) * 250px))
-    translateY(calc(34px - var(--story-progress) * 12px))
-    rotate(calc(8deg - var(--story-progress) * 8deg));
+  transform: rotate(calc(8deg - var(--story-progress) * 8deg));
   z-index: 1;
 }
 .story-phone.is-active {
@@ -254,7 +264,9 @@
   color: #637164;
 }
 .payment-story .capability-list {
-  margin-top: 15px;
+  display: block;
+  margin-top: 24px;
+  opacity: var(--story-progress);
 }
 .payment-story .capability-list article {
   transition: border-color 220ms;
@@ -273,20 +285,7 @@
   outline: 2px solid #c8d9b4;
   outline-offset: 6px;
 }
-@media (max-width: 1050px) and (min-width: 701px) {
-  .story-phone-0 {
-    transform: translateX(calc(-55px - var(--story-progress) * 185px))
-      translateY(22px) scale(0.85);
-  }
-  .story-phone-1 {
-    transform: scale(0.9);
-  }
-  .story-phone-2 {
-    transform: translateX(calc(55px + var(--story-progress) * 185px))
-      translateY(22px) scale(0.85);
-  }
-}
-@media (max-width: 700px) {
+@media (max-width: 1000px) {
   .story-controls {
     gap: 0;
   }
@@ -297,24 +296,24 @@
   .story-stage {
     display: flex;
     gap: 20px;
-    height: 570px;
+    width: auto;
+    max-width: none;
     margin-inline: -24px;
     padding: 20px calc((100% - 260px) / 2 + 24px);
     overflow-x: auto;
     overflow-y: hidden;
     scroll-snap-type: x mandatory;
   }
-  .story-phone {
-    position: relative;
-    top: 0;
-    left: auto;
+  .story-step {
     flex: 0 0 260px;
-    margin-left: 0;
     transform: none;
     scroll-snap-align: center;
   }
+  .story-phone {
+    transform: none;
+  }
   .payment-story .capability-list {
-    margin-top: 25px;
+    opacity: 1;
   }
 }
 @media (prefers-reduced-motion: reduce) {
