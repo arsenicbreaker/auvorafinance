@@ -110,6 +110,10 @@ See [Phase 11 validation](phase-11/VALIDATION.md). These are local development p
 - [x] Existing public hashes were read through the API and browser without a new wallet signature or fixture.
 - [ ] Real selected-wallet rejection, creation, redirect/reload recovery, and lifecycle acceptance passed.
 - [ ] Product wallet/relayer sponsorship path is integrated and independently verifies the owner's gas outcome.
+- [x] WF-11 sponsored pause/resume/cancel/withdraw have independently verified FINAL RPC outcomes, matching contract events, and relayer signer identity ([2026-11-03 evidence](phase-12/2026-11-03-sponsored-acceptance.md)).
+- [x] Pending sponsored-request reload recovery tested, as explicitly reported by the product owner; the specific recovered hash was not retained.
+- [ ] Capture/reconcile separate owner and relayer balance deltas; relayer signer identity alone does not supply those snapshots.
+- [x] Reconcile receipt-level protocol burn totals for all four WF-11 sponsored actions; this is not a before/after account balance measurement ([cost evidence](phase-12/2026-11-03-sponsored-acceptance.md)).
 - [ ] All remaining Phase 7 live evidence has been captured and reconciled.
 
 Phase 12 remains in progress. See [validation](phase-12/VALIDATION.md) and the [concrete live acceptance plan](phase-12/LIVE_ACCEPTANCE.md). Phase 13 is pending; history delivery does not close the wallet or sponsorship gates.

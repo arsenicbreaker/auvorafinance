@@ -293,9 +293,7 @@ export default async function Home({
         <nav aria-label="Footer navigation">
           <a href="#how-it-works">How it works</a>
           <Link href="/dashboard">Dashboard</Link>
-          <a href="#top">
-            Back to top
-          </a>
+          <a href="#top">Back to top</a>
         </nav>
         <div className="footer-type" aria-hidden="true">
           auvora<span>.</span>

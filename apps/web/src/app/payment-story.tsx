@@ -241,9 +241,7 @@ export function PaymentStory({ items }: { items: Capability[] }) {
                     <b>you.testnet</b>
                     <span className="story-status">Ready to connect</span>
                   </span>
-                  <span className="story-screen-action">
-                    Connect wallet
-                  </span>
+                  <span className="story-screen-action">Connect wallet</span>
                   <small>You approve every schedule.</small>
                 </span>
               ) : index === 1 ? (
@@ -267,9 +265,7 @@ export function PaymentStory({ items }: { items: Capability[] }) {
                     <b>Weekly</b>
                     <span>Monthly</span>
                   </span>
-                  <span className="story-screen-action">
-                    Review schedule
-                  </span>
+                  <span className="story-screen-action">Review schedule</span>
                   <small>Your timing. Your approval.</small>
                 </span>
               ) : (
@@ -298,9 +294,7 @@ export function PaymentStory({ items }: { items: Capability[] }) {
                       Next scheduled run<small>In 7 days</small>
                     </span>
                   </span>
-                  <span className="story-screen-action">
-                    View schedule
-                  </span>
+                  <span className="story-screen-action">View schedule</span>
                 </span>
               )}
               <span className="story-phone-bottom">Illustrative preview</span>
@@ -321,9 +315,7 @@ export function PaymentStory({ items }: { items: Capability[] }) {
                 </button>
                 <h3>{item.title}</h3>
                 <p>{item.text}</p>
-                <Link href={item.href}>
-                  {item.label}
-                </Link>
+                <Link href={item.href}>{item.label}</Link>
               </article>
             </div>
           </div>

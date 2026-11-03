@@ -6,21 +6,21 @@ This repository is a NEAR Hackathon 2026 project. It is not audited, production-
 
 ## What works
 
-| Capability                                           | Status                              | Authority boundary                                          |
-| ---------------------------------------------------- | ----------------------------------- | ----------------------------------------------------------- |
-| Recurring native NEAR workflow                       | Live on `oceanear.testnet`          | Owner wallet creates and funds it                           |
-| Recipient allowlist                                  | Live                                | Workflow owner signs recipient authorization                |
-| Due-run execution and callback accounting            | Live                                | Keeper supplies only the workflow ID; contract decides      |
-| Pause, resume, cancel, and safe withdrawal           | Live                                | Workflow owner signs each action                            |
-| Keeper discovery and restart reconciliation          | Implemented                         | Restricted keeper key and PostgreSQL records                |
-| Sponsored nonpayable call proof                      | Live proof recorded                 | Relayer cannot sponsor deposits or change signed arguments  |
-| Sponsored management in the web app                  | Not integrated                      | Current management actions charge the wallet testnet gas    |
-| Execution history                                    | Implemented and locally verified    | Final RPC evidence checked for keeper-recorded hashes       |
-| Natural-language draft parsing                       | Implemented locally                 | Produces editable fields only; cannot open or sign a wallet |
-| NEAR AI Cloud adapter                                | Configurable, not yet live-verified | Falls back to deterministic parsing when unavailable        |
-| Treasury forecast                                    | Implemented and locally verified    | Reads workflow pages at one finalized testnet block         |
-| Hypothetical one-year yield scenario                 | Implemented and locally verified    | Editable assumptions only; no provider or asset transaction |
-| Mainnet, stablecoins, swaps, lending, and real yield | Not implemented                     | Outside the MVP                                             |
+| Capability                                           | Status                              | Authority boundary                                           |
+| ---------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------ |
+| Recurring native NEAR workflow                       | Live on `oceanear.testnet`          | Owner wallet creates and funds it                            |
+| Recipient allowlist                                  | Live                                | Workflow owner signs recipient authorization                 |
+| Due-run execution and callback accounting            | Live                                | Keeper supplies only the workflow ID; contract decides       |
+| Pause, resume, cancel, and safe withdrawal           | Live                                | Workflow owner signs each action                             |
+| Keeper discovery and restart reconciliation          | Implemented                         | Restricted keeper key and PostgreSQL records                 |
+| Sponsored nonpayable call proof                      | Live proof recorded                 | Relayer cannot sponsor deposits or change signed arguments   |
+| Sponsored management in the web app                  | Live WF-11 lifecycle verified       | Separate delegate connector; relayer signs outer transaction |
+| Execution history                                    | Implemented and locally verified    | Final RPC evidence checked for keeper-recorded hashes        |
+| Natural-language draft parsing                       | Implemented locally                 | Produces editable fields only; cannot open or sign a wallet  |
+| NEAR AI Cloud adapter                                | Configurable, not yet live-verified | Falls back to deterministic parsing when unavailable         |
+| Treasury forecast                                    | Implemented and locally verified    | Reads workflow pages at one finalized testnet block          |
+| Hypothetical one-year yield scenario                 | Implemented and locally verified    | Editable assumptions only; no provider or asset transaction  |
+| Mainnet, stablecoins, swaps, lending, and real yield | Not implemented                     | Outside the MVP                                              |
 
 The live contract returned `phase-2-ready` at finality on 2026-10-30. Workflows `2` and `4` each completed two scheduled 0.001 NEAR payments with distinct finalized hashes; workflows `3` and `5` returned `RESERVE_GUARD`. All four fixture ledgers were withdrawn to zero. A keeper-cycle worker was terminated after broadcast and a separate OS process reconciled its persisted hash without submitting a replacement. Two independent keeper processes also produced one payment for the next slot. Direct concurrent contract triggers and remaining lifecycle/product gates stay open. See [Demo evidence](docs/DEMO_EVIDENCE.md).
 
@@ -57,9 +57,9 @@ Set the server-only `AUVORA_HISTORY_DATABASE_URL` in `apps/web/.env.local` to co
 
 Pages contain up to 20 attempts. Verification is read-only and bounded; API limits are per process (20 requests per minute, four concurrent reads). The database pool has at most two connections per configured database and ten-second connection/query timeouts. Before starting a production web server, run `pnpm build`; the development command prepares its server workspace dependencies automatically.
 
-Phase 12 remains open for the selected-wallet, sponsored management, and remaining live lifecycle acceptance gates. See [Phase 12 validation](docs/phase-12/VALIDATION.md) and [live acceptance handoff](docs/phase-12/LIVE_ACCEPTANCE.md).
+WF-11 sponsored pause, resume, cancel, and withdrawal have verified final testnet receipts; the product owner reports passing pending-request reload recovery. Phase 12 remains open for separate balance-delta evidence and remaining wallet/live lifecycle acceptance gates. See [current evidence](docs/phase-12/2026-11-03-sponsored-acceptance.md) and [live acceptance handoff](docs/phase-12/LIVE_ACCEPTANCE.md).
 
-The relayer now exports `validateManagementDelegate` and `createManagementSnapshotReader` as server-side building blocks. Admission permits only signed, nonpayable pause/resume/cancel/withdraw calls with exact arguments, a bounded expiry, an unused on-chain nonce, a full-access signing key, and an owned workflow. The read-only reader pins ownership and key queries to one final block on an official HTTPS testnet endpoint, with a shared five-second deadline and bounded responses. Admission does not reserve a request, authorize a broadcast, or guarantee the contract action will succeed. Durable replay/budget reservations, transaction journaling/reconciliation, the HTTP service, and a compatible wallet integration are still required before enabling product sponsorship.
+The relayer validates signed nonpayable pause/resume/cancel/withdraw delegates with exact arguments, bounded expiry, on-chain nonce/key checks, and workflow ownership. The HTTP service integrates durable replay/budget reservations and persists its signed transaction before broadcast, then reconciles the same hash. A separate FastNEAR wallet connector supplies delegate signing. This integrated path has live WF-11 evidence; ordinary wallet management remains a separate wallet-funded path. Creation and funding are not sponsored.
 
 ## Prerequisites
 

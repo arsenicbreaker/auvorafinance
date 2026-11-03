@@ -1,5 +1,7 @@
 # Auvora Finance MVP Implementation Plan
 
+Latest acceptance update (2026-11-03): WF-11 sponsored pause/resume/cancel/withdraw have independently verified FINAL RPC outcomes and relayer signer identity. Pending sponsored-request reload recovery is complete according to the product owner's report. These supersede older statements that live sponsorship has not been demonstrated. Separate balance-delta snapshots and other live acceptance gates remain open; Phase 12 is not yet closed. See [evidence](phase-12/2026-11-03-sponsored-acceptance.md).
+
 Status: Phases 1–6 are implemented; Phase 7 live/product acceptance remains in progress. Phases 8–11 are implemented and tested locally. Phase 12 is in progress: read-only execution history is integrated, while selected-wallet, sponsored management, and remaining live acceptance are open. Phase 13 release/demo preparation remains pending.
 
 Rule: do not begin a phase until the prior phase is accepted by the product owner
