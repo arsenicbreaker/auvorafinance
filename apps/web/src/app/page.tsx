@@ -75,7 +75,9 @@ export default async function Home({
             aria-hidden="true"
           >
             <g stroke="currentColor" strokeWidth="1.4">
-              {paymentRoutes.map((route) => <path key={route} d={route} />)}
+              {paymentRoutes.map((route) => (
+                <path key={route} d={route} />
+              ))}
               <path d="M330-200v260q0 28 28 28h90q28 0 28-28V-200" />
               <path d="M1110-200v260q0 28-28 28h-90q-28 0-28-28V-200" />
             </g>
@@ -97,10 +99,18 @@ export default async function Home({
               { x: 120, y: 371, symbol: "≈" },
               { x: 1260, y: 371, symbol: "≈" },
             ].map(({ x, y, symbol }) => (
-              <g key={x} className="payment-node" transform={`translate(${x} ${y})`}>
+              <g
+                key={x}
+                className="payment-node"
+                transform={`translate(${x} ${y})`}
+              >
                 <rect width="60" height="38" rx="9" />
-                <text className="payment-node-idle" x="30" y="25">{symbol}</text>
-                <text className="payment-node-hover" x="30" y="25">$</text>
+                <text className="payment-node-idle" x="30" y="25">
+                  {symbol}
+                </text>
+                <text className="payment-node-hover" x="30" y="25">
+                  $
+                </text>
               </g>
             ))}
           </svg>
@@ -199,25 +209,63 @@ export default async function Home({
             Explore the dashboard
           </Link>
         </div>
-        <div className="workspace-outline">
-          <p className="workspace-outline-heading">
-            Your payment workspace <span>NEAR testnet</span>
-          </p>
-          <div>
-            <span>01</span>
-            <h3>Workflow controls</h3>
-            <p>Pause, resume, cancel, or withdraw from your workflows.</p>
+        <div className="workspace-preview">
+          <Link
+            className="workspace-bubble workspace-bubble-control"
+            href="/dashboard#workflows"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.7"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M20 11.5V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h2l4 3v-3h6a2 2 0 0 0 2-2v-5.5Z" />
+              <path d="m8 10 2.5 2.5L16 7" />
+            </svg>
+            <span>Your schedule. Your say.</span>
+          </Link>
+          <div className="workspace-outline">
+            <p className="workspace-outline-heading">
+              Your payment workspace <span>NEAR testnet</span>
+            </p>
+            <div>
+              <span>01</span>
+              <h3>Workflow controls</h3>
+              <p>Pause, resume, cancel, or withdraw from your workflows.</p>
+            </div>
+            <div>
+              <span>02</span>
+              <h3>Execution history</h3>
+              <p>Follow each payment run and its transaction details.</p>
+            </div>
+            <div>
+              <span>03</span>
+              <h3>Treasury outlook</h3>
+              <p>Plan around payment commitments and explore scenarios.</p>
+            </div>
           </div>
-          <div>
-            <span>02</span>
-            <h3>Execution history</h3>
-            <p>Follow each payment run and its transaction details.</p>
-          </div>
-          <div>
-            <span>03</span>
-            <h3>Treasury outlook</h3>
-            <p>Plan around payment commitments and explore scenarios.</p>
-          </div>
+          <Link
+            className="workspace-bubble workspace-bubble-history"
+            href="/dashboard#history"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.7"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M20 11.5V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h2l4 3v-3h6a2 2 0 0 0 2-2v-5.5Z" />
+              <path d="M8 8h8M8 12h5" />
+            </svg>
+            <span>Every run, accounted for.</span>
+          </Link>
         </div>
       </section>
       <section className="landing-cta">
