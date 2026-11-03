@@ -43,7 +43,9 @@ export function PaymentStory({ items }: { items: Capability[] }) {
     if (!element) return;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     let frame = 0;
-    function update() {
+    let displayedProgress: number | undefined;
+    let previousTime = 0;
+    function update(time: number) {
       frame = 0;
       if (!element) return;
       const top = element.getBoundingClientRect().top;
@@ -56,12 +58,23 @@ export function PaymentStory({ items }: { items: Capability[] }) {
               (window.innerHeight * 0.8 - top) / (window.innerHeight * 0.75),
             ),
           );
-      element.style.setProperty("--story-progress", String(progress));
+      const elapsed = previousTime ? Math.min(time - previousTime, 64) : 16;
+      previousTime = time;
+      displayedProgress =
+        displayedProgress === undefined || reducedMotion.matches
+          ? progress
+          : displayedProgress +
+            (progress - displayedProgress) * (1 - Math.exp(-elapsed / 180));
+      if (Math.abs(progress - displayedProgress) < 0.0005)
+        displayedProgress = progress;
+      element.style.setProperty("--story-progress", String(displayedProgress));
+      if (displayedProgress !== progress) frame = requestAnimationFrame(update);
+      else previousTime = 0;
     }
     function scheduleUpdate() {
       if (!frame) frame = requestAnimationFrame(update);
     }
-    update();
+    update(performance.now());
     window.addEventListener("scroll", scheduleUpdate, { passive: true });
     window.addEventListener("resize", scheduleUpdate);
     reducedMotion.addEventListener("change", scheduleUpdate);
@@ -70,6 +83,89 @@ export function PaymentStory({ items }: { items: Capability[] }) {
       window.removeEventListener("scroll", scheduleUpdate);
       window.removeEventListener("resize", scheduleUpdate);
       reducedMotion.removeEventListener("change", scheduleUpdate);
+    };
+  }, []);
+
+  useEffect(() => {
+    const element = section.current;
+    if (!element) return;
+    const desktop = window.matchMedia(
+      "(min-width: 1001px) and (pointer: fine)",
+    );
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let frame = 0;
+    let target = window.scrollY;
+    let previousTime = 0;
+
+    function stop() {
+      cancelAnimationFrame(frame);
+      frame = 0;
+      previousTime = 0;
+      target = window.scrollY;
+    }
+
+    function animate(time: number) {
+      const elapsed = previousTime ? Math.min(time - previousTime, 64) : 16;
+      previousTime = time;
+      const remaining = target - window.scrollY;
+      const next =
+        Math.abs(remaining) < 1
+          ? target
+          : window.scrollY +
+            Math.sign(remaining) *
+              Math.max(1, Math.abs(remaining) * (1 - Math.exp(-elapsed / 120)));
+      window.scrollTo({ top: next, behavior: "instant" });
+      if (Math.abs(target - window.scrollY) < 1) stop();
+      else frame = requestAnimationFrame(animate);
+    }
+
+    function onWheel(event: WheelEvent) {
+      if (
+        !desktop.matches ||
+        reducedMotion.matches ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey ||
+        !event.cancelable ||
+        Math.abs(event.deltaX) >= Math.abs(event.deltaY) ||
+        !(event.target instanceof Node) ||
+        !element?.contains(event.target)
+      ) {
+        stop();
+        return;
+      }
+      const unit =
+        event.deltaMode === 1
+          ? 16
+          : event.deltaMode === 2
+            ? window.innerHeight
+            : 1;
+      const delta = event.deltaY * unit;
+      if (!frame || Math.sign(delta) !== Math.sign(target - window.scrollY))
+        target = window.scrollY;
+      const maximum = Math.max(
+        0,
+        document.documentElement.scrollHeight - window.innerHeight,
+      );
+      target = Math.max(0, Math.min(maximum, target + delta * 0.6));
+      event.preventDefault();
+      if (!frame) frame = requestAnimationFrame(animate);
+    }
+
+    window.addEventListener("wheel", onWheel, { passive: false });
+    window.addEventListener("pointerdown", stop, { passive: true });
+    window.addEventListener("keydown", stop);
+    window.addEventListener("resize", stop);
+    desktop.addEventListener("change", stop);
+    reducedMotion.addEventListener("change", stop);
+    return () => {
+      stop();
+      window.removeEventListener("wheel", onWheel);
+      window.removeEventListener("pointerdown", stop);
+      window.removeEventListener("keydown", stop);
+      window.removeEventListener("resize", stop);
+      desktop.removeEventListener("change", stop);
+      reducedMotion.removeEventListener("change", stop);
     };
   }, []);
 
