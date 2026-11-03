@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { LandingNavigation } from "./landing-navigation";
+import { PaymentStory } from "./payment-story";
 
 const paymentRoutes = [
   "M0 130h180q28 0 28 28v120q0 28 28 28h150q28 0 28 28V2000",
@@ -177,30 +178,7 @@ export default async function Home({
           </div>
         </div>
       </section>
-      <section
-        className="landing-story"
-        id="how-it-works"
-        aria-labelledby="story-title"
-      >
-        <p className="section-caption">From intention to execution</p>
-        <h2 id="story-title">
-          Your payments have a rhythm.
-          <br />
-          <span>Now your workspace does, too.</span>
-        </h2>
-        <div className="capability-list">
-          {capabilities.map((item) => (
-            <article key={item.number}>
-              <span className="capability-number">{item.number}</span>
-              <h3>{item.title}</h3>
-              <p>{item.text}</p>
-              <Link href={item.href}>
-                {item.label} <span aria-hidden="true">↗</span>
-              </Link>
-            </article>
-          ))}
-        </div>
-      </section>
+      <PaymentStory items={capabilities} />
       <section
         className="landing-workspace"
         id="workspace"

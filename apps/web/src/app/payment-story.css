@@ -1,0 +1,328 @@
+.payment-story {
+  --story-progress: 1;
+  overflow: clip;
+}
+.story-controls {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 32px 0 10px;
+}
+.story-controls button,
+.story-step-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--landing-soft);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition:
+    color 180ms,
+    background 180ms,
+    border-color 180ms;
+}
+.story-controls button[aria-pressed="true"] {
+  border-color: #ffffff35;
+  border-radius: 7px;
+  background: #ffffff0a;
+  color: var(--landing-paper);
+}
+.story-controls button span {
+  opacity: 0.55;
+  font-size: 11px;
+}
+.story-stage {
+  position: relative;
+  height: 565px;
+  margin-top: 25px;
+  perspective: 1200px;
+}
+.story-phone {
+  position: absolute;
+  left: 50%;
+  top: 30px;
+  display: flex;
+  flex-direction: column;
+  width: 260px;
+  height: 510px;
+  margin-left: -130px;
+  padding: 42px 19px 18px;
+  border: 5px solid #282b28;
+  border-radius: 36px;
+  background: #f7f7ef;
+  color: #193129;
+  box-shadow:
+    0 0 0 1px #777c70,
+    0 22px 40px #0005;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transform: translateY(calc(8px - var(--story-progress) * 8px));
+  transition:
+    box-shadow 220ms,
+    border-color 220ms;
+  z-index: 2;
+}
+.story-phone-0 {
+  transform: translateX(calc(-65px - var(--story-progress) * 250px))
+    translateY(calc(34px - var(--story-progress) * 12px))
+    rotate(calc(-8deg + var(--story-progress) * 8deg));
+  z-index: 1;
+}
+.story-phone-2 {
+  transform: translateX(calc(65px + var(--story-progress) * 250px))
+    translateY(calc(34px - var(--story-progress) * 12px))
+    rotate(calc(8deg - var(--story-progress) * 8deg));
+  z-index: 1;
+}
+.story-phone.is-active {
+  border-color: #84977b;
+  box-shadow:
+    0 0 0 1px #b0c19e,
+    0 28px 55px #0007;
+  z-index: 3;
+}
+.payment-story .story-phone:hover,
+.payment-story .story-phone:active {
+  border-color: #b0c19e;
+  background: #f7f7ef;
+  color: #193129;
+}
+.story-phone-camera {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  width: 70px;
+  height: 18px;
+  border-radius: 20px;
+  background: #202520;
+  transform: translateX(-50%);
+}
+.story-phone-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.story-phone-top b {
+  font-size: 23px;
+  letter-spacing: -1.2px;
+}
+.story-phone-top > span {
+  font-size: 8px;
+  color: #637164;
+}
+.story-screen-label {
+  margin-top: 22px;
+  font-size: 10px;
+  color: #637164;
+}
+.story-screen {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 14px;
+  padding-top: 9px;
+}
+.story-screen > strong {
+  font-size: 29px;
+  line-height: 1.08;
+  font-weight: 550;
+  letter-spacing: -1px;
+}
+.story-screen small {
+  font-size: 10px;
+  font-weight: 400;
+  color: #637164;
+}
+.story-screen > small {
+  text-align: center;
+}
+.story-wallet-mark {
+  align-self: center;
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  background: #dfe8d9;
+  border-radius: 16px;
+  font-size: 32px;
+}
+.story-demo-card {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 15px;
+  background: #e9ede3;
+  border-radius: 10px;
+}
+.story-demo-card b {
+  font-size: 16px;
+  font-weight: 500;
+}
+.story-demo-card > small {
+  font-size: 8px;
+  letter-spacing: 0.6px;
+}
+.story-status {
+  font-size: 10px;
+  color: #436340;
+}
+.story-status::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-right: 5px;
+  background: #5c7e53;
+  border-radius: 50%;
+}
+.story-demo-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 11px 0;
+  border-bottom: 1px solid #19312922;
+}
+.story-demo-field b {
+  font-size: 15px;
+  font-weight: 500;
+}
+.story-demo-field .story-amount {
+  font-size: 32px;
+}
+.story-frequency {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9px;
+}
+.story-frequency > * {
+  padding: 8px 10px;
+  font-weight: 400;
+}
+.story-frequency b {
+  background: #dfe8d9;
+  border-radius: 5px;
+}
+.story-screen-action {
+  display: flex;
+  justify-content: space-between;
+  padding: 13px 14px;
+  border-radius: 7px;
+  background: #263e31;
+  color: #fff;
+  font-size: 11px;
+}
+.story-timeline {
+  display: grid;
+  gap: 14px;
+  margin: 3px 0;
+}
+.story-timeline > span {
+  position: relative;
+  display: grid;
+  gap: 3px;
+  padding-left: 17px;
+  font-size: 10px;
+}
+.story-timeline i {
+  position: absolute;
+  top: 4px;
+  left: 0;
+  width: 7px;
+  height: 7px;
+  border: 1px solid #567451;
+  border-radius: 50%;
+  background: #567451;
+}
+.story-timeline > span:last-child i {
+  background: transparent;
+}
+.story-timeline small {
+  font-size: 8px;
+}
+.story-phone-bottom {
+  margin-top: auto;
+  padding-top: 10px;
+  font-size: 8px;
+  text-align: center;
+  color: #637164;
+}
+.payment-story .capability-list {
+  margin-top: 15px;
+}
+.payment-story .capability-list article {
+  transition: border-color 220ms;
+}
+.payment-story .capability-list article.is-active {
+  border-color: #b0c19e;
+}
+.story-step-select {
+  padding: 0;
+  gap: 16px;
+}
+.story-step-select[aria-pressed="true"] {
+  color: var(--landing-paper);
+}
+.payment-story button:focus-visible {
+  outline: 2px solid #c8d9b4;
+  outline-offset: 6px;
+}
+@media (max-width: 1050px) and (min-width: 701px) {
+  .story-phone-0 {
+    transform: translateX(calc(-55px - var(--story-progress) * 185px))
+      translateY(22px) scale(0.85);
+  }
+  .story-phone-1 {
+    transform: scale(0.9);
+  }
+  .story-phone-2 {
+    transform: translateX(calc(55px + var(--story-progress) * 185px))
+      translateY(22px) scale(0.85);
+  }
+}
+@media (max-width: 700px) {
+  .story-controls {
+    gap: 0;
+  }
+  .story-controls button {
+    padding: 10px 12px;
+    gap: 7px;
+  }
+  .story-stage {
+    display: flex;
+    gap: 20px;
+    height: 570px;
+    margin-inline: -24px;
+    padding: 20px calc((100% - 260px) / 2 + 24px);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+  }
+  .story-phone {
+    position: relative;
+    top: 0;
+    left: auto;
+    flex: 0 0 260px;
+    margin-left: 0;
+    transform: none;
+    scroll-snap-align: center;
+  }
+  .payment-story .capability-list {
+    margin-top: 25px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .payment-story {
+    --story-progress: 1 !important;
+  }
+  .payment-story *,
+  .payment-story *::before {
+    transition: none !important;
+  }
+}
