@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { WalletProof } from "../../features/wallet/wallet-proof";
 import {
   WorkflowBuilder,
@@ -128,7 +129,15 @@ export default function Dashboard() {
       </a>
       <aside className="app-sidebar" aria-label="Dashboard navigation">
         <Link href="/" className="app-brand" aria-label="Auvora home">
-          Auvora
+          <Image
+            src="/auvora-wordmark.png"
+            alt="Auvora"
+            width={2172}
+            height={724}
+            className="dashboard-wordmark"
+            sizes="160px"
+            preload
+          />
         </Link>
         <nav aria-label="Workspace">
           {pages
@@ -177,7 +186,14 @@ export default function Dashboard() {
       </aside>
       <div className="app-main">
         <Link href="/" className="mobile-brand" aria-label="Auvora home">
-          Auvora
+          <Image
+            src="/auvora-wordmark.png"
+            alt="Auvora"
+            width={2172}
+            height={724}
+            className="dashboard-wordmark"
+            sizes="160px"
+          />
         </Link>
         <header className="app-topbar">
           <div className="topbar-network">
