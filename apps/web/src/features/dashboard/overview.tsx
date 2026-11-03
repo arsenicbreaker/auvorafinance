@@ -13,7 +13,7 @@ export function WalletRequired({
 }: { onConnectWallet?: (() => void) | undefined } = {}) {
   return (
     <section
-      className="overview-panel overview-empty"
+      className="overview-panel overview-empty wallet-empty"
       aria-label="Wallet connection required"
     >
       <span className="empty-calendar">
