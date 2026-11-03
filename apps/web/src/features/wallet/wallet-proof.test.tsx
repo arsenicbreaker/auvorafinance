@@ -73,6 +73,21 @@ async function openProof() {
 }
 
 describe("wallet proof outcomes", () => {
+  it("exposes the ready wallet selector and clears it on unmount", async () => {
+    const onConnectReady = vi.fn();
+    const view = render(
+      <WalletProof
+        contractId="treasury.testnet"
+        rpcUrl="https://rpc.testnet.near.org"
+        onConnectReady={onConnectReady}
+      />,
+    );
+    await waitFor(() =>
+      expect(onConnectReady).toHaveBeenLastCalledWith(expect.any(Function)),
+    );
+    view.unmount();
+    expect(onConnectReady).toHaveBeenLastCalledWith(null);
+  });
   it("unsubscribes with the original subscription as its receiver", async () => {
     const view = render(
       <WalletProof

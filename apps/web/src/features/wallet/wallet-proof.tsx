@@ -23,6 +23,7 @@ interface WalletProofProps {
   contractId: string;
   rpcUrl: string;
   onWalletSession?: (session: WalletSession | null) => void;
+  onConnectReady?: (connect: (() => void) | null) => void;
 }
 
 export interface WalletSession {
@@ -49,6 +50,7 @@ export function WalletProof({
   contractId,
   rpcUrl,
   onWalletSession,
+  onConnectReady,
 }: WalletProofProps) {
   const [selector, setSelector] = useState<WalletSelector | null>(null);
   const [modal, setModal] = useState<WalletSelectorModal | null>(null);
@@ -69,6 +71,12 @@ export function WalletProof({
   );
 
   const activeAccount = accounts[0]?.accountId ?? "";
+  useEffect(() => {
+    onConnectReady?.(
+      modal && setupState === "ready" ? () => modal.show() : null,
+    );
+    return () => onConnectReady?.(null);
+  }, [modal, setupState, onConnectReady]);
   const isOwner =
     Boolean(activeAccount) && contractStatus?.owner_id === activeAccount;
 

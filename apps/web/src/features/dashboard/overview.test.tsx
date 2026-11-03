@@ -1,5 +1,12 @@
 // @vitest-environment happy-dom
-import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import {
   readOwnerWorkflowSnapshot,
@@ -24,6 +31,17 @@ const snapshot = (ownerId: string): OwnerWorkflowSnapshot => ({
 });
 beforeEach(() => vi.resetAllMocks());
 afterEach(cleanup);
+
+it("opens the wallet selector from the overview without a wallet-page link", () => {
+  const connect = vi.fn();
+  render(
+    <DashboardOverview {...props} accountId="" onConnectWallet={connect} />,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Connect wallet" }));
+  expect(connect).toHaveBeenCalledTimes(1);
+  expect(screen.queryByRole("link", { name: "Connect wallet" })).toBeNull();
+  expect(readOwnerWorkflowSnapshot).not.toHaveBeenCalled();
+});
 
 it("does not request owner data while disconnected, including search", () => {
   render(<DashboardOverview {...props} accountId="" search="recipient" />);

@@ -8,7 +8,9 @@ import {
 } from "../../lib/near-rpc";
 import { DashboardIcon, type DashboardIconName } from "./dashboard-icon";
 
-export function WalletRequired() {
+export function WalletRequired({
+  onConnectWallet,
+}: { onConnectWallet?: (() => void) | undefined } = {}) {
   return (
     <section
       className="overview-panel overview-empty"
@@ -22,17 +24,24 @@ export function WalletRequired() {
         Your balances, recipients, and schedules will appear after you connect
         your NEAR wallet.
       </p>
-      <a href="#proof">
-        Connect wallet <DashboardIcon name="arrow" />
-      </a>
+      {onConnectWallet ? (
+        <button type="button" onClick={onConnectWallet}>
+          Connect wallet
+        </button>
+      ) : (
+        <a href="#proof">Connect wallet</a>
+      )}
     </section>
   );
 }
 
 export function DashboardOverview(
-  props: Parameters<typeof ConnectedDashboardOverview>[0],
+  props: Parameters<typeof ConnectedDashboardOverview>[0] & {
+    onConnectWallet?: (() => void) | undefined;
+  },
 ) {
-  if (!props.accountId) return <WalletRequired />;
+  if (!props.accountId)
+    return <WalletRequired onConnectWallet={props.onConnectWallet} />;
   return (
     <ConnectedDashboardOverview
       key={`${props.accountId}:${props.contractId}:${props.rpcUrl}`}

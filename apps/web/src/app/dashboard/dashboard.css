@@ -579,6 +579,11 @@
   font-weight: 600;
   text-decoration: none;
 }
+.dashboard .overview-empty > button {
+  min-height: 44px;
+  padding: 10px 18px;
+  border-radius: 7px;
+}
 .overview-empty a svg {
   width: 16px;
 }

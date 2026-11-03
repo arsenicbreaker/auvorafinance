@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { WalletProof } from "../../features/wallet/wallet-proof";
@@ -91,6 +97,10 @@ function serverHash() {
 }
 
 export default function Dashboard() {
+  const [connectWallet, setConnectWallet] = useState<(() => void) | null>(null);
+  const handleConnectReady = useCallback((connect: (() => void) | null) => {
+    setConnectWallet(() => connect);
+  }, []);
   const [walletSession, setWalletSession] =
     useState<WorkflowWalletSession | null>(null);
   const [workflowRefreshToken, setWorkflowRefreshToken] = useState(0);
@@ -141,7 +151,9 @@ export default function Dashboard() {
         </Link>
         <nav aria-label="Workspace">
           {pages
-            .filter((page) => page.id !== "sponsorship" || sponsorUrl)
+            .filter(
+              (page) => !["proof", "builder", "sponsorship"].includes(page.id),
+            )
             .map((page) => (
               <a
                 key={page.id}
@@ -149,7 +161,12 @@ export default function Dashboard() {
                 aria-label={page.title}
                 title={page.title}
                 className={
-                  current.id === page.id && !isSearching ? "selected" : ""
+                  (current.id === page.id ||
+                    (page.id === "workflows" &&
+                      ["builder", "sponsorship"].includes(current.id))) &&
+                  !isSearching
+                    ? "selected"
+                    : ""
                 }
                 aria-current={
                   current.id === page.id && !isSearching ? "page" : undefined
@@ -264,6 +281,7 @@ export default function Dashboard() {
               refreshToken={workflowRefreshToken}
               search={search}
               recipientsOnly={current.id === "recipients"}
+              onConnectWallet={connectWallet ?? undefined}
             />
           </div>
           <div hidden={!show("proof") && !show("builder")}>
@@ -291,6 +309,7 @@ export default function Dashboard() {
               contractId={contractId}
               rpcUrl={rpcUrl}
               onWalletSession={setWalletSession}
+              onConnectReady={handleConnectReady}
             />
             {account ? (
               <a className="new-payment continue-setup" href="#builder">
@@ -317,6 +336,11 @@ export default function Dashboard() {
             />
           </div>
           <div hidden={!show("workflows")}>
+            {sponsorUrl ? (
+              <a className="new-payment" href="#sponsorship">
+                Sponsored controls
+              </a>
+            ) : null}
             <WorkflowLedger
               key={`ledger:${rpcUrl}:${contractId}:${account ?? "signed-out"}`}
               contractId={contractId}
@@ -346,7 +370,7 @@ export default function Dashboard() {
                 initialOwnerId={account}
               />
             ) : (
-              <WalletRequired />
+              <WalletRequired onConnectWallet={connectWallet ?? undefined} />
             )}
           </div>
           <div hidden={!show("outlook")}>
@@ -358,7 +382,7 @@ export default function Dashboard() {
                 initialOwnerId={account}
               />
             ) : (
-              <WalletRequired />
+              <WalletRequired onConnectWallet={connectWallet ?? undefined} />
             )}
           </div>
           <footer className="app-footer">
