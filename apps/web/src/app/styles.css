@@ -920,14 +920,15 @@ button:disabled {
 }
 
 .history-form {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: end;
-  gap: 18px;
-  padding: 0 36px 26px;
+  gap: 16px;
+  padding: 22px 28px 24px;
+  border-bottom: 1px solid var(--rule);
 }
 .history-form label {
   display: grid;
-  flex: 1;
   gap: 8px;
   font-size: 0.85rem;
   font-weight: 700;
@@ -940,10 +941,15 @@ button:disabled {
   color: var(--ink);
   font: inherit;
 }
+.history-form > button {
+  min-width: 164px;
+  min-height: 48px;
+  padding-inline: 18px;
+}
 .history-content {
   display: grid;
   gap: 18px;
-  padding: 0 36px 28px;
+  padding: 22px 28px 28px;
 }
 .history-table-wrap {
   overflow-x: auto;
@@ -983,10 +989,15 @@ button:disabled {
 @media (max-width: 720px) {
   .history-form {
     display: grid;
-    padding: 0 20px 22px;
+    grid-template-columns: 1fr;
+    padding: 20px 20px 22px;
+  }
+  .history-form > button {
+    width: 100%;
+    min-width: 0;
   }
   .history-content {
-    padding: 0 20px 24px;
+    padding: 20px 20px 24px;
     min-width: 0;
   }
 }
