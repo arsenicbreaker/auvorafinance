@@ -532,7 +532,7 @@ div[id] {
 .workspace-preview {
   position: relative;
   min-width: 0;
-  padding: 48px 0 42px;
+  padding: 56px 24px 72px;
 }
 .workspace-bubble {
   position: absolute;
@@ -559,14 +559,14 @@ div[id] {
   flex-shrink: 0;
 }
 .workspace-bubble-control {
-  top: 12px;
-  right: -20px;
+  top: 8px;
+  right: 0;
   background: #c8d9b4;
   color: #193129;
 }
 .workspace-bubble-history {
-  bottom: 12px;
-  left: -28px;
+  bottom: 44px;
+  left: 0;
   border-radius: 13px 13px 3px 13px;
   background: #193129;
   color: #f7f7ef;
@@ -584,10 +584,10 @@ div[id] {
 }
 @media (max-width: 1000px) {
   .workspace-bubble-control {
-    right: -8px;
+    right: 0;
   }
   .workspace-bubble-history {
-    left: -8px;
+    left: 0;
   }
   .workspace-bubble {
     gap: 9px;
@@ -603,17 +603,20 @@ div[id] {
   }
 }
 .workspace-outline {
-  padding: 24px 28px;
+  position: relative;
+  padding: 26px 30px 0;
   border: 1px solid var(--landing-line);
   border-radius: 9px;
   background: var(--landing-white);
+  box-shadow: 0 16px 38px #152b230d;
 }
 .workspace-outline-heading {
   display: flex;
+  align-items: baseline;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
-  padding-bottom: 22px;
+  padding-bottom: 24px;
   margin-bottom: 0;
   border-bottom: 1px solid var(--landing-line);
   font-size: 13px;
@@ -626,14 +629,14 @@ div[id] {
 }
 .workspace-outline > div {
   display: grid;
-  grid-template-columns: 32px 1fr;
-  gap: 7px 14px;
-  padding: 24px 0;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 8px 14px;
+  padding: 25px 0 26px;
   border-bottom: 1px solid var(--landing-line);
 }
 .workspace-outline > div:last-child {
   border: 0;
-  padding-bottom: 0;
+  padding-bottom: 34px;
 }
 .workspace-outline > div > span {
   grid-row: span 2;
@@ -646,6 +649,7 @@ div[id] {
   font-size: 20px;
   font-weight: 500;
   letter-spacing: -0.5px;
+  line-height: 1.2;
 }
 .workspace-outline p:not(.workspace-outline-heading) {
   margin: 0;
@@ -1038,7 +1042,7 @@ div[id] {
     border-radius: 9px;
   }
   .workspace-outline {
-    padding: 22px 18px;
+    padding: 24px 22px 0;
   }
   .landing-cta {
     padding: 75px 20px;

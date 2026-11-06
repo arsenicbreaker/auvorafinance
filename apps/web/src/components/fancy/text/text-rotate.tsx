@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  ElementType,
   forwardRef,
   useCallback,
   useEffect,
@@ -9,10 +8,10 @@ import {
   useMemo,
   useState,
 } from "react";
-import {
-  AnimatePresence,
+import type { ElementType } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import type {
   AnimatePresenceProps,
-  motion,
   MotionProps,
   Transition,
 } from "motion/react";
@@ -220,7 +219,7 @@ const TextRotate = forwardRef<TextRotateRef, TextRotateProps>(
 
     // Splitting the text into animation segments
     const elements = useMemo(() => {
-      const currentText = texts[currentTextIndex];
+      const currentText = texts[currentTextIndex] ?? "";
       if (splitBy === "characters") {
         const text = currentText.split(" ");
         return text.map((word, i) => ({
@@ -328,10 +327,32 @@ const TextRotate = forwardRef<TextRotateRef, TextRotateProps>(
           return prop;
         };
 
+        const initialValue = getProp(initial);
+        const animateValue = getProp(animate);
+        const exitValue = getProp(exit);
+
         return {
-          initial: getProp(initial) as MotionProps["initial"],
-          animate: getProp(animate) as MotionProps["animate"],
-          exit: getProp(exit) as MotionProps["exit"],
+          ...(initialValue !== undefined
+            ? {
+                initial: initialValue as Exclude<
+                  MotionProps["initial"],
+                  undefined
+                >,
+              }
+            : {}),
+          ...(animateValue !== undefined
+            ? {
+                animate: animateValue as Exclude<
+                  MotionProps["animate"],
+                  undefined
+                >,
+              }
+            : {}),
+          ...(exitValue !== undefined
+            ? {
+                exit: exitValue as Exclude<MotionProps["exit"], undefined>,
+              }
+            : {}),
         };
       },
       [initial, animate, exit],
