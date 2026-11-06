@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { DashboardIcon } from "../features/dashboard/dashboard-icon";
+import TextRotate from "../components/fancy/text/text-rotate";
 import { useEffect, useRef, useState } from "react";
+import { useReducedMotion } from "motion/react";
 import "./payment-story.css";
 
 type Capability = {
@@ -19,6 +21,7 @@ export function PaymentStory({ items }: { items: Capability[] }) {
   const section = useRef<HTMLElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
+  const prefersReducedMotion = useReducedMotion();
 
   function selectStep(index: number) {
     setActive(index);
@@ -181,7 +184,20 @@ export function PaymentStory({ items }: { items: Capability[] }) {
       <h2 id="story-title">
         Your payments have a rhythm.
         <br />
-        <span>Now your workspace does, too.</span>
+        <TextRotate
+          as="span"
+          texts={[
+            "Now your workspace does, too.",
+            "Now your payments flow, too.",
+            "Now your routines do, too.",
+          ]}
+          splitBy="words"
+          rotationInterval={4200}
+          staggerDuration={0.035}
+          transition={{ type: "spring", damping: 24, stiffness: 280 }}
+          mainClassName="story-title-rotate"
+          auto={!prefersReducedMotion}
+        />
       </h2>
       <div
         ref={stage}

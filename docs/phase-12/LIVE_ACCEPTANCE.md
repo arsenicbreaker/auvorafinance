@@ -6,7 +6,7 @@ WF-11 sponsored Pause, Resume, Cancel, and Withdraw are now independently verifi
 
 Status: open. The new execution history can be reviewed without a wallet at `http://127.0.0.1:3013/#history`.
 
-Selected wallet: **Meteor Wallet**, chosen by the product owner on 2026-10-31. Installed integration: `@near-wallet-selector/meteor-wallet` 10.1.4 with `@meteorwallet/sdk` 1.0.24. Start at `http://127.0.0.1:3013/#proof`, select **Connect wallet**, choose **Meteor Wallet**, and use a testnet account. Connection/signature acceptance is not yet verified. The product owner corrected the sender to `oceanear.testnet`, verified to exist at final block 275615075. A distinct recipient is preferred for observable balance deltas; existing project test recipient `oceanrelayer.testnet` was verified at block 275615076 and proposed for the draft, but its selection is still pending.
+Selected wallet: **Meteor Wallet**, chosen by the product owner on 2026-10-31. Installed integration: `@near-wallet-selector/meteor-wallet` 10.1.4 with `@meteorwallet/sdk` 1.0.24. The product owner confirmed on 2026-11-06 that selected-wallet rejection, workflow creation, and redirect/reload recovery were tested successfully. Other live lifecycle and device acceptance remains separate. The product owner corrected the sender to `oceanear.testnet`, verified to exist at final block 275615075. A distinct recipient is preferred for observable balance deltas; existing project test recipient `oceanrelayer.testnet` was verified at block 275615076 and proposed for the draft, but its selection is still pending.
 
 ## Reviewable wallet test plan
 

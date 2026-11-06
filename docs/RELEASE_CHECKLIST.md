@@ -39,14 +39,14 @@ Local contract verification on 2026-10-31 passed 34 unit tests and an expanded L
 
 ## Product evidence
 
-Automated wallet-state verification now covers rejection/abandonment, missing hashes, unknown/final results, receipt failures, and status rechecks without a second signature. Read-only RPC checks use two existing testnet hashes. These mocked component tests and the disconnected mobile browser sample do not replace real selected-wallet acceptance. See [wallet verification](phase-7/WALLET_VALIDATION.md).
+Automated wallet-state verification covers rejection/abandonment, missing hashes, unknown/final results, receipt failures, and status rechecks without a second signature. Read-only RPC checks use two existing testnet hashes. The product owner confirmed on 2026-11-06 that selected-wallet rejection, workflow creation, and redirect/reload recovery were tested successfully; the report is recorded in [Phase 12 validation](phase-12/VALIDATION.md). Mobile/device and separate workflow lifecycle acceptance remain distinct gates. See also [wallet verification](phase-7/WALLET_VALIDATION.md).
 
 - [ ] Fresh setup follows [Demo runbook](DEMO_RUNBOOK.md) without undocumented credentials
 - [x] Natural-language parser fills an editable form and does not open a wallet ([desktop browser proof](phase-7/PRODUCT_VALIDATION.md))
 - [x] Missing recipient produces clarification; existing corpus tests cover ambiguous start time ([product evidence](phase-7/PRODUCT_VALIDATION.md))
 - [x] Unsupported assets are rejected ([USDC browser proof](phase-7/PRODUCT_VALIDATION.md))
 - [ ] Provider timeout or malformed output leaves the manual form usable
-- [ ] Wallet rejection or abandonment does not show success
+- [x] Selected-wallet rejection was exercised without reporting success (product-owner confirmation, 2026-11-06; see [Phase 12 validation](phase-12/VALIDATION.md))
 - [ ] Submitted and unknown transactions are not presented as finalized
 - [ ] Empty, loading, error, and disconnected states are visible and understandable
 - [ ] Keyboard path and mobile layout have been checked
@@ -108,7 +108,8 @@ See [Phase 11 validation](phase-11/VALIDATION.md). These are local development p
 - [x] Browser history supports owner changes, response validation, honest unavailable results, empty/loading/error states, and keyboard/mobile table scrolling.
 - [x] Full check passed 291 tests; full production build and high-severity audit gate passed.
 - [x] Existing public hashes were read through the API and browser without a new wallet signature or fixture.
-- [ ] Real selected-wallet rejection, creation, redirect/reload recovery, and lifecycle acceptance passed.
+- [x] Real selected-wallet rejection, creation, and redirect/reload recovery passed (product-owner confirmation, 2026-11-06; see [Phase 12 validation](phase-12/VALIDATION.md)).
+- [ ] Separate live lifecycle acceptance passed.
 - [ ] Product wallet/relayer sponsorship path is integrated and independently verifies the owner's gas outcome.
 - [x] WF-11 sponsored pause/resume/cancel/withdraw have independently verified FINAL RPC outcomes, matching contract events, and relayer signer identity ([2026-11-03 evidence](phase-12/2026-11-03-sponsored-acceptance.md)).
 - [x] Pending sponsored-request reload recovery tested, as explicitly reported by the product owner; the specific recovered hash was not retained.

@@ -1,5 +1,9 @@
 # Phase 12: integrated acceptance work in progress
 
+## 2026-11-06 selected-wallet acceptance update
+
+The product owner confirmed that real selected-wallet rejection, workflow creation, and redirect/reload recovery were tested successfully. These three acceptance items are treated as passed in the release checklist. No transaction hash or separate test artifact was supplied with this confirmation, so this note records owner-reported acceptance rather than independent RPC evidence. Other wallet/device acceptance and the separate live contract lifecycle gates remain open.
+
 ## 2026-11-03 live sponsorship acceptance
 
 Four WF-11 management transactions (pause, resume, cancel, withdraw) were independently verified through final testnet RPC receipts. All succeeded with matching contract events, zero attached deposit, and outer signer `oceanrelayer.testnet`. Withdrawal transferred 0.00656 NEAR with a successful callback. Pending-request reload recovery is complete according to the product owner's explicit report; its specific recovered hash was not retained. See [evidence](2026-11-03-sponsored-acceptance.md). This supersedes historical claims below that no live sponsored management action has been accepted. Other live acceptance and balance-snapshot requirements remain unresolved.

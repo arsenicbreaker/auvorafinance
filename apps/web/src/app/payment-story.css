@@ -2,6 +2,30 @@
   --story-progress: 1;
   overflow: clip;
 }
+.payment-story .story-title-rotate {
+  display: inline-flex;
+  flex-wrap: wrap;
+  white-space: pre-wrap;
+  vertical-align: baseline;
+}
+.payment-story .story-title-rotate > span[aria-hidden] {
+  display: flex;
+  flex-wrap: wrap;
+}
+.payment-story .story-title-rotate > .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.payment-story .story-title-rotate > span[aria-hidden] > span {
+  display: inline-flex;
+}
 .story-step-select {
   display: inline-flex;
   align-items: center;
