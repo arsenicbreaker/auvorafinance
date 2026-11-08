@@ -121,7 +121,7 @@ div[id] {
 }
 .landing-light {
   overflow: hidden;
-  border-radius: 7px;
+  border-radius: 0;
   background: var(--landing-paper);
   color: var(--ink);
 }
