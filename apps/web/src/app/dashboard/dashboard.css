@@ -100,12 +100,6 @@
   letter-spacing: -1.7px;
   text-decoration: none;
 }
-.dashboard-wordmark {
-  display: block;
-  width: 160px;
-  height: auto;
-  max-width: 100%;
-}
 .app-sidebar nav {
   display: grid;
   gap: 7px;
