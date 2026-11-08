@@ -193,23 +193,13 @@ function ConnectedDashboardOverview({
 
   return (
     <div className="overview-content" aria-busy={loading}>
-      <div className="overview-source">
-        <span className="source-dot" />
-        {loading ? (
-          "Reading finalized testnet data…"
-        ) : snapshot ? (
-          <>
-            Your account: <strong>{snapshot.ownerId}</strong>
-          </>
-        ) : (
-          "Overview unavailable"
-        )}
+      <div className="overview-toolbar">
         <button
           className="overview-refresh"
           onClick={() => setReload((value) => value + 1)}
           disabled={loading}
         >
-          Refresh
+          {loading ? "Refreshing" : "Refresh"}
         </button>
       </div>
       {error ? (
