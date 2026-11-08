@@ -148,7 +148,6 @@ export default async function Home({
               See how it works
             </a>
           </div>
-          <p className="hero-footnote">Available on NEAR testnet</p>
         </div>
         <div className="landing-preview">
           <div className="preview-intro">

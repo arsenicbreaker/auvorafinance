@@ -308,12 +308,6 @@ div[id] {
   flex-wrap: wrap;
   gap: 10px;
 }
-.hero-footnote {
-  width: fit-content;
-  margin: 10px auto 0;
-  color: var(--landing-muted);
-  font-size: 12px;
-}
 .landing-preview {
   position: relative;
   display: grid;
