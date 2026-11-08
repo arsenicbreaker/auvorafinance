@@ -402,50 +402,37 @@ function ConnectedDashboardOverview({
               <div className="insight-botanical" aria-hidden="true">
                 <svg viewBox="0 0 180 150">
                   <path
-                    d="M89 109c0-35 13-59 22-88M89 109c-4-32-19-42-36-53"
+                    d="M27 88c4-31 29-53 61-56 31-3 60 14 65 39 6 28-16 53-47 55-31 2-59-14-67-39"
                     fill="none"
                     stroke="#65744c"
-                    strokeWidth="3"
+                    strokeWidth="4"
+                    strokeLinecap="round"
                   />
-                  <g fill="#74835a">
-                    <ellipse
-                      cx="107"
-                      cy="40"
-                      rx="9"
-                      ry="24"
-                      transform="rotate(30 107 40)"
-                    />
-                    <ellipse
-                      cx="117"
-                      cy="67"
-                      rx="23"
-                      ry="8"
-                      transform="rotate(-25 117 67)"
-                    />
-                    <ellipse
-                      cx="76"
-                      cy="68"
-                      rx="9"
-                      ry="24"
-                      transform="rotate(-47 76 68)"
-                    />
-                    <ellipse
-                      cx="59"
-                      cy="48"
-                      rx="8"
-                      ry="20"
-                      transform="rotate(-47 59 48)"
-                    />
-                    <ellipse
-                      cx="92"
-                      cy="83"
-                      rx="7"
-                      ry="20"
-                      transform="rotate(35 92 83)"
-                    />
-                  </g>
-                  <path d="M67 104h46l-7 36H74Z" fill="#d8c0a5" />
-                  <path d="M67 104h46" stroke="#b39a7d" strokeWidth="3" />
+                  <path
+                    d="M43 76c8-22 29-35 51-32 21 3 37 17 39 35 2 18-13 34-34 37-20 3-40-7-50-24"
+                    fill="none"
+                    stroke="#a3ad8f"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                  />
+                  <circle cx="91" cy="76" r="23" fill="#d8c0a5" />
+                  <circle
+                    cx="91"
+                    cy="76"
+                    r="23"
+                    fill="none"
+                    stroke="#b39a7d"
+                    strokeWidth="2"
+                  />
+                  <path
+                    d="M81 77h20M85 70h12M85 83h12"
+                    stroke="#65744c"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                  />
+                  <circle cx="27" cy="88" r="5" fill="#b94c08" />
+                  <circle cx="153" cy="71" r="5" fill="#b94c08" />
+                  <circle cx="106" cy="126" r="5" fill="#b94c08" />
                 </svg>
               </div>
               <div>

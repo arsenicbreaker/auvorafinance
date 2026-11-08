@@ -115,8 +115,8 @@ div[id] {
 .landing {
   width: auto;
   max-width: 1920px;
-  margin: 14px auto 0;
-  padding: 0 14px;
+  margin: 0 auto;
+  padding: 0;
   color: var(--landing-paper);
 }
 .landing-light {
@@ -189,6 +189,8 @@ div[id] {
 .landing-hero {
   position: relative;
   padding: 24px 24px 20px;
+  background: var(--landing-paper);
+  color: var(--ink);
   text-align: center;
   isolation: isolate;
 }
@@ -1168,8 +1170,8 @@ div[id] {
 }
 @media (max-width: 760px) {
   .landing {
-    margin-top: 8px;
-    padding: 0 8px;
+    margin-top: 0;
+    padding: 0;
   }
   .landing-nav {
     padding: 16px 20px;
