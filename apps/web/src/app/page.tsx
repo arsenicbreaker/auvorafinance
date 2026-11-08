@@ -272,16 +272,62 @@ export default async function Home({
         </div>
       </section>
       <section className="landing-cta">
-        <p className="section-caption">Make room for what comes next</p>
-        <h2>
-          Your next payment,
-          <br />
-          <span>already in the plan.</span>
-        </h2>
-        <Link className="ui-button ui-button-light" href="/dashboard#proof">
-          Start with your wallet
-        </Link>
-        <p>Testnet only. Connect when you are ready.</p>
+        <div className="cta-copy">
+          <p className="section-caption">
+            <span aria-hidden="true" />
+            Make room for what comes next
+          </p>
+          <h2>
+            Your next payment,
+            <br />
+            <span>already in the plan.</span>
+          </h2>
+          <Link className="ui-button ui-button-light" href="/dashboard#proof">
+            Start with your wallet
+          </Link>
+          <p className="cta-note">Testnet only. Connect when you are ready.</p>
+        </div>
+        <div className="cta-route" aria-hidden="true">
+          <svg
+            className="cta-route-lines"
+            viewBox="0 0 560 470"
+            fill="none"
+            preserveAspectRatio="none"
+          >
+            <path d="M312 74c110 0 158 40 158 112 0 43-26 66-68 78" />
+            <path d="M356 269c-78 17-116 62-116 132" />
+            <circle cx="402" cy="264" r="5" />
+            <circle cx="240" cy="401" r="5" />
+          </svg>
+          <div className="cta-route-card cta-route-card-wallet">
+            <span className="cta-route-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M5 8.5h14v9H5z" />
+                <path d="M7 8.5V6.8c0-1 .8-1.8 1.8-1.8H17" />
+                <path d="M15.5 12.8h3.5" />
+              </svg>
+            </span>
+            <span>Your wallet</span>
+          </div>
+          <div className="cta-route-card cta-route-card-plan">
+            <span className="cta-route-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M7 3v3M17 3v3M4.5 9h15" />
+                <rect x="4.5" y="5" width="15" height="15" rx="2" />
+                <path d="m8 14 2.2 2.2L16 11" />
+              </svg>
+            </span>
+            <span>Your plan</span>
+          </div>
+          <div className="cta-route-card cta-route-card-payment">
+            <span className="cta-route-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M6 16.5h12M8 12.5h8M10 8.5h4" />
+              </svg>
+            </span>
+            <span>Next payment</span>
+          </div>
+        </div>
       </section>
       <footer className="landing-footer">
         <div>
