@@ -81,7 +81,7 @@ const pages: [DashboardPage, ...DashboardPage[]] = [
     id: "sponsorship",
     title: "Sponsored controls",
     description: "Manage existing workflows with sponsored gas.",
-    icon: "waves",
+    icon: "sponsor",
   },
 ];
 function subscribeToHash(callback: () => void) {

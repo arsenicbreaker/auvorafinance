@@ -15,6 +15,7 @@ export type DashboardIconName =
   | "dollar"
   | "close"
   | "balance"
+  | "sponsor"
   | "leaf";
 
 const paths: Record<DashboardIconName, string> = {
@@ -36,6 +37,7 @@ const paths: Record<DashboardIconName, string> = {
   close: "m6 6 12 12M6 18 18 6",
   balance:
     "M4 6c0-5 16-5 16 0s-16 5-16 0Zm0 0v6c0 5 16 5 16 0V6M4 12v6c0 5 16 5 16 0v-6",
+  sponsor: "M12 3 20 6v5c0 5-3.4 8.5-8 10-4.6-1.5-8-5-8-10V6l8-3Zm-3 9 2 2 4-4",
   leaf: "M5 20C4 8 12 3 21 3c0 12-6 16-13 14m-5 4L17 7",
 };
 
