@@ -307,6 +307,12 @@
 .new-payment:hover {
   background: #103e29;
 }
+.workflow-shortcut {
+  margin-bottom: 18px;
+}
+.workflow-shortcut + .ledger-shell {
+  margin-top: 0;
+}
 .new-payment svg,
 .insight-action svg {
   width: 16px;
@@ -1010,6 +1016,58 @@
   border-color: var(--dash-border);
   border-radius: 15px;
   background: var(--dash-card);
+}
+.dashboard-v2 .ledger-shell {
+  margin-bottom: 24px;
+  border: 1px solid var(--dash-border);
+  border-radius: 15px;
+  overflow: hidden;
+}
+.dashboard-v2 .ledger-heading {
+  gap: 24px;
+  padding: 28px 32px 24px;
+  align-items: center;
+}
+.dashboard-v2 .ledger-fee-note {
+  margin: 0;
+  padding: 13px 32px 15px;
+  border-bottom: 1px solid var(--dash-border);
+  background: var(--dash-bg);
+}
+.dashboard-v2 .ledger-summary {
+  margin: 0;
+  border-bottom: 1px solid var(--dash-border);
+}
+.dashboard-v2 .ledger-summary div {
+  padding: 18px 22px;
+  background: var(--dash-card);
+}
+.dashboard-v2 .ledger-row {
+  grid-template-columns: minmax(250px, 0.9fr) minmax(360px, 1.25fr) minmax(
+    220px,
+    0.75fr
+  );
+  gap: 24px;
+  align-items: start;
+  padding: 26px 28px 30px;
+}
+.dashboard-v2 .ledger-identity h3 {
+  margin: 18px 0 6px;
+}
+.dashboard-v2 .ledger-facts {
+  gap: 1px;
+  margin: 0;
+}
+.dashboard-v2 .ledger-facts div {
+  padding: 14px 16px;
+}
+.dashboard-v2 .ledger-action {
+  gap: 16px;
+  padding-left: 24px;
+}
+.dashboard-v2 .ledger-control-group + .ledger-control-group {
+  margin-top: 0;
+  padding-top: 18px;
 }
 .dashboard-v2 .app-footer {
   display: flex;

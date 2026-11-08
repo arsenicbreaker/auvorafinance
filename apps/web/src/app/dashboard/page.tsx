@@ -81,7 +81,7 @@ const pages: [DashboardPage, ...DashboardPage[]] = [
     id: "sponsorship",
     title: "Sponsored controls",
     description: "Manage existing workflows with sponsored gas.",
-    icon: "payment",
+    icon: "waves",
   },
 ];
 function subscribeToHash(callback: () => void) {
@@ -143,7 +143,9 @@ export default function Dashboard() {
         <nav aria-label="Workspace">
           {pages
             .filter(
-              (page) => !["proof", "builder", "sponsorship"].includes(page.id),
+              (page) =>
+                page.id !== "proof" &&
+                (page.id !== "sponsorship" || Boolean(sponsorUrl)),
             )
             .map((page) => (
               <a
@@ -152,12 +154,7 @@ export default function Dashboard() {
                 aria-label={page.title}
                 title={page.title}
                 className={
-                  (current.id === page.id ||
-                    (page.id === "workflows" &&
-                      ["builder", "sponsorship"].includes(current.id))) &&
-                  !isSearching
-                    ? "selected"
-                    : ""
+                  current.id === page.id && !isSearching ? "selected" : ""
                 }
                 aria-current={
                   current.id === page.id && !isSearching ? "page" : undefined
@@ -241,14 +238,16 @@ export default function Dashboard() {
                   : current.description}
               </p>
             </div>
-            <a
-              className="new-payment"
-              href={account ? "#builder" : "#proof"}
-              onClick={() => setSearch("")}
-            >
-              <DashboardIcon name="plus" />
-              New payment
-            </a>
+            {current.id !== "builder" || isSearching ? (
+              <a
+                className="new-payment"
+                href={account ? "#builder" : "#proof"}
+                onClick={() => setSearch("")}
+              >
+                <DashboardIcon name="plus" />
+                New payment
+              </a>
+            ) : null}
           </div>
           <div
             hidden={
@@ -321,7 +320,7 @@ export default function Dashboard() {
           </div>
           <div hidden={!show("workflows")}>
             {sponsorUrl ? (
-              <a className="new-payment" href="#sponsorship">
+              <a className="new-payment workflow-shortcut" href="#sponsorship">
                 Sponsored controls
               </a>
             ) : null}
