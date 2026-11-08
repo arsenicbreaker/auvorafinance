@@ -370,10 +370,13 @@ div[id] {
   animation: payment-float 7s ease-in-out infinite;
 }
 .flow-object-face > span {
+  font-family: "Century Gothic", "Trebuchet MS", sans-serif;
   color: #494b40;
-  font-size: 62px;
-  font-weight: 450;
-  letter-spacing: -8px;
+  font-size: 66px;
+  font-weight: 500;
+  letter-spacing: -7px;
+  line-height: 1;
+  transform: translate(-2px, -2px);
 }
 .flow-object-face i {
   position: absolute;
