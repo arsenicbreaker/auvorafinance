@@ -238,16 +238,6 @@ export default function Dashboard() {
                   : current.description}
               </p>
             </div>
-            {current.id !== "builder" || isSearching ? (
-              <a
-                className="new-payment"
-                href={account ? "#builder" : "#proof"}
-                onClick={() => setSearch("")}
-              >
-                <DashboardIcon name="plus" />
-                New payment
-              </a>
-            ) : null}
           </div>
           <div
             hidden={
@@ -319,11 +309,6 @@ export default function Dashboard() {
             />
           </div>
           <div hidden={!show("workflows")}>
-            {sponsorUrl ? (
-              <a className="new-payment workflow-shortcut" href="#sponsorship">
-                Sponsored controls
-              </a>
-            ) : null}
             <WorkflowLedger
               key={`ledger:${rpcUrl}:${contractId}:${account ?? "signed-out"}`}
               contractId={contractId}

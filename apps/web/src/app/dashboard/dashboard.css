@@ -307,12 +307,6 @@
 .new-payment:hover {
   background: #103e29;
 }
-.workflow-shortcut {
-  margin-bottom: 18px;
-}
-.workflow-shortcut + .ledger-shell {
-  margin-top: 0;
-}
 .new-payment svg,
 .insight-action svg {
   width: 16px;
@@ -1203,7 +1197,10 @@
 @media (max-width: 700px) {
   .dashboard-v2 {
     display: block;
+    width: 100%;
+    min-height: 100dvh;
     padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+    background: #f7f6ef;
   }
   html:has(.dashboard-v2) {
     scroll-padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
@@ -1228,14 +1225,17 @@
   .app-sidebar .app-brand {
     display: none;
   }
+  .app-main {
+    position: relative;
+  }
   .mobile-brand {
     display: inline-flex;
     align-items: center;
     min-height: 48px;
-    margin: 12px 18px 0;
+    margin: 16px 20px 0;
     color: var(--dash-ink);
-    font: 600 29px/1.1 var(--ui-font);
-    letter-spacing: -1.3px;
+    font: 650 25px/1 var(--ui-font);
+    letter-spacing: -1.2px;
     text-decoration: none;
   }
   .app-sidebar nav {
@@ -1269,32 +1269,45 @@
     display: none;
   }
   .app-topbar {
-    height: 74px;
-    padding: 0 18px;
-    gap: 12px;
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    width: auto;
+    height: 48px;
+    padding: 0;
+    border: 0;
+    gap: 10px;
+    background: transparent;
+  }
+  .topbar-network {
+    display: flex;
+    font-size: 10px;
+  }
+  .topbar-wallet {
+    width: 38px;
+    height: 38px;
   }
   .dashboard-search {
-    gap: 8px;
-    padding: 0 10px;
-  }
-  .dashboard-search input {
-    font-size: 12px;
-  }
-  .dashboard-search kbd {
     display: none;
   }
   .app-content {
-    padding: 5px 18px 24px;
+    padding: 34px 20px 28px;
   }
   .app-page-heading {
-    flex-wrap: wrap;
-    gap: 17px;
+    display: block;
+    margin-bottom: 26px;
   }
   .dashboard-v2 .app-page-heading h1 {
-    font-size: 37px;
+    max-width: 10ch;
+    margin-bottom: 12px;
+    font-size: clamp(40px, 12vw, 52px);
+    line-height: 0.98;
+    letter-spacing: -2.4px;
   }
   .app-page-heading p {
+    max-width: 34ch;
     font-size: 14px;
+    line-height: 1.55;
   }
   .overview-source {
     font-size: 10px;
@@ -1359,17 +1372,28 @@
     padding-right: 10px;
   }
   .setup-steps {
-    flex-wrap: wrap;
-    gap: 5px 16px;
-    padding-bottom: 20px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    padding: 0 0 20px;
   }
   .setup-steps a {
-    font-size: 11px;
-    gap: 6px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    min-height: 72px;
+    padding: 10px;
+    border-radius: 10px;
+    background: #ecefe6;
+    font-size: 10px;
+    line-height: 1.25;
+  }
+  .setup-steps a[aria-current] {
+    background: var(--dash-pale);
   }
   .setup-steps span {
-    width: 25px;
-    height: 25px;
+    width: 27px;
+    height: 27px;
   }
   .connect-reminder {
     flex-wrap: wrap;
@@ -1383,6 +1407,64 @@
   .dashboard-v2 .app-footer {
     flex-direction: column;
     gap: 7px;
+  }
+  .dashboard-v2
+    :is(
+      .proof-shell,
+      .builder-shell,
+      .ledger-shell,
+      .history-shell,
+      .outlook-shell,
+      .sponsorship-shell
+    ) {
+    margin-bottom: 18px;
+    border-radius: 18px;
+  }
+  .dashboard-v2
+    :is(.proof-heading, .builder-intro, .ledger-heading, .outlook-heading) {
+    gap: 16px;
+    padding: 22px 18px;
+  }
+  .dashboard-v2
+    :is(.proof-heading, .builder-intro, .ledger-heading, .outlook-heading)
+    h2 {
+    font-size: 29px;
+    line-height: 1.05;
+  }
+  .dashboard-v2 .builder-intro,
+  .dashboard-v2 .builder-grid,
+  .dashboard-v2 .ledger-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dashboard-v2 .instruction-panel,
+  .dashboard-v2 :is(.builder-form, .review-sheet),
+  .dashboard-v2 .ledger-row,
+  .dashboard-v2 .ledger-state,
+  .dashboard-v2 .history-content {
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+  .dashboard-v2 .ledger-fee-note {
+    padding: 13px 18px 15px;
+  }
+  .dashboard-v2 .ledger-summary,
+  .dashboard-v2 .ledger-facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dashboard-v2 .ledger-action {
+    padding: 20px 0 0;
+    border-top: 1px solid var(--dash-border);
+    border-left: 0;
+  }
+  .dashboard-v2
+    :is(
+      .proof-shell,
+      .builder-shell,
+      .ledger-shell,
+      .sponsorship-shell
+    )
+    button:not(.insight-dismiss) {
+    width: 100%;
   }
 }
 @media (prefers-reduced-motion: reduce) {
