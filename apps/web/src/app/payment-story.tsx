@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { DashboardIcon } from "../features/dashboard/dashboard-icon";
+import {
+  DashboardIcon,
+  type DashboardIconName,
+} from "../features/dashboard/dashboard-icon";
 import TextRotate from "../components/fancy/text/text-rotate";
 import { useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "motion/react";
@@ -15,7 +18,23 @@ type Capability = {
   label: string;
 };
 
-const steps = ["Connect", "Schedule", "Track"];
+const steps = ["Payments", "Schedules", "Sponsored"];
+const previewTitles = ["Payments", "Schedules", "Sponsored controls"];
+const previewDescriptions = [
+  "Give your next payment a schedule. Review it before you sign.",
+  "Keep track of your schedules and manage each workflow.",
+  "Manage existing workflows with sponsored gas.",
+];
+const mobileNavigation: DashboardIconName[] = [
+  "home",
+  "payment",
+  "calendar",
+  "people",
+  "chart",
+  "balance",
+  "sponsor",
+];
+const selectedNavigation = [1, 2, 6];
 
 export function PaymentStory({ items }: { items: Capability[] }) {
   const section = useRef<HTMLElement>(null);
@@ -235,85 +254,98 @@ export function PaymentStory({ items }: { items: Capability[] }) {
               onClick={() => selectStep(index)}
             >
               <span className="story-phone-camera" />
-              <span className="story-phone-top">
-                <b>auvora</b>
-                <span>NEAR testnet</span>
+              <span className="story-dashboard-screen">
+                <span className="story-mobile-header">
+                  <b>auvora</b>
+                  <span className="story-mobile-network">
+                    <i /> NEAR testnet
+                  </span>
+                  <span className="story-mobile-avatar">OC</span>
+                </span>
+                <span className="story-mobile-heading">
+                  <strong>{previewTitles[index]}</strong>
+                  <small>{previewDescriptions[index]}</small>
+                </span>
+
+                {index === 0 ? (
+                  <>
+                    <span className="story-payment-steps">
+                      <span>
+                        <i><DashboardIcon name="check" /></i>
+                        <small>Connect wallet</small>
+                      </span>
+                      <span className="is-current">
+                        <i>2</i>
+                        <small>Set payment</small>
+                      </span>
+                      <span>
+                        <i>3</i>
+                        <small>Track schedules</small>
+                      </span>
+                    </span>
+                    <span className="story-mobile-card story-payment-card">
+                      <small>Step 2 of 3</small>
+                      <b>Set up a recurring payment</b>
+                      <span>
+                        Choose who gets paid, how much they receive, and when
+                        the schedule stops.
+                      </span>
+                      <span className="story-card-preview">
+                        <strong>Describe the payment</strong>
+                        <i />
+                        <i />
+                      </span>
+                    </span>
+                  </>
+                ) : index === 1 ? (
+                  <span className="story-mobile-card story-schedule-card">
+                    <small>Step 3 of 3</small>
+                    <b>Track your payment schedules</b>
+                    <span className="story-refresh">Refresh</span>
+                    <span>
+                      See what runs next, manage active schedules, and withdraw
+                      funds that are no longer reserved.
+                    </span>
+                    <span className="story-fee-note">
+                      Management actions currently charge testnet gas to your
+                      wallet.
+                    </span>
+                    <span className="story-owner-preview">
+                      <small>OWNER</small>
+                      <strong>oceane...testnet</strong>
+                    </span>
+                  </span>
+                ) : (
+                  <span className="story-mobile-card story-sponsored-card">
+                    <small>Gas sponsorship</small>
+                    <b>Manage a workflow. We cover the gas.</b>
+                    <span>
+                      Pause, resume, cancel, or withdraw from an existing
+                      workflow. The relayer pays the transaction gas.
+                    </span>
+                    <span className="story-network-badge">NEAR testnet</span>
+                    <span className="story-owner-preview">
+                      <small>OWNER ACCOUNT</small>
+                      <strong>oceane...testnet</strong>
+                    </span>
+                  </span>
+                )}
+
+                <span className="story-mobile-nav" aria-hidden="true">
+                  {mobileNavigation.map((icon, navIndex) => (
+                    <span
+                      key={icon}
+                      className={
+                        selectedNavigation[index] === navIndex
+                          ? "is-selected"
+                          : undefined
+                      }
+                    >
+                      <DashboardIcon name={icon} />
+                    </span>
+                  ))}
+                </span>
               </span>
-              <span className="story-screen-label">
-                {steps[index]} / 0{index + 1}
-              </span>
-              {index === 0 ? (
-                <span className="story-screen">
-                  <strong>
-                    Your wallet.
-                    <br />
-                    Your workspace.
-                  </strong>
-                  <span className="story-wallet-mark">
-                    <DashboardIcon name="wallet" />
-                  </span>
-                  <span className="story-demo-card">
-                    <small>OWNER ACCOUNT</small>
-                    <b>you.testnet</b>
-                    <span className="story-status">Ready to connect</span>
-                  </span>
-                  <span className="story-screen-action">Connect wallet</span>
-                  <small>You approve every schedule.</small>
-                </span>
-              ) : index === 1 ? (
-                <span className="story-screen">
-                  <strong>
-                    Give it
-                    <br />a rhythm.
-                  </strong>
-                  <span className="story-demo-field">
-                    <small>Recipient</small>
-                    <b>studio.testnet</b>
-                  </span>
-                  <span className="story-demo-field">
-                    <small>Amount per payment</small>
-                    <b className="story-amount">
-                      12 <small>NEAR</small>
-                    </b>
-                  </span>
-                  <span className="story-frequency">
-                    <span>Daily</span>
-                    <b>Weekly</b>
-                    <span>Monthly</span>
-                  </span>
-                  <span className="story-screen-action">Review schedule</span>
-                  <small>Your timing. Your approval.</small>
-                </span>
-              ) : (
-                <span className="story-screen">
-                  <strong>
-                    Every run.
-                    <br />
-                    In view.
-                  </strong>
-                  <span className="story-demo-card">
-                    <small>WEEKLY SCHEDULE</small>
-                    <b>studio.testnet</b>
-                    <span className="story-status">Active · 12 NEAR</span>
-                  </span>
-                  <span className="story-timeline">
-                    <span>
-                      <i />
-                      Payment completed<small>Transaction recorded</small>
-                    </span>
-                    <span>
-                      <i />
-                      Payment completed<small>Transaction recorded</small>
-                    </span>
-                    <span>
-                      <i />
-                      Next scheduled run<small>In 7 days</small>
-                    </span>
-                  </span>
-                  <span className="story-screen-action">View schedule</span>
-                </span>
-              )}
-              <span className="story-phone-bottom">Illustrative preview</span>
             </button>
             <div className="capability-list">
               <article

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { DashboardIcon } from "../features/dashboard/dashboard-icon";
 import { redirect } from "next/navigation";
 import { LandingNavigation } from "./landing-navigation";
@@ -119,7 +120,15 @@ export default async function Home({
             ))}
           </svg>
           <p className="hero-kicker">
-            <span aria-hidden="true" /> Recurring payments, built on NEAR
+            <Image
+              className="near-mark"
+              src="/near-logo.png"
+              alt=""
+              width={864}
+              height={865}
+              aria-hidden="true"
+            />
+            Built on NEAR
           </p>
           <h1>
             Set it once.

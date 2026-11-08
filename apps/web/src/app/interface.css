@@ -274,11 +274,11 @@ div[id] {
   margin-bottom: 16px;
   font-size: 13px;
 }
-.hero-kicker > span {
-  height: 7px;
-  width: 7px;
-  border-radius: 50%;
-  background: var(--landing-green);
+.hero-kicker .near-mark {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  object-fit: contain;
 }
 .landing h1 {
   max-width: 820px;
