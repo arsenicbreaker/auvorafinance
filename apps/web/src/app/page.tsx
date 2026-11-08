@@ -2,6 +2,7 @@ import Link from "next/link";
 import { DashboardIcon } from "../features/dashboard/dashboard-icon";
 import { redirect } from "next/navigation";
 import { LandingNavigation } from "./landing-navigation";
+import { LandingFooter } from "./landing-footer";
 import { PaymentStory } from "./payment-story";
 
 const paymentRoutes = [
@@ -329,23 +330,7 @@ export default async function Home({
           </div>
         </div>
       </section>
-      <footer className="landing-footer">
-        <div>
-          <Link href="/" className="wordmark">
-            auvora<span>.</span>
-          </Link>
-          <p>Recurring payments on NEAR.</p>
-        </div>
-        <nav aria-label="Footer navigation">
-          <a href="#how-it-works">How it works</a>
-          <Link href="/dashboard">Dashboard</Link>
-          <a href="#top">Back to top</a>
-        </nav>
-        <div className="footer-type" aria-hidden="true">
-          auvora<span>.</span>
-        </div>
-        <p className="footer-bottom">Auvora · NEAR testnet</p>
-      </footer>
+      <LandingFooter />
     </main>
   );
 }
