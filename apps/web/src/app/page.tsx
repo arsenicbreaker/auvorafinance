@@ -13,6 +13,14 @@ const paymentRoutes = [
   "M1440 390h-250q-30 0-30 30v140q0 30-30 30H910q-30 0-30 30V2000",
 ];
 
+const paymentRailItems = [
+  "Connect wallet",
+  "Set schedule",
+  "Fund workflow",
+  "Automatic execution",
+  "Track every run",
+];
+
 const capabilities = [
   {
     number: "01",
@@ -150,18 +158,6 @@ export default async function Home({
           </div>
         </div>
         <div className="landing-preview">
-          <div className="preview-intro">
-            <p className="section-caption">A calmer payment routine</p>
-            <h2>
-              Less repetition.
-              <br />
-              <span>More room to move.</span>
-            </h2>
-            <p>
-              Turn recurring transfers into a funded schedule, with the controls
-              always within reach.
-            </p>
-          </div>
           <div className="flow-object" aria-hidden="true">
             <div className="flow-object-face">
               <span>au</span>
@@ -170,6 +166,29 @@ export default async function Home({
               <i />
             </div>
             <span className="object-caption">Set. Fund. Flow.</span>
+          </div>
+          <div className="payment-rail" aria-label="Payment workflow">
+            <div className="payment-rail-track">
+              {[false, true].map((duplicate) => (
+                <div
+                  className="payment-rail-group"
+                  key={duplicate ? "duplicate" : "primary"}
+                  role={duplicate ? undefined : "list"}
+                  aria-hidden={duplicate || undefined}
+                >
+                  {paymentRailItems.map((item) => (
+                    <span
+                      className="payment-rail-item"
+                      key={`${duplicate ? "duplicate" : "primary"}-${item}`}
+                      role={duplicate ? undefined : "listitem"}
+                    >
+                      <i aria-hidden="true" />
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
