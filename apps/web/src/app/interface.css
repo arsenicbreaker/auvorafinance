@@ -707,6 +707,27 @@ div[id] {
 .cta-route-lines circle {
   fill: currentColor;
 }
+.cta-route-lines .cta-route-pulse {
+  stroke: #c8d9b4;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 12 112;
+  stroke-dashoffset: 12;
+  animation: cta-route-flow 4s linear infinite;
+}
+.cta-route-lines .cta-route-pulse-next {
+  animation-delay: 2s;
+}
+@keyframes cta-route-flow {
+  0% { stroke-dashoffset: 12; }
+  50%, 100% { stroke-dashoffset: -112; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cta-route-lines .cta-route-pulse {
+    display: none;
+    animation: none;
+  }
+}
 .cta-route-card {
   position: absolute;
   display: grid;

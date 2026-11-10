@@ -297,6 +297,8 @@ export default async function Home({
           >
             <path d="M312 74c110 0 158 40 158 112 0 43-26 66-68 78" />
             <path d="M356 269c-78 17-116 62-116 132" />
+            <path className="cta-route-pulse" pathLength="100" d="M312 74c110 0 158 40 158 112 0 43-26 66-68 78" />
+            <path className="cta-route-pulse cta-route-pulse-next" pathLength="100" d="M356 269c-78 17-116 62-116 132" />
             <circle cx="402" cy="264" r="5" />
             <circle cx="240" cy="401" r="5" />
           </svg>
