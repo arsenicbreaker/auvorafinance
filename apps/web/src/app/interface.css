@@ -279,7 +279,7 @@ div[id] {
 .hero-kicker {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 4px;
   margin-bottom: 16px;
   font-size: 13px;
 }
