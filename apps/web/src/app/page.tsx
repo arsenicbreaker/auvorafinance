@@ -171,33 +171,6 @@ export default async function Home({
             </div>
             <span className="object-caption">Set. Fund. Flow.</span>
           </div>
-          <div className="preview-panel">
-            <div className="preview-panel-top">
-              <span>Payment workflow</span>
-              <span>Overview</span>
-            </div>
-            <h3>A plan for every transfer.</h3>
-            <ol>
-              <li>
-                <span>01</span>
-                <div>
-                  Connect wallet<small>Start with your NEAR account</small>
-                </div>
-              </li>
-              <li>
-                <span>02</span>
-                <div>
-                  Set your schedule<small>Recipient, amount, and timing</small>
-                </div>
-              </li>
-              <li>
-                <span>03</span>
-                <div>
-                  Follow each run<small>History and workflow controls</small>
-                </div>
-              </li>
-            </ol>
-          </div>
         </div>
       </section>
       <PaymentStory items={capabilities} />
