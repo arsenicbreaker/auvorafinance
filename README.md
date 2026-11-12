@@ -1,67 +1,87 @@
+<div align="center">
+
+<img src="apps/web/public/auvora-wordmark.png" alt="Auvora" width="220" />
+
 # Auvora Finance
 
-Auvora is a testnet-only recurring native NEAR payment system. A user defines and signs a payment policy, a keeper asks the contract to execute due runs, and the contract enforces the recipient, amount, schedule, run limit, reserve, and workflow ledger.
+**Recurring NEAR payments with a treasury reserve**
 
-This repository is a NEAR Hackathon 2026 project. It is not audited, production-ready, or intended for mainnet funds.
+Set a recipient, payment amount, schedule, and minimum reserve. Sign the policy in your testnet wallet, then follow each scheduled payment from the dashboard to its on-chain receipt.
 
-## What works
+![NEAR Testnet](https://img.shields.io/badge/NEAR-Testnet-155B49?style=for-the-badge)
+![Rust](https://img.shields.io/badge/Contract-Rust-68442F?style=for-the-badge)
+![Next.js](https://img.shields.io/badge/Web-Next.js-222222?style=for-the-badge)
 
-| Capability                                           | Status                              | Authority boundary                                           |
-| ---------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------ |
-| Recurring native NEAR workflow                       | Live on `oceanear.testnet`          | Owner wallet creates and funds it                            |
-| Recipient allowlist                                  | Live                                | Workflow owner signs recipient authorization                 |
-| Due-run execution and callback accounting            | Live                                | Keeper supplies only the workflow ID; contract decides       |
-| Pause, resume, cancel, and safe withdrawal           | Live                                | Workflow owner signs each action                             |
-| Keeper discovery and restart reconciliation          | Implemented                         | Restricted keeper key and PostgreSQL records                 |
-| Sponsored nonpayable call proof                      | Live proof recorded                 | Relayer cannot sponsor deposits or change signed arguments   |
-| Sponsored management in the web app                  | Live WF-11 lifecycle verified       | Separate delegate connector; relayer signs outer transaction |
-| Execution history                                    | Implemented and locally verified    | Final RPC evidence checked for keeper-recorded hashes        |
-| Natural-language draft parsing                       | Implemented locally                 | Produces editable fields only; cannot open or sign a wallet  |
-| NEAR AI Cloud adapter                                | Configurable, not yet live-verified | Falls back to deterministic parsing when unavailable         |
-| Treasury forecast                                    | Implemented and locally verified    | Reads workflow pages at one finalized testnet block          |
-| Hypothetical one-year yield scenario                 | Implemented and locally verified    | Editable assumptions only; no provider or asset transaction  |
-| Mainnet, stablecoins, swaps, lending, and real yield | Not implemented                     | Outside the MVP                                              |
+<img src="docs/phase-8/2026-10-31-desktop-outlook.jpg" alt="Auvora dashboard showing the treasury outlook for a testnet account" width="900" />
 
-The live contract returned `phase-2-ready` at finality on 2026-10-30. Workflows `2` and `4` each completed two scheduled 0.001 NEAR payments with distinct finalized hashes; workflows `3` and `5` returned `RESERVE_GUARD`. All four fixture ledgers were withdrawn to zero. A keeper-cycle worker was terminated after broadcast and a separate OS process reconciled its persisted hash without submitting a replacement. Two independent keeper processes also produced one payment for the next slot. Direct concurrent contract triggers and remaining lifecycle/product gates stay open. See [Demo evidence](docs/DEMO_EVIDENCE.md).
+[Features](#features) · [How it works](#how-it-works) · [Testnet evidence](#testnet-evidence) · [Quick start](#quick-start)
 
-## Judge path: do X, see Y
+</div>
 
-1. Install the pinned tools and dependencies.
-2. Start the web app.
-3. Connect a NEAR testnet wallet that owns the workflow.
-4. Enter the example payment instruction and select **Fill payment fields**.
-5. See an editable native NEAR draft. No wallet opens at this step.
-6. Review the canonical fields. The wallet opens only for an explicit on-chain action.
-7. Start the keeper and wait until a due workflow finalizes.
-8. Run the evidence report to read final contract state and recorded transaction hashes.
+---
 
-The exact commands, expected outputs, and human-only signing steps are in [Demo runbook](docs/DEMO_RUNBOOK.md).
+## Problem
 
-## Read-only treasury planning
+A treasury that pays the same recipient every week has two jobs on each due date. Someone has to send the payment and check that enough funds will remain for other obligations.
 
-The **Treasury outlook** section works without a wallet connection. Enter a public testnet owner account and select **Read finalized balances**. Change the forecast horizon or planning fee buffer to inspect commitments, reserves, per-workflow funding gaps, and uncommitted funds. Expand **Model a hypothetical one-year return** to edit a principal and assumed APY; this scenario never opens a wallet or moves assets. Refresh the snapshot to incorporate newer chain state.
+## Solution
 
-## Workflow transaction recovery
+Auvora lets the owner authorize a recurring payment once. A keeper requests each due run, and the NEAR contract checks the signed terms and available balance before releasing funds. The owner can pause the schedule or cancel future runs from the dashboard.
 
-Known pending workflow hashes are saved on this browser for recipient authorization, creation, pause, resume, cancel, and withdrawal. After a reload, reconnect the same owner with the same contract and RPC, then select **Check transaction status**. This reads the original hash without opening the wallet again. A pending or unavailable result keeps new actions in that section blocked; confirmed success or failure clears the matching saved record.
+Built for the **NEAR Hackathon 2026**. The MVP handles native NEAR on testnet. It is unaudited.
 
-The builder also saves reviewed form fields and a request marker before opening a wallet. After remount/reload, fields return without restoring financial approval. Explicit rejection is retained; an unanswered/interrupted request is shown as unknown and blocks another signature until the owner checks wallet activity and clears that marker. Known hashes still use their finality check. AI prompts, secrets, and signed bytes are not stored by this recovery. A draft lost before this update cannot be reconstructed.
+## Features
 
-Recovery cannot discover a hash the wallet never returned, survive cleared storage, or recover transactions from another device/origin. Use one signing tab; browser storage is not a cross-tab signing lock. See [known limitations](docs/KNOWN_LIMITATIONS.md).
+| Feature              | What you can do                                                                                                                                                                                                   |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Payment builder      | Enter an instruction, select **Fill payment fields**, then review the recipient, amount, interval, run limit, and reserve before signing. The optional NEAR AI Cloud adapter falls back to deterministic parsing. |
+| Workflow management  | Authorize a recipient, create and fund a workflow, then pause, resume, cancel, or withdraw the amount the contract makes available.                                                                               |
+| Sponsored management | Sign a delegate for an eligible management action. The relayer pays for the outer transaction. The owner funds workflow creation.                                                                                 |
+| Treasury outlook     | Enter a public testnet account to forecast commitments and funding gaps from one finalized block. Model a hypothetical annual return by adjusting principal and APY.                                              |
+| Execution record     | Inspect keeper-recorded attempts and check their hashes against finalized RPC outcomes and contract events. Unresolved attempts appear as pending or unverified.                                                  |
+| Wallet recovery      | After a reload, reconnect the same owner and check a saved transaction hash. If the wallet closed before returning a hash, review wallet activity before retrying.                                                |
 
-## Execution history
+---
 
-The **Execution record** section reads keeper-recorded attempts for a public testnet owner without opening a wallet. It checks ownership at one finalized block and verifies each hash's final call and contract events. `Pending` and `Unverified` remain explicit when the outcome is unresolved or unavailable. The list is an index of keeper records and can omit older or external transactions; an empty list does not prove that no on-chain execution occurred.
+## How it works
 
-Set the server-only `AUVORA_HISTORY_DATABASE_URL` in `apps/web/.env.local` to connect the existing keeper PostgreSQL database. Use a SELECT-only role for a deployed service and never prefix this value with `NEXT_PUBLIC_`. Without configuration, the UI displays an unavailable-history explanation and does not fabricate records. Local configuration was connected during Phase 12 development without printing credentials.
+1. **Draft and approve.** The owner reviews the payment fields, authorizes the recipient, and signs the funded workflow in a NEAR testnet wallet.
+2. **Request a due run.** The keeper discovers the workflow and calls `execute_due` with its ID. The contract reads the recipient and amount from the stored policy and checks the schedule, remaining runs, reserve, and pending slot.
+3. **Settle the payment.** The contract dispatches the transfer and records its outcome in a callback. A failed transfer restores the reserved ledger amount. After a keeper restart, the worker reconciles its saved transaction hash.
+4. **Inspect the result.** Enter the owner's account in **Execution record** to see attempts tracked by the keeper. External transactions can fall outside this index.
 
-Pages contain up to 20 attempts. Verification is read-only and bounded; API limits are per process (20 requests per minute, four concurrent reads). The database pool has at most two connections per configured database and ten-second connection/query timeouts. Before starting a production web server, run `pnpm build`; the development command prepares its server workspace dependencies automatically.
+For a guided walkthrough with wallet steps and expected results, follow the [demo runbook](docs/DEMO_RUNBOOK.md).
 
-WF-11 sponsored pause, resume, cancel, and withdrawal have verified final testnet receipts; the product owner reports passing pending-request reload recovery. Phase 12 remains open for separate balance-delta evidence and remaining wallet/live lifecycle acceptance gates. See [current evidence](docs/phase-12/2026-11-03-sponsored-acceptance.md) and [live acceptance handoff](docs/phase-12/LIVE_ACCEPTANCE.md).
+## Testnet evidence
 
-The relayer validates signed nonpayable pause/resume/cancel/withdraw delegates with exact arguments, bounded expiry, on-chain nonce/key checks, and workflow ownership. The HTTP service integrates durable replay/budget reservations and persists its signed transaction before broadcast, then reconciles the same hash. A separate FastNEAR wallet connector supplies delegate signing. This integrated path has live WF-11 evidence; ordinary wallet management remains a separate wallet-funded path. Creation and funding are not sponsored.
+| Recorded result                                                                                                 | Evidence                                                                                                  |
+| --------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Treasury contract deployed at `oceanear.testnet`                                                                | [Deployment transaction](https://testnet.nearblocks.io/txns/FW1uXWCowcW1W17HUUryk965Rgzrn5h6x3e9tgjiimX1) |
+| Workflows 2 and 4 each completed two payments of 0.001 NEAR. Workflows 3 and 5 reached the reserve guard.       | [Payment and reserve report](docs/phase-7/2026-10-30-final-report.json)                                   |
+| A restarted worker recovered its transaction hash. Two keeper processes produced one payment for the next slot. | [Keeper process report](docs/phase-7/2026-10-30-process-final-report.json)                                |
+| Workflow 11 completed sponsored pause, resume, cancel, and withdrawal with final receipts.                      | [Transactions and contract events](docs/phase-12/2026-11-03-sponsored-acceptance.md)                      |
 
-## Prerequisites
+The NEAR AI Cloud adapter still needs live verification. Remaining acceptance checks cover wallet redirects, device coverage, live contract edge cases, and owner/relayer balance changes. [Live acceptance checklist](docs/phase-12/LIVE_ACCEPTANCE.md)
+
+---
+
+## Architecture and tech stack
+
+| Component                               | Implementation             | Role                                                                                              |
+| --------------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------- |
+| [Web app](apps/web)                     | Next.js, React, TypeScript | Builds payment policies, connects wallets, and displays treasury forecasts and execution history. |
+| [Treasury contract](contracts/treasury) | Rust on NEAR               | Enforces payment policies and accounts for transfers, reserves, and withdrawals.                  |
+| [Keeper](apps/keeper)                   | Node.js, PostgreSQL        | Discovers due workflows and persists signed transactions before broadcast.                        |
+| [Relayer](apps/relayer)                 | Node.js, NEP-366 delegates | Validates owner-signed management requests, reserves a sponsorship budget, and submits them.      |
+| [Shared packages](packages)             | TypeScript, Prisma         | Provide workflow schemas, treasury calculations, NEAR RPC clients, and database access.           |
+
+FlowPilot's builder, dashboard, and execution history informed the product design. The architecture notes explain how Auvora implements these interactions on NEAR. [FlowPilot](https://github.com/Lem0nTree/FlowPilot) · [Architecture notes](docs/ARCHITECTURE.md)
+
+---
+
+## Quick start
+
+### Prerequisites
 
 - Node.js 22.12 or newer within 22.x (tested with 22.22.1)
 - Corepack with pnpm 12.14.0
@@ -79,18 +99,18 @@ rustup show
 cargo install --locked cargo-near --version 0.22.0
 ```
 
-## Configuration
+### Configuration
 
 Use [.env.example](.env.example) as the field list. Keep credentials only in ignored local files or deployment secret stores:
 
-- `apps/web/.env.local`: public browser configuration only.
+- `apps/web/.env.local`: web configuration, including server-only history and optional AI settings.
 - `.env.keeper.local`: restricted keeper account and database configuration.
 - `.env.relayer.local`: separately funded relayer configuration.
 - `.env.deploy.local`: owner deployment credentials for an explicitly approved deployment or upgrade.
 
 Never paste a seed phrase into the app. Never commit a private key or AI provider key.
 
-Minimal web configuration:
+In `apps/web/.env.local`, configure the testnet endpoint and contract. To enable execution history, also set the server-only `AUVORA_HISTORY_DATABASE_URL` to the keeper PostgreSQL database using a read-only role.
 
 ```dotenv
 NEXT_PUBLIC_NEAR_RPC_URL=https://test.rpc.fastnear.com
@@ -109,9 +129,9 @@ AI_TIMEOUT_MS=8000
 
 If the provider key or model is absent, the web app keeps the manual form available and uses the deterministic parser for supported instructions.
 
-## Run locally
+### Run locally
 
-Web:
+Start the dashboard from the repository root and open [the local dashboard](http://localhost:3000/dashboard).
 
 ```bash
 pnpm --filter @auvora/web dev
@@ -147,7 +167,7 @@ It independently verifies recorded execution hashes with final RPC outcomes and 
 
 `pnpm proof:payments` previews the two signed Phase 7 fixtures without sending transactions. After human approval, `pnpm proof:payments --execute` runs the scheduled payments, reserve rejection, persisted-hash recovery, and concurrent keeper cycles, then withdraws remaining fixture balances. Read the accounts, testnet deposits, limitations, and recovery instructions in the [Demo runbook](docs/DEMO_RUNBOOK.md) first.
 
-## Check local readiness
+### Check local readiness
 
 Run the read-only local doctor before testing a payment:
 
@@ -169,7 +189,7 @@ Keeper health now includes `healthVersion: 1` and its public network, contract, 
 
 If the keeper check fails, confirm PostgreSQL is available, then run the migration and keeper commands from **Run locally**. If the web check fails, start the web app or specify the correct local port. After changing public web configuration, restart development mode or rebuild production mode.
 
-## Validation commands
+### Validation commands
 
 ```bash
 pnpm format:check
@@ -188,42 +208,16 @@ cargo near build non-reproducible-wasm --locked
 
 Native Windows supports the TypeScript checks and Rust unit tests. Run the sandbox integration test on Linux, WSL2, or Ubuntu CI.
 
-## Security boundary
-
-- AI output is untrusted draft data.
-- The user reviews canonical fields before a wallet request.
-- The keeper cannot choose a recipient, amount, reserve, or schedule.
-- `execute_due` accepts a workflow ID and the contract re-checks every policy.
-- One pending execution slot prevents duplicate dispatch for the same run.
-- Failed transfer callbacks restore the reserved ledger amount once.
-- Withdrawals cannot consume active obligations, reserve, or pending value.
-- The MVP is testnet-only and remains upgrade-trusted.
-
-Read [Security model](docs/SECURITY.md) and [Known limitations](docs/KNOWN_LIMITATIONS.md) before relying on a demo result.
-
-## Testnet evidence already recorded
-
-- Contract deployment: [FW1uXWCowcW1W17HUUryk965Rgzrn5h6x3e9tgjiimX1](https://testnet.nearblocks.io/txns/FW1uXWCowcW1W17HUUryk965Rgzrn5h6x3e9tgjiimX1)
-- Phase 1 upgrade: [6Pi8aHBnWEXsnaUdX2CDVZFr5sdT8U1Q717xt3XsQb6c](https://testnet.nearblocks.io/txns/6Pi8aHBnWEXsnaUdX2CDVZFr5sdT8U1Q717xt3XsQb6c)
-- NEAR dependency hardening upgrade: [BpAT9eRzUT3fHbiYDnMXSUMi9856qcfX5hzbK69XniW8](https://testnet.nearblocks.io/txns/BpAT9eRzUT3fHbiYDnMXSUMi9856qcfX5hzbK69XniW8)
-- Restricted keeper call: [DdDZQzEGBFWbAvQfb1cr5t1qyBo1y8ar2xF1St8UaNNd](https://testnet.nearblocks.io/txns/DdDZQzEGBFWbAvQfb1cr5t1qyBo1y8ar2xF1St8UaNNd)
-- Sponsored relayer proof: [5tXH5JGDeyf9WhkCED94E9D7yqGtERNEh3HhYYrEcY7H](https://testnet.nearblocks.io/txns/5tXH5JGDeyf9WhkCED94E9D7yqGtERNEh3HhYYrEcY7H)
-- Owner wallet proof: [MFaieneZw88gcdhwSsneX5h6jBibeNrDjmJQGPow7Nd](https://testnet.nearblocks.io/txns/MFaieneZw88gcdhwSsneX5h6jBibeNrDjmJQGPow7Nd)
-- Phase 1 lifecycle hashes: [Phase 1 validation](docs/phase-1/VALIDATION.md)
+---
 
 ## Documentation
 
-- [Demo runbook](docs/DEMO_RUNBOOK.md)
-- [Demo evidence](docs/DEMO_EVIDENCE.md)
-- [Known limitations](docs/KNOWN_LIMITATIONS.md)
-- [Release checklist](docs/RELEASE_CHECKLIST.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Implementation plan](docs/IMPLEMENTATION_PLAN.md)
-- [Technology stack](docs/TECH_STACK.md)
-- [Security model](docs/SECURITY.md)
-- [Phase 0 validation](docs/phase-0/VALIDATION.md)
-- [Phase 1 validation](docs/phase-1/VALIDATION.md)
+- [Demo runbook](docs/DEMO_RUNBOOK.md) and [recorded evidence](docs/DEMO_EVIDENCE.md)
+- [Contract interface](docs/phase-1/CONTRACT_INTERFACE.md) and [security model](docs/SECURITY.md)
+- [Known limitations](docs/KNOWN_LIMITATIONS.md) and [release checklist](docs/RELEASE_CHECKLIST.md)
 
-## Publication boundary
+<div align="center">
 
-Repository publication, the public demo post, and the final hackathon submission are human actions. The submission must not be sent until the human reviews and explicitly confirms the exact immutable payload described in [HACKATHON.md](HACKATHON.md).
+**Auvora Finance** · NEAR Hackathon 2026
+
+</div>
