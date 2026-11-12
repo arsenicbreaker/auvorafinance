@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="apps/web/public/auvora-wordmark.png" alt="Auvora" width="220" />
+<img src="apps/web/public/logo-auvora.png" alt="Auvora" width="160" />
 
 # Auvora Finance
 
@@ -74,8 +74,6 @@ The NEAR AI Cloud adapter still needs live verification. Remaining acceptance ch
 | [Keeper](apps/keeper)                   | Node.js, PostgreSQL        | Discovers due workflows and persists signed transactions before broadcast.                        |
 | [Relayer](apps/relayer)                 | Node.js, NEP-366 delegates | Validates owner-signed management requests, reserves a sponsorship budget, and submits them.      |
 | [Shared packages](packages)             | TypeScript, Prisma         | Provide workflow schemas, treasury calculations, NEAR RPC clients, and database access.           |
-
-FlowPilot's builder, dashboard, and execution history informed the product design. The architecture notes explain how Auvora implements these interactions on NEAR. [FlowPilot](https://github.com/Lem0nTree/FlowPilot) · [Architecture notes](docs/ARCHITECTURE.md)
 
 ---
 
