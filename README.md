@@ -6,7 +6,7 @@
 
 **Recurring NEAR payments with a treasury reserve**
 
-Live website: [auvora.conoisseur.xyz](https://auvora.conoisseur.xyz)
+Live website: [auvora.web.id](https://auvora.web.id)
 
 Set a recipient, payment amount, schedule, and minimum reserve. Sign the policy in your testnet wallet, then follow each scheduled payment from the dashboard to its on-chain receipt.
 
