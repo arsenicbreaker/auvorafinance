@@ -21,6 +21,4 @@ packages/db/src/generated/
 
 *.md
 !/README.md
-!/docs/phase-12/2026-11-03-sponsored-acceptance.md
-!/docs/phase-12/VALIDATION.md
-!/docs/phase-12/LIVE_ACCEPTANCE.md
+/docs/

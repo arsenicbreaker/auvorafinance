@@ -14,8 +14,6 @@ Set a recipient, payment amount, schedule, and minimum reserve. Sign the policy 
 ![Rust](https://img.shields.io/badge/Contract-Rust-68442F?style=for-the-badge)
 ![Next.js](https://img.shields.io/badge/Web-Next.js-222222?style=for-the-badge)
 
-<img src="docs/auvora-community-fund-payment-stack.png" alt="Auvora community fund payment stack for automated payments on NEAR" width="900" />
-
 [Features](#features) · [How it works](#how-it-works) · [Testnet evidence](#testnet-evidence)
 
 </div>
@@ -52,18 +50,17 @@ Built for the **NEAR Hackathon 2026**. The MVP handles native NEAR on testnet. I
 3. **Settle the payment.** The contract dispatches the transfer and records its outcome in a callback. A failed transfer restores the reserved ledger amount. After a keeper restart, the worker reconciles its saved transaction hash.
 4. **Inspect the result.** Enter the owner's account in **Execution record** to see attempts tracked by the keeper. External transactions can fall outside this index.
 
-For a guided walkthrough with wallet steps and expected results, follow the [demo runbook](docs/DEMO_RUNBOOK.md).
-
 ## Testnet evidence
 
-| Recorded result                                                                                                 | Evidence                                                                                                  |
-| --------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| Treasury contract deployed at `oceanear.testnet`                                                                | [Deployment transaction](https://testnet.nearblocks.io/txns/FW1uXWCowcW1W17HUUryk965Rgzrn5h6x3e9tgjiimX1) |
-| Workflows 2 and 4 each completed two payments of 0.001 NEAR. Workflows 3 and 5 reached the reserve guard.       | [Payment and reserve report](docs/phase-7/2026-10-30-final-report.json)                                   |
-| A restarted worker recovered its transaction hash. Two keeper processes produced one payment for the next slot. | [Keeper process report](docs/phase-7/2026-10-30-process-final-report.json)                                |
-| Workflow 11 completed sponsored pause, resume, cancel, and withdrawal with final receipts.                      | [Transactions and contract events](docs/phase-12/2026-11-03-sponsored-acceptance.md)                      |
+The treasury contract runs at `oceanear.testnet`. [Deployment transaction](https://testnet.nearblocks.io/txns/FW1uXWCowcW1W17HUUryk965Rgzrn5h6x3e9tgjiimX1)
 
-The NEAR AI Cloud adapter still needs live verification. Remaining acceptance checks cover wallet redirects, device coverage, live contract edge cases, and owner/relayer balance changes. [Live acceptance checklist](docs/phase-12/LIVE_ACCEPTANCE.md)
+Workflows 2 and 4 each completed two payments of 0.001 NEAR. Workflows 3 and 5 reached the reserve guard.
+
+For workflow 11, the owner signed four management actions and the relayer submitted them. Each transaction has a final receipt on NEAR testnet.
+
+[Pause](https://testnet.nearblocks.io/txns/D4obnfmPe2Mz9aA8fZarJFd3Dsou9Z5ULxevQj95xwGC) · [Resume](https://testnet.nearblocks.io/txns/6f9DLzpc94sfCUPvrQAEaeRc17vW7DeETpiLk1b5LX2t) · [Cancel](https://testnet.nearblocks.io/txns/AtvC4J59VSsUXvrMwmD8CcTWbJVi4tftJKYLvF94unox) · [Withdraw](https://testnet.nearblocks.io/txns/HxTHjayLxZk4HMijPRXJWzhHuKBMpEJLsM9kipt1VPLA)
+
+The NEAR AI Cloud adapter still needs live verification. Wallet redirect and device coverage, live contract edge cases, and owner/relayer balance changes also remain open.
 
 ---
 
@@ -76,17 +73,3 @@ The NEAR AI Cloud adapter still needs live verification. Remaining acceptance ch
 | [Keeper](apps/keeper)                   | Node.js, PostgreSQL        | Discovers due workflows and persists signed transactions before broadcast.                        |
 | [Relayer](apps/relayer)                 | Node.js, NEP-366 delegates | Validates owner-signed management requests, reserves a sponsorship budget, and submits them.      |
 | [Shared packages](packages)             | TypeScript, Prisma         | Provide workflow schemas, treasury calculations, NEAR RPC clients, and database access.           |
-
----
-
-## Documentation
-
-- [Demo runbook](docs/DEMO_RUNBOOK.md) and [recorded evidence](docs/DEMO_EVIDENCE.md)
-- [Contract interface](docs/phase-1/CONTRACT_INTERFACE.md) and [security model](docs/SECURITY.md)
-- [Known limitations](docs/KNOWN_LIMITATIONS.md) and [release checklist](docs/RELEASE_CHECKLIST.md)
-
-<div align="center">
-
-**Auvora Finance** · NEAR Hackathon 2026
-
-</div>
