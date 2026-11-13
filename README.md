@@ -12,7 +12,7 @@ Set a recipient, payment amount, schedule, and minimum reserve. Sign the policy 
 ![Rust](https://img.shields.io/badge/Contract-Rust-68442F?style=for-the-badge)
 ![Next.js](https://img.shields.io/badge/Web-Next.js-222222?style=for-the-badge)
 
-<img src="docs/phase-8/2026-10-31-desktop-outlook.jpg" alt="Auvora dashboard showing the treasury outlook for a testnet account" width="900" />
+<img src="docs/auvora-community-fund-payment-stack.png" alt="Auvora community fund payment stack for automated payments on NEAR" width="900" />
 
 [Features](#features) · [How it works](#how-it-works) · [Testnet evidence](#testnet-evidence)
 
