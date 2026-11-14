@@ -73,3 +73,11 @@ The NEAR AI Cloud adapter still needs live verification. Wallet redirect and dev
 | [Keeper](apps/keeper)                   | Node.js, PostgreSQL        | Discovers due workflows and persists signed transactions before broadcast.                        |
 | [Relayer](apps/relayer)                 | Node.js, NEP-366 delegates | Validates owner-signed management requests, reserves a sponsorship budget, and submits them.      |
 | [Shared packages](packages)             | TypeScript, Prisma         | Provide workflow schemas, treasury calculations, NEAR RPC clients, and database access.           |
+
+---
+
+## Hackathon Disclosure
+
+The team behind Auvora also submitted HOMR as a separate project to NEAR HACKATHON.
+
+HOMR repository: https://github.com/arsenicbreaker/HOMR
